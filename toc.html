@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teoria das Restrições (TOC) | MeLi PDI Terminal</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ==========================================================================
+           01. ROOT VARIABLES (THROUGHPUT / BOTTLENECK THEME)
+           ========================================================================== */
+        :root {
+            /* Palette Base: Deep Industrial Dark */
+            --bg-absolute: #0A0505; 
+            --bg-panel-deep: rgba(20, 10, 10, 0.85);
+            --bg-card-glass: rgba(30, 15, 15, 0.65);
+            --bg-card-hover: rgba(45, 20, 20, 0.85);
+
+            /* Tema TOC (Vermelho Restrição e Verde Fluidez) */
+            --toc-red: #FF2A2A;
+            --red-glow: rgba(255, 42, 42, 0.6);
+            --red-dim: rgba(255, 42, 42, 0.15);
+            
+            --flow-green: #00E676;
+            --green-glow: rgba(0, 230, 118, 0.5);
+
+            --white-clean: #FFFFFF;
+            --white-glow: rgba(255, 255, 255, 0.5);
+
+            /* Cores Auxiliares (Meli) */
+            --meli-yellow: #FFE600;
+            --pdca-blue: #00E5FF;
+
+            /* Tipografia */
+            --font-display: 'Orbitron', sans-serif;
+            --font-body: 'Rajdhani', sans-serif;
+            --font-mono: 'Share Tech Mono', monospace;
+            --font-code: 'Fira Code', monospace;
+
+            /* Cores de Texto */
+            --text-title: #FFFFFF;
+            --text-main: #E2E8F0;
+            --text-muted: #A09090;
+
+            /* Bordas e Sombras (Advanced Glassmorphism) */
+            --border-toc: rgba(255, 42, 42, 0.3);
+            --shadow-glass: 0 15px 35px 0 rgba(0, 0, 0, 0.9);
+            --shadow-neon-red: 0 0 20px var(--red-glow), inset 0 0 15px var(--red-dim);
+            
+            /* Medidas Estruturais (TRAVADAS PARA DESKTOP) */
+            --sidebar-width: 300px;
+            --topbar-height: 80px;
+            --radius-card: 6px; 
+            --transition-hud: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        /* ==========================================================================
+           02. CSS RESET & GLOBAL SETUP
+           ========================================================================== */
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; scroll-behavior: smooth; }
+        body {
+            background-color: var(--bg-absolute); color: var(--text-main);
+            font-family: var(--font-body); min-height: 100vh; min-width: 1200px; 
+            overflow-x: hidden; display: flex; position: relative;
+        }
+
+        /* Custom Scrollbar - TOC Style */
+        ::-webkit-scrollbar { width: 12px; height: 12px; }
+        ::-webkit-scrollbar-track { background: var(--bg-absolute); border-left: 1px solid rgba(255, 42, 42, 0.1); }
+        ::-webkit-scrollbar-thumb { background: var(--red-dim); border: 1px solid var(--toc-red); border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--toc-red); box-shadow: 0 0 20px var(--toc-red); }
+
+        /* Tipografia Global */
+        h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--text-title); line-height: 1.2; }
+        p { font-size: 1.25rem; line-height: 1.8; margin-bottom: 1.5rem; color: var(--text-main); text-align: justify; }
+        strong { color: var(--toc-red); font-weight: 700; text-shadow: 0 0 8px var(--red-dim); }
+
+        /* ==========================================================================
+           03. ADVANCED BACKGROUND EFFECTS (BOTTLENECK FLOW)
+           ========================================================================== */
+        body::before {
+            content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -3;
+            background-image: 
+                linear-gradient(rgba(255, 42, 42, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 60px 60px; pointer-events: none;
+            mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.1) 100%);
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.1) 100%);
+        }
+
+        @keyframes flow-pulse {
+            0% { box-shadow: 0 0 15px var(--red-dim); border-color: rgba(255, 42, 42, 0.3); }
+            50% { box-shadow: 0 0 30px var(--red-glow); border-color: var(--toc-red); }
+            100% { box-shadow: 0 0 15px var(--red-dim); border-color: rgba(255, 42, 42, 0.3); }
+        }
+
+        .hud-scanner {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 2px;
+            background: linear-gradient(to right, transparent, var(--toc-red), var(--white-clean), var(--toc-red), transparent);
+            opacity: 0.3; z-index: 9999; pointer-events: none; animation: scanline-v 6s linear infinite;
+        }
+        @keyframes scanline-v { 0% { transform: translateY(-100%); } 100% { transform: translateY(100vh); } }
+        /* ==========================================================================
+           04. GLOBAL LAYOUT & SIDEBAR
+           ========================================================================== */
+        .app-wrapper { display: flex; width: 100%; min-height: 100vh; position: relative; z-index: 10; }
+        .main-content { flex-grow: 1; display: flex; flex-direction: column; min-height: 100vh; background: radial-gradient(circle at top right, rgba(255, 42, 42, 0.02), transparent 80%); }
+        .container { width: 100%; max-width: 1400px; margin: 0 auto; padding: 3rem 5rem 5rem 5rem; }
+
+        .sys-sidebar {
+            width: var(--sidebar-width); background: var(--bg-panel-deep);
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border-right: 1px solid rgba(255, 42, 42, 0.2); display: flex;
+            flex-direction: column; flex-shrink: 0; z-index: 100; position: sticky; top: 0; height: 100vh;
+        }
+
+        .sidebar-brand {
+            height: var(--topbar-height); display: flex; flex-direction: column; justify-content: center; align-items: center;
+            border-bottom: 1px dashed var(--border-toc); background: radial-gradient(circle at top, var(--red-dim), transparent); position: relative;
+        }
+        .sidebar-brand::before { content: ''; position: absolute; bottom: -1px; left: 0; width: 50%; height: 2px; background: var(--toc-red); box-shadow: 0 0 15px var(--toc-red); }
+
+        .brand-logo { font-family: var(--font-display); font-size: 2rem; font-weight: 900; color: var(--white-clean); letter-spacing: 3px; }
+        .brand-logo span { color: var(--meli-yellow); text-shadow: 0 0 15px rgba(255, 230, 0, 0.5); }
+        .brand-sub { font-family: var(--font-mono); font-size: 0.75rem; color: var(--toc-red); letter-spacing: 5px; margin-top: 5px; text-transform: uppercase; }
+
+        .nav-menu { flex-grow: 1; padding: 2.5rem 1.5rem; display: flex; flex-direction: column; gap: 15px; }
+        .nav-link {
+            display: flex; align-items: center; gap: 15px; padding: 14px 20px;
+            color: var(--text-muted); font-family: var(--font-body); font-size: 1.1rem;
+            font-weight: 600; letter-spacing: 1.5px; text-decoration: none; position: relative;
+            transition: var(--transition-hud); border: 1px solid transparent; border-radius: var(--radius-card);
+            clip-path: polygon(0 0, 100% 0, 100% 75%, 95% 100%, 0 100%);
+        }
+        .nav-link::before {
+            content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 4px;
+            background: var(--toc-red); transform: scaleY(0); transition: 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .nav-link:hover { color: var(--text-main); background: rgba(255, 42, 42, 0.05); border-color: rgba(255, 42, 42, 0.2); padding-left: 28px; }
+        .nav-link:hover::before { transform: scaleY(1); box-shadow: 0 0 15px var(--red-glow); }
+        .nav-link.active { color: var(--bg-absolute); background: var(--toc-red); border-color: var(--toc-red); font-weight: 900; }
+        .nav-link.active::before { background: var(--white-clean); transform: scaleY(1); box-shadow: 0 0 15px var(--white-glow); }
+
+        .nav-icon { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; transition: 0.3s; }
+        .nav-link:hover .nav-icon { transform: scale(1.15); color: var(--toc-red); }
+        .nav-link.active .nav-icon { color: var(--bg-absolute); }
+
+        /* ==========================================================================
+           05. TOPBAR & PANELS CSS
+           ========================================================================== */
+        .sys-topbar {
+            height: var(--topbar-height); width: 100%; background: var(--bg-panel-deep);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-toc); display: flex; align-items: center;
+            justify-content: space-between; padding: 0 5rem; position: sticky; top: 0; z-index: 90;
+        }
+        .topbar-path { font-family: var(--font-mono); font-size: 0.95rem; color: var(--text-muted); letter-spacing: 2px; }
+        .topbar-path span { color: var(--toc-red); text-shadow: 0 0 8px var(--red-dim); }
+
+        .tech-panel {
+            background: var(--bg-card-glass); backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 42, 42, 0.2); border-radius: var(--radius-card);
+            padding: 4rem; margin-bottom: 4rem; position: relative; box-shadow: var(--shadow-glass);
+            transition: var(--transition-hud);
+        }
+        .tech-panel:hover { border-color: var(--toc-red); background: var(--bg-card-hover); transform: translateY(-3px); }
+        
+        .panel-header { display: flex; align-items: center; gap: 25px; margin-bottom: 2.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 1.5rem; }
+        .panel-title { font-size: 2.2rem; color: var(--text-title); letter-spacing: 3px; }
+        .panel-icon {
+            width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;
+            background: rgba(255, 42, 42, 0.05); border: 1px solid var(--toc-red); border-radius: var(--radius-card);
+            color: var(--toc-red); font-size: 2rem; box-shadow: var(--shadow-neon-red);
+        }
+    </style>
+</head>
+<body>
+    <div class="hud-scanner"></div>
+    <div class="app-wrapper">
+        
+        <aside class="sys-sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">MELI<span>PDI</span></div>
+                <div class="brand-sub">BOTTLENECK // MODULE</div>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    <span>Home Dashboard</span>
+                </a>
+                <a href="pdca.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21.5 2v6h-6M2.13 15.57a10 10 0 1 0 1.49-8.4L2 12"></path></svg>
+                    <span>Ciclo PDCA</span>
+                </a>
+                <a href="5-porques.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path></svg>
+                    <span>Análise 5 Porquês</span>
+                </a>
+                <a href="ishikawa.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    <span>Diagrama de Ishikawa</span>
+                </a>
+                <div style="height: 1px; background: rgba(255, 42, 42, 0.2); margin: 15px 0; opacity: 0.5;"></div>
+                
+                <a href="#" class="nav-link active">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                    <span>Teoria das Restrições (TOC)</span>
+                </a>
+            </nav>
+            <div style="padding: 20px; text-align: center; font-family: var(--font-mono); font-size: 0.75rem; color: var(--toc-red); opacity: 0.6; margin-top: auto;">
+                SECURE CONNECTION<br>OSASCO_CD // 2026
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="sys-topbar">
+                <div class="topbar-path">MELI PDI <span>/</span> PROBLEM_SOLVING <span>/</span> TOC_ANALYSIS.exe</div>
+            </header>
+
+            <div class="container">
+                <section class="hero-section" style="margin-bottom: 4rem; padding-bottom: 3rem; border-bottom: 1px solid rgba(255, 42, 42, 0.3); position: relative;">
+                    <div style="position: absolute; bottom: -2px; left: 0; width: 300px; height: 4px; background: var(--toc-red); box-shadow: 0 0 20px var(--red-glow);"></div>
+                    <h1 style="font-size: 4.5rem; font-weight: 900; letter-spacing: 5px; line-height: 1.1;">TEORIA DAS<br><span style="color: var(--toc-red); text-shadow: 0 0 30px rgba(255,42,42,0.4);">RESTRIÇÕES</span></h1>
+                    <div style="font-family: var(--font-mono); font-size: 1.6rem; color: var(--text-main); letter-spacing: 4px; margin-top: 15px; display: flex; align-items: center; gap: 15px;">
+                        <span style="font-size: 1rem; color: var(--bg-absolute); background: var(--toc-red); padding: 4px 12px; font-weight: bold;">[TOC_SYSTEM]</span>
+                        A Filosofia do "Gargalo" Logístico
+                    </div>
+                </section>
+
+                <section class="tech-panel" id="section-cenario">
+                    <div class="panel-header">
+                        <div class="panel-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg></div>
+                        <h2 class="panel-title">SEÇÃO 1 // O NOVO CENÁRIO: DA CADEIA LINEAR PARA A REDE (SCN)</h2>
+                    </div>
+
+                    <p>Antigamente, pensava-se na logística como uma linha reta (matéria-prima → fábrica → loja). Hoje, vivemos na era da <strong style="color: var(--flow-green);">Supply Chain Network (SCN)</strong>.</p>
+                    
+                    <ul style="list-style: none; padding-left: 0; margin: 2rem 0;">
+                        <li style="margin-bottom: 15px; font-size: 1.15rem; display: flex; gap: 15px;">
+                            <span style="color: var(--toc-red); font-family: var(--font-mono); font-size: 1.2rem; font-weight: bold;">> O QUE MUDOU:</span>
+                            <span style="color: var(--white-clean);">Não é mais apenas carregar e guardar caixas. É uma orquestração em tempo real entre indústrias, transportadoras e varejo.</span>
+                        </li>
+                        <li style="margin-bottom: 15px; font-size: 1.15rem; display: flex; gap: 15px;">
+                            <span style="color: var(--toc-red); font-family: var(--font-mono); font-size: 1.2rem; font-weight: bold;">> A PRESSÃO:</span>
+                            <span style="color: var(--white-clean);">O consumidor quer tudo "para ontem", com frete grátis ou muito barato e disponibilidade total.</span>
+                        </li>
+                    </ul>
+
+                    <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255, 42, 42, 0.2); border-left: 4px solid var(--toc-red); padding: 25px; border-radius: 4px; margin: 2rem 0;">
+                        <h3 style="color: var(--toc-red); font-family: var(--font-display); font-size: 1.25rem; margin-bottom: 10px;">O PESO NO BOLSO (BRASIL)</h3>
+                        <p style="margin: 0; font-size: 1.15rem; color: var(--text-main);">A logística é caríssima: Representa <strong style="color: var(--white-clean);">12,3% do PIB</strong> e consome cerca de <strong style="color: var(--white-clean);">7,6% da receita líquida</strong> das empresas.</p>
+                    </div>
+
+                    <div style="background: rgba(255, 42, 42, 0.05); padding: 25px; border-radius: 8px; text-align: center; box-shadow: inset 0 0 20px rgba(255, 42, 42, 0.05);">
+                        <strong style="color: var(--toc-red); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 10px;">O ERRO COMUM: FRACASSO GERENCIAL SISTÊMICO</strong>
+                        <p style="font-size: 1.2rem; color: var(--white-clean); margin: 0;">Tentar consertar a empresa otimizando cada departamento isoladamente. Se você melhora apenas o transporte, mas o estoque continua lento, o sistema inteiro continua falhando.</p>
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-toc-base">
+                    <div class="panel-header" style="border-bottom-color: rgba(255, 42, 42, 0.2);">
+                        <div class="panel-icon" style="background: rgba(255, 42, 42, 0.1); border-color: var(--toc-red); color: var(--toc-red); box-shadow: 0 0 25px rgba(255, 42, 42, 0.3);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--toc-red); text-shadow: 0 0 10px rgba(255, 42, 42, 0.3);">SEÇÃO 2 // A TEORIA DAS RESTRIÇÕES (TOC): A FILOSOFIA DO GARGALO</h2>
+                    </div>
+
+                    <p>A TOC surgiu nos anos 80 com o <strong>Dr. Eliyahu Goldratt</strong>, um físico que aplicou a lógica da ciência (causa e efeito) à gestão empresarial.</p>
+
+                    <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); padding: 30px; border-radius: 8px; margin: 3rem 0;">
+                        <h3 style="color: var(--white-clean); font-size: 1.5rem; margin-bottom: 20px; text-align: center;">A ANALOGIA DA CORRENTE (INTERATIVA)</h3>
+                        <p style="text-align: center; color: var(--text-muted); font-size: 1rem; margin-bottom: 30px;">[PASSE O RATO SOBRE A CORRENTE ABAIXO PARA IDENTIFICAR A RESTRIÇÃO]</p>
+                        
+                        <div style="display: flex; justify-content: center; align-items: center; gap: 5px; padding: 20px; background: var(--bg-absolute); border-radius: 8px; overflow: hidden; cursor: crosshair;" onmouseover="document.getElementById('elo-fraco-texto').style.display='block'; document.getElementById('elo-fraco').style.transform='scale(1.2) translateY(5px)'; document.getElementById('elo-fraco').style.borderColor='var(--toc-red)'; document.getElementById('elo-fraco').style.boxShadow='0 0 20px var(--toc-red)';" onmouseout="document.getElementById('elo-fraco-texto').style.display='none'; document.getElementById('elo-fraco').style.transform='scale(1)'; document.getElementById('elo-fraco').style.borderColor='rgba(255, 42, 42, 0.5)'; document.getElementById('elo-fraco').style.boxShadow='none';">
+                            
+                            <div style="width: 60px; height: 30px; border: 6px solid var(--text-muted); border-radius: 15px;"></div>
+                            <div style="width: 60px; height: 30px; border: 6px solid var(--text-muted); border-radius: 15px; margin-left: -20px;"></div>
+                            <div style="width: 60px; height: 30px; border: 6px solid var(--text-muted); border-radius: 15px; margin-left: -20px;"></div>
+                            
+                            <div id="elo-fraco" style="width: 60px; height: 30px; border: 4px dashed rgba(255, 42, 42, 0.5); border-radius: 15px; margin-left: -20px; transition: 0.4s; position: relative;"></div>
+                            
+                            <div style="width: 60px; height: 30px; border: 6px solid var(--text-muted); border-radius: 15px; margin-left: -20px;"></div>
+                            <div style="width: 60px; height: 30px; border: 6px solid var(--text-muted); border-radius: 15px; margin-left: -20px;"></div>
+                        </div>
+
+                        <div id="elo-fraco-texto" style="display: none; background: rgba(255, 42, 42, 0.1); border-left: 4px solid var(--toc-red); padding: 15px; margin-top: 20px; animation: 0.5s fade-in;">
+                            <strong style="color: var(--toc-red); display: block; margin-bottom: 5px;">> A RESISTÊNCIA DO SISTEMA</strong>
+                            <p style="font-size: 1.15rem; color: var(--white-clean); margin: 0;">Imagine uma corrente de ferro. A resistência dela não depende da média de todos os elos, mas sim <strong>exclusivamente da força do elo mais fraco</strong>. Se você fortalecer os elos que já são fortes, a corrente continuará quebrando no mesmo lugar.</p>
+                        </div>
+                    </div>
+
+                    <div style="background: rgba(0, 230, 118, 0.05); border-left: 5px solid var(--flow-green); padding: 25px; border-radius: 4px;">
+                        <h3 style="color: var(--flow-green); font-size: 1.3rem; margin-bottom: 10px;">A OBRA DE REFERÊNCIA: "A META"</h3>
+                        <p style="font-size: 1.15rem; color: var(--text-main); margin: 0;">Goldratt escreveu o livro <em>A Meta</em>, que ensina que o objetivo de qualquer empresa é <strong>lucrar</strong>, e que métricas contábeis tradicionais muitas vezes escondem onde está o verdadeiro problema da operação.</p>
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-5-passos">
+                    <h3 class="topic-header" style="color: var(--white-clean);">3. COMO A TOC FUNCIONA NA PRÁTICA LOGÍSTICA</h3>
+                    <p>É necessário sair do "chão de fábrica" e ir para a estratégia. Na logística moderna, a restrição (o gargalo) pode ser:</p>
+                    
+                    <div style="display: flex; gap: 15px; margin-bottom: 3rem; flex-wrap: wrap;">
+                        <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-toc); padding: 15px; border-radius: 4px; flex: 1; text-align: center; min-width: 200px;">
+                            <strong style="color: var(--toc-red); display: block;">1. CAPACIDADE</strong>
+                            <span style="color: var(--text-main);">A capacidade de separação (picking) em um armazém.</span>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-toc); padding: 15px; border-radius: 4px; flex: 1; text-align: center; min-width: 200px;">
+                            <strong style="color: var(--toc-red); display: block;">2. RECURSOS</strong>
+                            <span style="color: var(--text-main);">O número de caminhões disponíveis para coleta.</span>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-toc); padding: 15px; border-radius: 4px; flex: 1; text-align: center; min-width: 200px;">
+                            <strong style="color: var(--toc-red); display: block;">3. PROCESSOS</strong>
+                            <span style="color: var(--text-main);">Um processo burocrático de conferência de notas fiscais.</span>
+                        </div>
+                    </div>
+
+                    <h3 class="topic-header" style="color: var(--toc-red); margin-bottom: 2rem;">OS 5 PASSOS DE FOCO DA TOC (POOGI)</h3>
+                    <p style="font-size: 1.15rem; margin-bottom: 2rem;">Para ser um verdadeiro <em>Problem Solver</em>, você aplica este ciclo interativo. <strong>[PASSE O RATO SOBRE OS PASSOS PARA REVELAR A ESTRATÉGIA]</strong></p>
+
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        
+                        <div style="background: var(--bg-absolute); border: 1px solid rgba(255,255,255,0.1); padding: 20px; border-radius: 6px; transition: 0.3s; overflow: hidden; height: 65px;" onmouseover="this.style.height='120px'; this.style.background='rgba(255, 42, 42, 0.05)'; this.style.borderColor='var(--toc-red)';" onmouseout="this.style.height='65px'; this.style.background='var(--bg-absolute)'; this.style.borderColor='rgba(255,255,255,0.1)';">
+                            <strong style="font-family: var(--font-display); font-size: 1.25rem; color: var(--toc-red); display: block; margin-bottom: 15px;">1. IDENTIFICAR A RESTRIÇÃO</strong>
+                            <p style="color: var(--text-main); font-size: 1.1rem; margin: 0; opacity: 0.9;">Onde está o gargalo? Localize o ponto exato onde o fluxo da operação trava.</p>
+                        </div>
+
+                        <div style="background: var(--bg-absolute); border: 1px solid rgba(255,255,255,0.1); padding: 20px; border-radius: 6px; transition: 0.3s; overflow: hidden; height: 65px;" onmouseover="this.style.height='120px'; this.style.background='rgba(255, 230, 0, 0.05)'; this.style.borderColor='var(--meli-yellow)';" onmouseout="this.style.height='65px'; this.style.background='var(--bg-absolute)'; this.style.borderColor='rgba(255,255,255,0.1)';">
+                            <strong style="font-family: var(--font-display); font-size: 1.25rem; color: var(--meli-yellow); display: block; margin-bottom: 15px;">2. EXPLORAR A RESTRIÇÃO</strong>
+                            <p style="color: var(--text-main); font-size: 1.1rem; margin: 0; opacity: 0.9;">Como fazer o gargalo trabalhar melhor sem gastar mais agora? Maximize a eficiência do recurso limitante.</p>
+                        </div>
+
+                        <div style="background: var(--bg-absolute); border: 1px solid rgba(255,255,255,0.1); padding: 20px; border-radius: 6px; transition: 0.3s; overflow: hidden; height: 65px;" onmouseover="this.style.height='120px'; this.style.background='rgba(0, 230, 118, 0.05)'; this.style.borderColor='var(--flow-green)';" onmouseout="this.style.height='65px'; this.style.background='var(--bg-absolute)'; this.style.borderColor='rgba(255,255,255,0.1)';">
+                            <strong style="font-family: var(--font-display); font-size: 1.25rem; color: var(--flow-green); display: block; margin-bottom: 15px;">3. SUBORDINAR TUDO O RESTO</strong>
+                            <p style="color: var(--text-main); font-size: 1.1rem; margin: 0; opacity: 0.9;">Garantir que os outros processos não "atropelem" o gargalo. Todos devem operar no ritmo da restrição.</p>
+                        </div>
+
+                        <div style="background: var(--bg-absolute); border: 1px solid rgba(255,255,255,0.1); padding: 20px; border-radius: 6px; transition: 0.3s; overflow: hidden; height: 65px;" onmouseover="this.style.height='120px'; this.style.background='rgba(0, 229, 255, 0.05)'; this.style.borderColor='var(--pdca-blue)';" onmouseout="this.style.height='65px'; this.style.background='var(--bg-absolute)'; this.style.borderColor='rgba(255,255,255,0.1)';">
+                            <strong style="font-family: var(--font-display); font-size: 1.25rem; color: var(--pdca-blue); display: block; margin-bottom: 15px;">4. ELEVAR A RESTRIÇÃO</strong>
+                            <p style="color: var(--text-main); font-size: 1.1rem; margin: 0; opacity: 0.9;">Se ainda for o gargalo, investir em novas máquinas, contratar pessoas ou aumentar o espaço físico.</p>
+                        </div>
+
+                        <div style="background: var(--bg-absolute); border: 1px solid rgba(255,255,255,0.1); padding: 20px; border-radius: 6px; transition: 0.3s; overflow: hidden; height: 65px;" onmouseover="this.style.height='120px'; this.style.background='rgba(255, 255, 255, 0.05)'; this.style.borderColor='var(--white-clean)';" onmouseout="this.style.height='65px'; this.style.background='var(--bg-absolute)'; this.style.borderColor='rgba(255,255,255,0.1)';">
+                            <strong style="font-family: var(--font-display); font-size: 1.25rem; color: var(--white-clean); display: block; margin-bottom: 15px;">5. EVITAR A INÉRCIA</strong>
+                            <p style="color: var(--text-main); font-size: 1.1rem; margin: 0; opacity: 0.9;">Assim que o gargalo mudar de lugar (for quebrado), volte imediatamente ao passo 1 para o novo gargalo.</p>
+                        </div>
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-estudo-caso" style="border-color: rgba(255, 230, 0, 0.3);">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(255, 230, 0, 0.1); border-color: var(--meli-yellow); color: var(--meli-yellow); box-shadow: 0 0 25px rgba(255, 230, 0, 0.3);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--white-clean);">SEÇÃO 4 // ESTUDO DE CASO: MERCADO LIVRE E FULFILLMENT</h2>
+                    </div>
+
+                    <p>O Mercado Livre usa essa lógica para dominar o e-commerce na América Latina. No modelo de Fulfillment, eles controlam o fluxo de ponta a ponta.</p>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 2rem 0;">
+                        <div style="background: rgba(0,0,0,0.5); padding: 25px; border-left: 4px solid var(--meli-yellow); border-radius: 4px;">
+                            <strong style="color: var(--meli-yellow); font-size: 1.1rem; display: block; margin-bottom: 10px; font-family: var(--font-mono);">[ O DESAFIO ]</strong>
+                            <span style="color: var(--text-main); font-size: 1.15rem;">Milhares de vendedores e milhões de compradores num ecossistema fechado e hiper-rápido.</span>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.5); padding: 25px; border-left: 4px solid var(--toc-red); border-radius: 4px;">
+                            <strong style="color: var(--toc-red); font-size: 1.1rem; display: block; margin-bottom: 10px; font-family: var(--font-mono);">[ A APLICAÇÃO ]</strong>
+                            <span style="color: var(--text-main); font-size: 1.15rem;">Eles não olham apenas para o transporte. Analisam onde a mercadoria trava: é na entrada do CD? É na triagem (sortation)? É na "última milha"?</span>
+                        </div>
+                    </div>
+
+                    <div style="background: rgba(255,255,255,0.02); padding: 25px; border: 1px dashed var(--border-toc); margin-bottom: 4rem; text-align: center;">
+                        <strong style="color: var(--white-clean); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 10px;">O PERFIL DO PROFISSIONAL</strong>
+                        <p style="font-size: 1.2rem; color: var(--text-main); margin: 0;">As empresas buscam quem consegue <strong>enxergar a rede como um todo</strong> e encontrar o ponto exato de alavancagem para reduzir custos e acelerar entregas.</p>
+                    </div>
+
+                    <h3 class="topic-header" style="color: var(--flow-green); border-bottom: 1px solid rgba(0, 230, 118, 0.3); padding-bottom: 10px;">RESUMO PARA MEMORIZAÇÃO</h3>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 2rem;">
+                        <div style="background: rgba(0, 230, 118, 0.05); padding: 20px; border-radius: 4px; border: 1px solid rgba(0, 230, 118, 0.2);">
+                            <strong style="color: var(--white-clean); display: block; font-family: var(--font-display); margin-bottom: 5px;">SCN</strong>
+                            <span style="color: var(--text-main);">Rede complexa e interconectada (não é mais linha reta).</span>
+                        </div>
+                        <div style="background: rgba(0, 230, 118, 0.05); padding: 20px; border-radius: 4px; border: 1px solid rgba(0, 230, 118, 0.2);">
+                            <strong style="color: var(--white-clean); display: block; font-family: var(--font-display); margin-bottom: 5px;">TOC</strong>
+                            <span style="color: var(--text-main);">Foco direcionado no elo mais fraco (gargalo).</span>
+                        </div>
+                        <div style="background: rgba(0, 230, 118, 0.05); padding: 20px; border-radius: 4px; border: 1px solid rgba(0, 230, 118, 0.2);">
+                            <strong style="color: var(--white-clean); display: block; font-family: var(--font-display); margin-bottom: 5px;">PONTO DE ALAVANCAGEM</strong>
+                            <span style="color: var(--text-main);">Onde um pequeno esforço gera o maior resultado no sistema todo.</span>
+                        </div>
+                        <div style="background: rgba(0, 230, 118, 0.05); padding: 20px; border-radius: 4px; border: 1px solid rgba(0, 230, 118, 0.2);">
+                            <strong style="color: var(--white-clean); display: block; font-family: var(--font-display); margin-bottom: 5px;">VISÃO SISTÊMICA</strong>
+                            <span style="color: var(--text-main);">Otimizar o todo, não as partes isoladas.</span>
+                        </div>
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-ilusao">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(255, 42, 42, 0.1); border-color: var(--toc-red); color: var(--toc-red); box-shadow: 0 0 25px rgba(255, 42, 42, 0.3);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        </div>
+                        <h2 class="panel-title">SEÇÃO 5 // O FIM DA ILUSÃO: EFICIÊNCIA LOCAL VS. GLOBAL</h2>
+                    </div>
+
+                    <p>A contabilidade tradicional diz que, para ganhar dinheiro, todo mundo deve estar trabalhando 100% do tempo (máquinas, caminhões e pessoas). <strong>A TOC diz que isso é um erro fatal.</strong></p>
+
+                    <div style="background: var(--bg-absolute); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 30px; margin: 3rem 0; position: relative; overflow: hidden;">
+                        
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <span style="font-family: var(--font-mono); color: var(--text-muted); font-size: 0.9rem; letter-spacing: 2px;">[ CLIQUE NO BOTÃO PARA ALTERNAR A VISÃO DA OPERAÇÃO ]</span>
+                        </div>
+
+                        <div style="display: flex; justify-content: center; margin-bottom: 30px;">
+                            <button id="btn-tradicional" onclick="showTradicional()" style="background: var(--toc-red); color: #000; border: none; padding: 10px 20px; font-family: var(--font-display); font-weight: bold; cursor: pointer; border-radius: 4px 0 0 4px;">CONTABILIDADE TRADICIONAL</button>
+                            <button id="btn-toc" onclick="showTOC()" style="background: var(--bg-card-glass); color: var(--text-main); border: 1px solid var(--toc-red); padding: 10px 20px; font-family: var(--font-display); font-weight: bold; cursor: pointer; border-radius: 0 4px 4px 0;">VISÃO TOC (FLUXO)</button>
+                        </div>
+
+                        <div id="view-tradicional" style="display: block; text-align: center; animation: fade-in 0.5s;">
+                            <strong style="color: var(--toc-red); font-size: 1.3rem; display: block; margin-bottom: 10px;">O PROBLEMA DA EFICIÊNCIA LOCAL</strong>
+                            <p style="font-size: 1.15rem; color: var(--text-main);">Se você força um setor que não é o gargalo a trabalhar no máximo, ele vai produzir mais do que o resto da empresa consegue aguentar.</p>
+                            <div style="background: rgba(255, 42, 42, 0.1); padding: 15px; border-radius: 4px; border: 1px dashed var(--toc-red); display: inline-block; margin-top: 10px;">
+                                <strong style="color: var(--toc-red);">A CONSEQUÊNCIA:</strong> Isso gera montanhas de estoque parado, gasta dinheiro à toa e esconde erros.
+                            </div>
+                        </div>
+
+                        <div id="view-toc" style="display: none; text-align: center; animation: fade-in 0.5s;">
+                            <strong style="color: var(--flow-green); font-size: 1.3rem; display: block; margin-bottom: 10px;">A SOLUÇÃO DA EFICIÊNCIA GLOBAL</strong>
+                            <p style="font-size: 1.15rem; color: var(--text-main);">Na logística, a ociosidade em setores que não são o gargalo <strong>não é desperdício</strong>; é um "respiro" necessário para o sistema fluir bem.</p>
+                            <div style="background: rgba(0, 230, 118, 0.1); padding: 15px; border-radius: 4px; border: 1px dashed var(--flow-green); display: inline-block; margin-top: 10px;">
+                                <strong style="color: var(--flow-green);">A LIÇÃO:</strong> O fluxo contínuo vale mais do que manter todas as pessoas ocupadas 100% do tempo.
+                            </div>
+                        </div>
+                    </div>
+
+                    <script>
+                        function showTradicional() {
+                            document.getElementById('view-tradicional').style.display = 'block';
+                            document.getElementById('view-toc').style.display = 'none';
+                            document.getElementById('btn-tradicional').style.background = 'var(--toc-red)';
+                            document.getElementById('btn-tradicional').style.color = '#000';
+                            document.getElementById('btn-toc').style.background = 'var(--bg-card-glass)';
+                            document.getElementById('btn-toc').style.color = 'var(--text-main)';
+                            document.getElementById('btn-toc').style.borderColor = 'var(--toc-red)';
+                        }
+                        function showTOC() {
+                            document.getElementById('view-tradicional').style.display = 'none';
+                            document.getElementById('view-toc').style.display = 'block';
+                            document.getElementById('btn-toc').style.background = 'var(--flow-green)';
+                            document.getElementById('btn-toc').style.color = '#000';
+                            document.getElementById('btn-toc').style.borderColor = 'var(--flow-green)';
+                            document.getElementById('btn-tradicional').style.background = 'var(--bg-card-glass)';
+                            document.getElementById('btn-tradicional').style.color = 'var(--text-main)';
+                            document.getElementById('btn-tradicional').style.borderColor = 'var(--flow-green)';
+                        }
+                    </script>
+                </section>
+                <section class="tech-panel" id="section-metricas">
+                    <h3 class="topic-header" style="color: var(--flow-green);">AS 3 MÉTRICAS DE OURO (CONTABILIDADE DE GANHOS)</h3>
+                    <p>Para saber se uma decisão logística é boa, a TOC esquece os rateios complexos e foca em três indicadores simples:</p>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 2rem 0;">
+                        <div style="background: rgba(0, 230, 118, 0.05); border-left: 4px solid var(--flow-green); padding: 25px; border-radius: 4px;">
+                            <strong style="color: var(--flow-green); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 5px;">1. GANHO (THROUGHPUT)</strong>
+                            <p style="font-size: 1.15rem; color: var(--white-clean); margin-bottom: 10px;">É o dinheiro que entra quando o cliente paga.</p>
+                            <p style="font-size: 1.05rem; color: var(--text-muted); margin: 0; font-family: var(--font-mono);">Atenção: Produzir um lote ou levar o produto para o CD ainda não é Ganho. Só conta quando a venda é finalizada.</p>
+                        </div>
+                        <div style="background: rgba(255, 230, 0, 0.05); border-left: 4px solid var(--meli-yellow); padding: 25px; border-radius: 4px;">
+                            <strong style="color: var(--meli-yellow); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 5px;">2. INVENTÁRIO (INVENTORY)</strong>
+                            <p style="font-size: 1.15rem; color: var(--white-clean); margin-bottom: 10px;">É todo o dinheiro "preso" no sistema.</p>
+                            <p style="font-size: 1.05rem; color: var(--text-muted); margin: 0; font-family: var(--font-mono);">Inclui o estoque nas prateleiras, mas também os ativos: galpões, empilhadeiras e computadores. É um "ralo" de dinheiro que deve ser o menor possível.</p>
+                        </div>
+                        <div style="background: rgba(255, 42, 42, 0.05); border-left: 4px solid var(--toc-red); padding: 25px; border-radius: 4px;">
+                            <strong style="color: var(--toc-red); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 5px;">3. DESPESA OPERACIONAL</strong>
+                            <p style="font-size: 1.15rem; color: var(--white-clean); margin-bottom: 10px;">É o dinheiro gasto para transformar o Inventário em Ganho.</p>
+                            <p style="font-size: 1.05rem; color: var(--text-muted); margin: 0; font-family: var(--font-mono);">Luz, aluguel, salários e manutenção da frota.</p>
+                        </div>
+                    </div>
+
+                    <div style="background: rgba(0,0,0,0.8); border: 1px solid var(--pdca-blue); border-radius: 8px; padding: 30px; margin-top: 4rem; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                        <h3 style="color: var(--pdca-blue); font-family: var(--font-display); font-size: 1.5rem; margin-bottom: 10px; text-align: center;">A MATEMÁTICA DA DECISÃO (SIMULADOR)</h3>
+                        <p style="text-align: center; color: var(--text-main); margin-bottom: 30px;">Uma mudança na logística só presta se o <strong>Lucro Líquido sobe</strong> ou o <strong>RSI sobe</strong>. Teste abaixo:</p>
+
+                        <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; margin-bottom: 30px;">
+                            <div style="display: flex; flex-direction: column; width: 200px;">
+                                <label style="color: var(--flow-green); font-family: var(--font-mono); margin-bottom: 5px;">GANHO ($)</label>
+                                <input type="number" id="sim-ganho" value="100000" oninput="calcularRSI()" style="background: var(--bg-card-glass); border: 1px solid var(--flow-green); color: white; padding: 10px; font-size: 1.2rem; outline: none; border-radius: 4px;">
+                            </div>
+                            <div style="display: flex; flex-direction: column; width: 200px;">
+                                <label style="color: var(--toc-red); font-family: var(--font-mono); margin-bottom: 5px;">DESPESA ($)</label>
+                                <input type="number" id="sim-despesa" value="60000" oninput="calcularRSI()" style="background: var(--bg-card-glass); border: 1px solid var(--toc-red); color: white; padding: 10px; font-size: 1.2rem; outline: none; border-radius: 4px;">
+                            </div>
+                            <div style="display: flex; flex-direction: column; width: 200px;">
+                                <label style="color: var(--meli-yellow); font-family: var(--font-mono); margin-bottom: 5px;">INVENTÁRIO ($)</label>
+                                <input type="number" id="sim-inventario" value="200000" oninput="calcularRSI()" style="background: var(--bg-card-glass); border: 1px solid var(--meli-yellow); color: white; padding: 10px; font-size: 1.2rem; outline: none; border-radius: 4px;">
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-around; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px;">
+                            <div style="text-align: center;">
+                                <span style="display: block; font-family: var(--font-mono); color: var(--text-muted); letter-spacing: 1px;">LUCRO LÍQUIDO (Ganho - Despesa)</span>
+                                <strong id="resultado-lucro" style="font-size: 2.5rem; color: var(--white-clean);">$ 40.000</strong>
+                            </div>
+                            <div style="width: 1px; background: rgba(255,255,255,0.2);"></div>
+                            <div style="text-align: center;">
+                                <span style="display: block; font-family: var(--font-mono); color: var(--text-muted); letter-spacing: 1px;">RSI (Lucro / Inventário)</span>
+                                <strong id="resultado-rsi" style="font-size: 2.5rem; color: var(--pdca-blue);">20.00 %</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <script>
+                        function calcularRSI() {
+                            let ganho = Number(document.getElementById('sim-ganho').value) || 0;
+                            let despesa = Number(document.getElementById('sim-despesa').value) || 0;
+                            let inventario = Number(document.getElementById('sim-inventario').value) || 1; // previne divisão por zero
+
+                            let lucro = ganho - despesa;
+                            let rsi = (lucro / inventario) * 100;
+
+                            document.getElementById('resultado-lucro').innerText = "$ " + lucro.toLocaleString('pt-BR');
+                            document.getElementById('resultado-rsi').innerText = rsi.toFixed(2) + " %";
+                            
+                            if(lucro < 0) document.getElementById('resultado-lucro').style.color = "var(--toc-red)";
+                            else document.getElementById('resultado-lucro').style.color = "var(--white-clean)";
+
+                            if(rsi < 0) document.getElementById('resultado-rsi').style.color = "var(--toc-red)";
+                            else document.getElementById('resultado-rsi').style.color = "var(--pdca-blue)";
+                        }
+                    </script>
+                </section>
+                <section class="tech-panel" id="section-tipos-gargalos">
+                    <h3 class="topic-header" style="color: var(--white-clean);">OS TRÊS TIPOS DE GARGALOS (RESTRIÇÕES)</h3>
+                    <p>Nem todo gargalo é uma máquina quebrada. Eles podem ser de diferentes naturezas. <strong>[PASSE O RATO PARA REVELAR OS EXEMPLOS]</strong></p>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin: 3rem 0;">
+                        
+                        <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--toc-red); border-top: 5px solid var(--toc-red); border-radius: 6px; padding: 25px; position: relative; overflow: hidden; transition: 0.4s; height: 200px;" onmouseover="this.querySelector('.hidden-content').style.opacity='1'; this.querySelector('.hidden-content').style.transform='translateY(0)';" onmouseout="this.querySelector('.hidden-content').style.opacity='0'; this.querySelector('.hidden-content').style.transform='translateY(20px)';">
+                            <strong style="color: var(--toc-red); font-family: var(--font-display); font-size: 1.4rem; display: block; margin-bottom: 5px;">A. RESTRIÇÕES FÍSICAS</strong>
+                            <span style="color: var(--text-muted); font-size: 1.1rem;">(O óbvio)</span>
+                            <p style="color: var(--text-main); font-size: 1.15rem; margin-top: 15px;">São limites físicos e tangíveis da operação.</p>
+                            
+                            <div class="hidden-content" style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 20px; background: var(--toc-red); color: #000; opacity: 0; transform: translateY(20px); transition: 0.4s;">
+                                <strong style="display: block; font-family: var(--font-mono); margin-bottom: 5px;">EXEMPLOS:</strong>
+                                Uma esteira de triagem lenta, poucas docas para caminhões, falta de espaço no estoque ou poucos motoristas.
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--meli-yellow); border-top: 5px solid var(--meli-yellow); border-radius: 6px; padding: 25px; position: relative; overflow: hidden; transition: 0.4s; height: 200px;" onmouseover="this.querySelector('.hidden-content').style.opacity='1'; this.querySelector('.hidden-content').style.transform='translateY(0)';" onmouseout="this.querySelector('.hidden-content').style.opacity='0'; this.querySelector('.hidden-content').style.transform='translateY(20px)';">
+                            <strong style="color: var(--meli-yellow); font-family: var(--font-display); font-size: 1.4rem; display: block; margin-bottom: 5px;">B. RESTRIÇÕES DE MERCADO</strong>
+                            <span style="color: var(--text-muted); font-size: 1.1rem;">(O externo)</span>
+                            <p style="color: var(--text-main); font-size: 1.15rem; margin-top: 15px;">Acontece quando sua logística é ótima, mas não tem cliente suficiente comprando.</p>
+                            
+                            <div class="hidden-content" style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 20px; background: var(--meli-yellow); color: #000; opacity: 0; transform: translateY(20px); transition: 0.4s;">
+                                <strong style="display: block; font-family: var(--font-mono); margin-bottom: 5px;">O QUE FAZER:</strong>
+                                A solução não é comprar mais caminhões, mas sim criar serviços novos (como entrega no mesmo dia) para atrair mais clientes.
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--pdca-blue); border-top: 5px solid var(--pdca-blue); border-radius: 6px; padding: 25px; position: relative; overflow: hidden; transition: 0.4s; height: 200px;" onmouseover="this.querySelector('.hidden-content').style.opacity='1'; this.querySelector('.hidden-content').style.transform='translateY(0)';" onmouseout="this.querySelector('.hidden-content').style.opacity='0'; this.querySelector('.hidden-content').style.transform='translateY(20px)';">
+                            <strong style="color: var(--pdca-blue); font-family: var(--font-display); font-size: 1.4rem; display: block; margin-bottom: 5px;">C. RESTRIÇÕES POLÍTICAS</strong>
+                            <span style="color: var(--text-muted); font-size: 1.1rem;">(O "sempre foi assim")</span>
+                            <p style="color: var(--text-main); font-size: 1.15rem; margin-top: 15px;">São as mais perigosas porque são invisíveis. São regras ou metas erradas.</p>
+                            
+                            <div class="hidden-content" style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 20px; background: var(--pdca-blue); color: #000; opacity: 0; transform: translateY(20px); transition: 0.4s;">
+                                <strong style="display: block; font-family: var(--font-mono); margin-bottom: 5px;">O RESULTADO:</strong>
+                                Regras de bônus ou KPIs arcaicos (ex: comprar grandes lotes para ter desconto) quebram o fluxo, lotam o armazém e secam o caixa.
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-dbr">
+                    <div class="panel-header" style="border-bottom-color: rgba(0, 230, 118, 0.2);">
+                        <div class="panel-icon" style="background: rgba(0, 230, 118, 0.1); border-color: var(--flow-green); color: var(--flow-green); box-shadow: 0 0 25px rgba(0, 230, 118, 0.3);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h4l3-9 5 18 3-9h5"></path></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--flow-green); text-shadow: 0 0 10px rgba(0, 230, 118, 0.3);">SEÇÃO 8 // O GRANDE OBJETIVO: SAIR DO "EMPURRAR" PARA O "PUXAR"</h2>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; overflow: hidden; margin-bottom: 3rem;">
+                        <div style="background: rgba(255, 42, 42, 0.05); padding: 25px;">
+                            <strong style="color: var(--toc-red); font-family: var(--font-display); font-size: 1.2rem; display: block; margin-bottom: 10px;">SISTEMA EMPURRADO (TRADICIONAL)</strong>
+                            <p style="font-size: 1.15rem; color: var(--text-main); margin-bottom: 10px;">Empurram produtos para as lojas baseadas em previsões (que quase sempre erram).</p>
+                            <span style="color: var(--toc-red); font-weight: bold;">RESULTADO:</span> Sobram produtos que ninguém quer e faltam os que todo mundo procura.
+                        </div>
+                        <div style="background: rgba(0, 230, 118, 0.05); padding: 25px;">
+                            <strong style="color: var(--flow-green); font-family: var(--font-display); font-size: 1.2rem; display: block; margin-bottom: 10px;">SISTEMA PUXADO (TOC / LEAN)</strong>
+                            <p style="font-size: 1.15rem; color: var(--text-main); margin-bottom: 10px;">O ritmo de reposição é ditado pelo consumo real no ponto de venda.</p>
+                            <span style="color: var(--flow-green); font-weight: bold;">RESULTADO:</span> Se vendeu um, repõe um. O fluxo nunca entope.
+                        </div>
+                    </div>
+
+                    <h3 class="topic-header" style="color: var(--white-clean);">O MÉTODO DBR (TAMBOR - PULMÃO - CORDA)</h3>
+                    <p style="font-size: 1.2rem; color: var(--text-muted); margin-bottom: 2rem;">Este é o "aparelho digestivo" da logística avançada. Ele controla o fluxo para que nada trave.</p>
+
+                    <div style="display: flex; flex-direction: column; gap: 20px; position: relative; padding-left: 40px; margin-bottom: 2rem;">
+                        
+                        <div style="position: absolute; left: 15px; top: 30px; bottom: 30px; width: 4px; background: repeating-linear-gradient(to bottom, var(--pdca-blue), var(--pdca-blue) 10px, transparent 10px, transparent 20px);"></div>
+                        
+                        <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--toc-red); border-radius: 6px; padding: 20px; position: relative;">
+                            <div style="position: absolute; left: -40px; top: 20px; background: var(--bg-absolute); border: 2px solid var(--toc-red); border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">🥁</div>
+                            <strong style="color: var(--toc-red); font-family: var(--font-display); font-size: 1.4rem; display: block; margin-bottom: 5px;">O TAMBOR (DRUM) - O RITMO</strong>
+                            <p style="font-size: 1.15rem; color: var(--text-main); margin: 0;">É o gargalo/restrição. Como ele é o mais lento, é ele quem dita a velocidade de toda a fábrica ou centro de distribuição. Se o "tambor" bate devagar, a empresa inteira anda devagar.</p>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--meli-yellow); border-radius: 6px; padding: 20px; position: relative;">
+                            <div style="position: absolute; left: -40px; top: 20px; background: var(--bg-absolute); border: 2px solid var(--meli-yellow); border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">🛡️</div>
+                            <strong style="color: var(--meli-yellow); font-family: var(--font-display); font-size: 1.4rem; display: block; margin-bottom: 5px;">O PULMÃO (BUFFER) - A PROTEÇÃO</strong>
+                            <p style="font-size: 1.15rem; color: var(--text-main); margin-bottom: 10px;">Não é apenas estoque parado; é proteção de tempo. Ele fica logo antes do gargalo.</p>
+                            <p style="font-size: 1.1rem; color: var(--text-muted); margin: 0;"><strong>Para que serve:</strong> Garante que, se um caminhão atrasar ou uma máquina anterior quebrar, o gargalo (o Tambor) tenha material para continuar trabalhando sem parar. O gargalo nunca pode ficar ocioso.</p>
+                        </div>
+
+                        <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--pdca-blue); border-radius: 6px; padding: 20px; position: relative;">
+                            <div style="position: absolute; left: -40px; top: 20px; background: var(--bg-absolute); border: 2px solid var(--pdca-blue); border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">🪢</div>
+                            <strong style="color: var(--pdca-blue); font-family: var(--font-display); font-size: 1.4rem; display: block; margin-bottom: 5px;">A CORDA (ROPE) - O CONTROLE</strong>
+                            <p style="font-size: 1.15rem; color: var(--text-main); margin-bottom: 10px;">É o canal de comunicação entre o gargalo e o início do processo. Impede a superprodução.</p>
+                            <p style="font-size: 1.1rem; color: var(--text-muted); margin: 0;"><strong>Para que serve:</strong> A "corda" só libera a entrada de novo material no armazém na exata velocidade em que o "tambor" está processando. Isso evita que o galpão fique entulhado de caixas.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="tech-panel" id="section-poogi">
+                    <h3 class="topic-header" style="color: var(--white-clean); font-size: 1.8rem; margin-bottom: 10px;">POOGI: OS 5 PASSOS DE FOCALIZAÇÃO</h3>
+                    <p style="font-size: 1.25rem; color: var(--text-main); margin-bottom: 3rem;">Para um <em>Problem Solver</em>, este é o algoritmo para resolver qualquer problema logístico de forma eterna (Melhoria Contínua).</p>
+                    <div style="border-left: 4px solid rgba(255,255,255,0.1); padding-left: 30px; position: relative;">
+                        
+                        <div style="margin-bottom: 30px; position: relative;">
+                            <div style="position: absolute; left: -44px; top: 0; width: 24px; height: 24px; background: var(--toc-red); border-radius: 50%; box-shadow: 0 0 10px var(--toc-red);"></div>
+                            <strong style="color: var(--toc-red); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 5px;">1. IDENTIFICAR</strong>
+                            <p style="font-size: 1.15rem; color: var(--text-main); margin: 0;">Localize onde o fluxo trava (É o frete? É a separação? É o sistema?). Não tente consertar tudo, foque no elo mais fraco.</p>
+                        </div>
+
+                        <div style="margin-bottom: 30px; position: relative;">
+                            <div style="position: absolute; left: -44px; top: 0; width: 24px; height: 24px; background: var(--meli-yellow); border-radius: 50%; box-shadow: 0 0 10px var(--meli-yellow);"></div>
+                            <strong style="color: var(--meli-yellow); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 5px;">2. EXPLORAR</strong>
+                            <p style="font-size: 1.15rem; color: var(--text-main); margin: 0;">Faça o gargalo trabalhar o melhor possível sem gastar dinheiro ainda. <em>Ex: Se o gargalo é a conferência de carga, coloque os melhores funcionários lá e faça rodízio para que a conferência não pare nem no almoço.</em></p>
+                        </div>
+
+                        <div style="margin-bottom: 30px; position: relative;">
+                            <div style="position: absolute; left: -44px; top: 0; width: 24px; height: 24px; background: var(--flow-green); border-radius: 50%; box-shadow: 0 0 10px var(--flow-green);"></div>
+                            <strong style="color: var(--flow-green); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 5px;">3. SUBORDINAR</strong>
+                            <p style="font-size: 1.15rem; color: var(--text-main); margin: 0;">Obrigue todos os outros setores a seguirem o ritmo do gargalo. Se a expedição só consegue carregar 10 caminhões por dia, não adianta a separação separar 50. <strong>Parar o que não é gargalo é inteligência estratégica.</strong></p>
+                        </div>
+
+                        <div style="margin-bottom: 30px; position: relative;">
+                            <div style="position: absolute; left: -44px; top: 0; width: 24px; height: 24px; background: var(--pdca-blue); border-radius: 50%; box-shadow: 0 0 10px var(--pdca-blue);"></div>
+                            <strong style="color: var(--pdca-blue); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 5px;">4. ELEVAR</strong>
+                            <p style="font-size: 1.15rem; color: var(--text-main); margin: 0;">Agora sim, se o gargalo ainda persiste, invista dinheiro. Compre máquinas automáticas, contrate mais gente ou mude a tecnologia.</p>
+                        </div>
+
+                        <div style="position: relative;">
+                            <div style="position: absolute; left: -44px; top: 0; width: 24px; height: 24px; background: var(--white-clean); border-radius: 50%; box-shadow: 0 0 10px var(--white-clean);"></div>
+                            <strong style="color: var(--white-clean); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 5px;">5. EVITAR A INÉRCIA</strong>
+                            <p style="font-size: 1.15rem; color: var(--text-main); margin: 0;">Assim que você "eleva" um gargalo, ele deixa de ser o problema e um novo gargalo aparece em outro lugar. Volte ao passo 1 imediatamente. Não deixe regras antigas atrapalharem o novo cenário.</p>
+                        </div>
+
+                    </div>
+                    <div style="background: rgba(0,0,0,0.8); border: 1px dashed rgba(255,255,255,0.2); padding: 30px; border-radius: 8px; margin-top: 4rem;">
+                        <h3 style="color: var(--flow-green); font-family: var(--font-mono); font-size: 1.2rem; letter-spacing: 2px; margin-bottom: 20px; text-align: center;">[ DICAS DE ESTUDO & FIXAÇÃO MENTAL ]</h3>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                            <div style="background: rgba(255,255,255,0.02); padding: 20px; border-left: 3px solid var(--pdca-blue);">
+                                <strong style="color: var(--pdca-blue); display: block; margin-bottom: 5px;">PENSE COMO UM RIO</strong>
+                                <span style="color: var(--text-main); font-size: 1.1rem;">O Ganho é a água que chega ao mar. O Gargalo é uma pedra estreitando o rio. O Pulmão é uma pequena represa antes da pedra para garantir que sempre passe água pela fresta.</span>
+                            </div>
+                            
+                            <div style="background: rgba(255,255,255,0.02); padding: 20px; border-left: 3px solid var(--meli-yellow);">
+                                <strong style="color: var(--meli-yellow); display: block; margin-bottom: 5px;">LÓGICA DE NEGÓCIO</strong>
+                                <span style="color: var(--text-main); font-size: 1.1rem;">Na TOC, estoque é passivo (gasto), não ativo. O objetivo é reduzir o Inventário e a Despesa Operacional enquanto o Ganho sobe.</span>
+                            </div>
+                            
+                            <div style="background: rgba(255,255,255,0.02); padding: 20px; border-left: 3px solid var(--toc-red);">
+                                <strong style="color: var(--toc-red); display: block; margin-bottom: 5px;">CUIDADO COM A POLÍTICA</strong>
+                                <span style="color: var(--text-main); font-size: 1.1rem;">Lembre-se que, às vezes, o gargalo não é uma máquina, mas uma regra idiota (ex: "temos que encher o caminhão até o teto para sair", enquanto o cliente quer a mercadoria agora).</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-thinking-processes">
+                    <div class="panel-header" style="border-bottom-color: rgba(0, 229, 255, 0.2);">
+                        <div class="panel-icon" style="background: rgba(0, 229, 255, 0.1); border-color: var(--pdca-blue); color: var(--pdca-blue); box-shadow: 0 0 25px rgba(0, 229, 255, 0.3);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--pdca-blue); text-shadow: 0 0 10px rgba(0, 229, 255, 0.3);">SEÇÃO 10 // PROCESSOS DE PENSAMENTO (TP): A LÓGICA CONTRA O CAOS</h2>
+                    </div>
+
+                    <p>Muitas vezes, o gargalo não é uma máquina, mas uma <strong>crença errada ou uma política antiga</strong>. Para resolver isso, Goldratt criou os Processos de Pensamento, que respondem a três perguntas fundamentais:</p>
+
+                    <div style="display: flex; justify-content: space-between; gap: 20px; margin: 3rem 0; flex-wrap: wrap;">
+                        <div style="flex: 1; background: rgba(255, 42, 42, 0.05); border-top: 4px solid var(--toc-red); padding: 25px; border-radius: 4px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.3);">
+                            <strong style="color: var(--toc-red); font-family: var(--font-display); font-size: 1.2rem; display: block; margin-bottom: 10px;">1. O QUE MUDAR?</strong>
+                            <span style="color: var(--text-main); font-size: 1.1rem;">(Identificar a causa raiz)</span>
+                        </div>
+                        <div style="flex: 1; background: rgba(255, 230, 0, 0.05); border-top: 4px solid var(--meli-yellow); padding: 25px; border-radius: 4px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.3);">
+                            <strong style="color: var(--meli-yellow); font-family: var(--font-display); font-size: 1.2rem; display: block; margin-bottom: 10px;">2. PARA O QUE MUDAR?</strong>
+                            <span style="color: var(--text-main); font-size: 1.1rem;">(Criar a solução)</span>
+                        </div>
+                        <div style="flex: 1; background: rgba(0, 230, 118, 0.05); border-top: 4px solid var(--flow-green); padding: 25px; border-radius: 4px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.3);">
+                            <strong style="color: var(--flow-green); font-family: var(--font-display); font-size: 1.2rem; display: block; margin-bottom: 10px;">3. COMO CAUSAR A MUDANÇA?</strong>
+                            <span style="color: var(--text-main); font-size: 1.1rem;">(Plano de ação e convencimento)</span>
+                        </div>
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-arvores-logicas">
+                    <h3 class="topic-header" style="color: var(--white-clean);">AS FERRAMENTAS LÓGICAS (AS ÁRVORES DE GOLDRATT)</h3>
+                    <p style="margin-bottom: 3rem;">O ecossistema lógico da TOC utiliza árvores visuais para mapear a transição do problema atual para a solução futura.</p>
+
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 15px;">
+                        
+                        <div style="background: rgba(255,255,255,0.02); border-left: 4px solid var(--toc-red); padding: 20px; border-radius: 4px; display: flex; align-items: center; gap: 20px;">
+                            <div style="font-family: var(--font-display); font-size: 1.5rem; color: var(--toc-red); font-weight: 900; width: 60px;">CRT</div>
+                            <div>
+                                <strong style="color: var(--white-clean); font-size: 1.2rem; display: block;">Árvore da Realidade Atual</strong>
+                                <span style="color: var(--text-main); font-size: 1.1rem;">Você lista os sintomas (Efeitos Indesejáveis - UDEs), como atrasos e custos altos, e liga os pontos até achar a causa raiz. É o <strong>mapa do "incêndio"</strong> que você quer apagar.</span>
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(255,255,255,0.02); border-left: 4px solid var(--meli-yellow); padding: 20px; border-radius: 4px; display: flex; align-items: center; gap: 20px;">
+                            <div style="font-family: var(--font-display); font-size: 1.5rem; color: var(--meli-yellow); font-weight: 900; width: 60px;">EC</div>
+                            <div>
+                                <strong style="color: var(--white-clean); font-size: 1.2rem; display: block;">Nuvem de Evaporação</strong>
+                                <span style="color: var(--text-main); font-size: 1.1rem;">Resolve conflitos sem "meio-termo" (que é ruim para os dois lados). <em>Exemplo: Estoque alto para atender o cliente vs. Estoque baixo para economizar.</em> A "Nuvem" busca uma ideia (Injeção) que resolva ambos.</span>
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(255,255,255,0.02); border-left: 4px solid var(--pdca-blue); padding: 20px; border-radius: 4px; display: flex; align-items: center; gap: 20px;">
+                            <div style="font-family: var(--font-display); font-size: 1.5rem; color: var(--pdca-blue); font-weight: 900; width: 60px;">FRT</div>
+                            <div>
+                                <strong style="color: var(--white-clean); font-size: 1.2rem; display: block;">Árvore da Realidade Futura</strong>
+                                <span style="color: var(--text-main); font-size: 1.1rem;">É um "teste de laboratório" mental. Você projeta o futuro para ver se a solução vai funcionar e se ela vai criar novos problemas (Ramos Negativos).</span>
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(255,255,255,0.02); border-left: 4px solid var(--white-clean); padding: 20px; border-radius: 4px; display: flex; align-items: center; gap: 20px;">
+                            <div style="font-family: var(--font-display); font-size: 1.5rem; color: var(--white-clean); font-weight: 900; width: 60px;">PRT</div>
+                            <div>
+                                <strong style="color: var(--white-clean); font-size: 1.2rem; display: block;">Árvore de Pré-Requisitos</strong>
+                                <span style="color: var(--text-main); font-size: 1.1rem;">Lista todos os obstáculos (falta de dinheiro, resistência da equipe) e cria objetivos intermediários para vencê-los.</span>
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(255,255,255,0.02); border-left: 4px solid var(--flow-green); padding: 20px; border-radius: 4px; display: flex; align-items: center; gap: 20px;">
+                            <div style="font-family: var(--font-display); font-size: 1.5rem; color: var(--flow-green); font-weight: 900; width: 60px;">TT</div>
+                            <div>
+                                <strong style="color: var(--white-clean); font-size: 1.2rem; display: block;">Árvore de Transição</strong>
+                                <span style="color: var(--text-main); font-size: 1.1rem;">O passo a passo detalhado da execução da mudança.</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-casos-sucesso" style="border-color: rgba(255, 230, 0, 0.3);">
+                    <div class="panel-header" style="border-bottom-color: rgba(255, 230, 0, 0.2);">
+                        <div class="panel-icon" style="background: rgba(255, 230, 0, 0.1); border-color: var(--meli-yellow); color: var(--meli-yellow); box-shadow: 0 0 25px rgba(255, 230, 0, 0.3);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--meli-yellow); text-shadow: 0 0 10px rgba(255, 230, 0, 0.3);">SEÇÃO 12 // CASOS DE SUCESSO: A PROVA DOS NÚMEROS</h2>
+                    </div>
+
+                    <p>A TOC não é apenas teoria, gera lucro real. Veja os resultados de empresas que abandonaram o modelo tradicional em favor do foco no fluxo:</p>
+
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 25px; margin-top: 3rem;">
+                        
+                        <div style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255, 255, 255, 0.1); border-top: 4px solid var(--pdca-blue); padding: 30px; border-radius: 8px;">
+                            <strong style="color: var(--pdca-blue); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 10px;">A. O CASO DE SANTA CATARINA (Indústria de Couros)</strong>
+                            <p style="font-size: 1.15rem; color: var(--text-main); margin-bottom: 10px;">Este é um exemplo clássico de como a contabilidade tradicional engana o gestor.</p>
+                            <ul style="list-style: none; padding-left: 0; color: var(--text-main); font-size: 1.1rem; line-height: 1.7;">
+                                <li><strong style="color: var(--toc-red);">A Armadilha:</strong> O Produto A parece melhor porque dá mais lucro por unidade (R$ 38,15).</li>
+                                <li><strong style="color: var(--flow-green);">A Visão TOC:</strong> O Produto C é o campeão. Por quê? Porque ele passa muito mais rápido pelo gargalo (ocupa menos espaço/tempo).</li>
+                            </ul>
+                            <div style="background: rgba(0, 229, 255, 0.05); padding: 15px; border-radius: 4px; border-left: 3px solid var(--pdca-blue); margin-top: 15px;">
+                                <strong style="color: var(--pdca-blue);">CONCLUSÃO:</strong> É melhor vender algo que dá um lucro menor, mas que flui rápido, do que algo com margem alta que "entope" a sua operação. O que importa é o <strong>Ganho por minuto no gargalo</strong>.
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255, 255, 255, 0.1); border-top: 4px solid var(--meli-yellow); padding: 30px; border-radius: 8px;">
+                            <strong style="color: var(--meli-yellow); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 10px;">B. O CASO DA GOLDRATT UK (Distribuidoras Britânicas)</strong>
+                            <p style="font-size: 1.15rem; color: var(--text-main); margin-bottom: 10px;">Empresas como Birkdale e Autoline aplicaram o POOGI (Os 5 Passos) e tiveram resultados rápidos em apenas 6 semanas:</p>
+                            <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 15px;">
+                                <div style="flex: 1; background: rgba(255, 230, 0, 0.05); padding: 20px; border-radius: 4px; text-align: center; border: 1px solid rgba(255,230,0,0.2);">
+                                    <strong style="font-size: 2.5rem; color: var(--white-clean); display: block; font-family: var(--font-display);">65%</strong>
+                                    <span style="color: var(--text-muted); font-size: 1.1rem;">Aumento na velocidade de picking</span>
+                                </div>
+                                <div style="flex: 1; background: rgba(255, 230, 0, 0.05); padding: 20px; border-radius: 4px; text-align: center; border: 1px solid rgba(255,230,0,0.2);">
+                                    <strong style="font-size: 2.5rem; color: var(--white-clean); display: block; font-family: var(--font-display);">15 <span style="font-size: 1.5rem;">para</span> 50</strong>
+                                    <span style="color: var(--text-muted); font-size: 1.1rem;">Itens apanhados por hora (UPH)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255, 255, 255, 0.1); border-top: 4px solid var(--flow-green); padding: 30px; border-radius: 8px;">
+                            <strong style="color: var(--flow-green); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 10px;">C. CASOS INTERNACIONAIS (Escandinávia e EUA)</strong>
+                            <ul style="list-style: none; padding-left: 0; color: var(--text-main); font-size: 1.15rem; line-height: 1.8;">
+                                <li style="margin-bottom: 15px;"><strong style="color: var(--white-clean);">Harald Pihl (Suécia):</strong> Provou que não adianta comprar tecnologias modernas se você não souber onde aplicá-las. A TOC ajudou a focar o investimento <strong>exatamente onde o fluxo travava</strong>.</li>
+                                <li><strong style="color: var(--white-clean);">EUA (Eletrodomésticos):</strong> O problema era o software de gestão (WMS) que não sabia priorizar. A TOC reorganizou a lógica do sistema para destravar a expedição final.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-cds">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(255, 230, 0, 0.1); border-color: var(--meli-yellow); color: var(--meli-yellow); box-shadow: 0 0 25px rgba(255, 230, 0, 0.3);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--white-clean);">SEÇÃO 13 // A TOC NOS CDS (OSASCO E CAJAMAR)</h2>
+                    </div>
+
+                    <p style="font-size: 1.25rem;">Em locais com densidade "astronômica" como os CDs de Osasco e Cajamar, <strong>o fluxo é tudo</strong>. Veja como os 5 Passos de Focalização são aplicados na prática pela engenharia do Mercado Livre:</p>
+
+                    <div style="text-align: center; font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 20px; letter-spacing: 2px;">
+                        [ CLIQUE NAS FASES DO FLUXO ABAIXO PARA INSPECIONAR ]
+                    </div>
+
+                    <div style="background: var(--bg-absolute); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden; margin-bottom: 4rem;">
+                        
+                        <div style="display: flex; border-bottom: 1px solid rgba(255,255,255,0.1); overflow-x: auto;">
+                            <button class="tab-btn active" onclick="openTab(event, 'tab-1')" style="flex: 1; padding: 15px; background: rgba(255, 42, 42, 0.1); border: none; border-bottom: 3px solid var(--toc-red); color: var(--white-clean); font-family: var(--font-display); cursor: pointer; min-width: 150px;">1. IDENTIFICAR</button>
+                            <button class="tab-btn" onclick="openTab(event, 'tab-2')" style="flex: 1; padding: 15px; background: transparent; border: none; border-bottom: 3px solid transparent; color: var(--text-muted); font-family: var(--font-display); cursor: pointer; min-width: 150px;">2. EXPLORAR</button>
+                            <button class="tab-btn" onclick="openTab(event, 'tab-3')" style="flex: 1; padding: 15px; background: transparent; border: none; border-bottom: 3px solid transparent; color: var(--text-muted); font-family: var(--font-display); cursor: pointer; min-width: 150px;">3. SUBORDINAR</button>
+                            <button class="tab-btn" onclick="openTab(event, 'tab-4')" style="flex: 1; padding: 15px; background: transparent; border: none; border-bottom: 3px solid transparent; color: var(--text-muted); font-family: var(--font-display); cursor: pointer; min-width: 150px;">4. ELEVAR</button>
+                            <button class="tab-btn" onclick="openTab(event, 'tab-5')" style="flex: 1; padding: 15px; background: transparent; border: none; border-bottom: 3px solid transparent; color: var(--text-muted); font-family: var(--font-display); cursor: pointer; min-width: 150px;">5. INÉRCIA</button>
+                        </div>
+
+                        <div style="padding: 30px; min-height: 200px; display: flex; align-items: center;">
+                            
+                            <div id="tab-1" class="tab-content" style="display: block; animation: fade-in 0.4s;">
+                                <strong style="color: var(--toc-red); font-size: 1.4rem; display: block; margin-bottom: 10px;">PASSO 1: IDENTIFICAR O GARGALO (INBOUND)</strong>
+                                <p style="font-size: 1.2rem; color: var(--text-main); margin: 0;">Se há filas de caminhões do lado de fora e funcionários "parados" ou sem ritmo lá dentro, o problema está no Recebimento (Inbound). Ele é o gargalo que impede o dinheiro (ganho) de entrar no sistema.</p>
+                            </div>
+
+                            <div id="tab-2" class="tab-content" style="display: none; animation: fade-in 0.4s;">
+                                <strong style="color: var(--meli-yellow); font-size: 1.4rem; display: block; margin-bottom: 10px;">PASSO 2: EXPLORAR O GARGALO (AGENDAMENTO)</strong>
+                                <p style="font-size: 1.2rem; color: var(--text-main); margin: 0;">O Mercado Livre não é "chato" com horários por capricho. O agendamento eletrônico e as multas para quem atrasa servem para garantir que a doca (o gargalo) nunca fique ociosa nem congestionada. Isso é explorar a restrição ao máximo sem gastar um centavo a mais em obras.</p>
+                            </div>
+
+                            <div id="tab-3" class="tab-content" style="display: none; animation: fade-in 0.4s;">
+                                <strong style="color: var(--flow-green); font-size: 1.4rem; display: block; margin-bottom: 10px;">PASSO 3: SUBORDINAR O RESTANTE (SINCRONIA)</strong>
+                                <p style="font-size: 1.2rem; color: var(--text-main); margin: 0;">O ritmo de separação (picking) e as transportadoras de saída (Rope/Corda) devem trabalhar no ritmo do que o Inbound consegue processar. Não adianta ter mil pessoas para separar pedidos se a mercadoria não entrou no sistema ainda.</p>
+                            </div>
+
+                            <div id="tab-4" class="tab-content" style="display: none; animation: fade-in 0.4s;">
+                                <strong style="color: var(--pdca-blue); font-size: 1.4rem; display: block; margin-bottom: 10px;">PASSO 4: ELEVAR A RESTRIÇÃO (EXPANSÃO BILIONÁRIA)</strong>
+                                <p style="font-size: 1.2rem; color: var(--text-main); margin: 0;">Quando a eficiência máxima é atingida e o gargalo ainda trava o crescimento, o MELI investe bilhões para construir novos mega-polos. Isso é elevar a capacidade do sistema com aporte de capital.</p>
+                            </div>
+
+                            <div id="tab-5" class="tab-content" style="display: none; animation: fade-in 0.4s;">
+                                <strong style="color: var(--white-clean); font-size: 1.4rem; display: block; margin-bottom: 10px;">PASSO 5: EVITAR A INÉRCIA (A RESTRIÇÃO MIGRANTE)</strong>
+                                <p style="font-size: 1.2rem; color: var(--text-main); margin: 0;">Assim que o recebimento em Osasco fica rápido, o gargalo muda. Agora o problema passa a ser o Last-Mile (Última Milha) — as vans e aviões de entrega. O gestor deve recomeçar o ciclo imediatamente.</p>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <script>
+                        function openTab(evt, tabName) {
+                            var i, tabcontent, tablinks;
+                            tabcontent = document.getElementsByClassName("tab-content");
+                            for (i = 0; i < tabcontent.length; i++) { tabcontent[i].style.display = "none"; }
+                            tablinks = document.getElementsByClassName("tab-btn");
+                            for (i = 0; i < tablinks.length; i++) {
+                                tablinks[i].className = tablinks[i].className.replace(" active", "");
+                                tablinks[i].style.background = "transparent";
+                                tablinks[i].style.color = "var(--text-muted)";
+                                tablinks[i].style.borderBottomColor = "transparent";
+                            }
+                            document.getElementById(tabName).style.display = "block";
+                            evt.currentTarget.className += " active";
+                            
+                            // Cores Dinâmicas por Aba
+                            let color = 'var(--white-clean)';
+                            let bg = 'rgba(255,255,255,0.1)';
+                            if(tabName === 'tab-1') { color = 'var(--toc-red)'; bg = 'rgba(255, 42, 42, 0.1)'; }
+                            if(tabName === 'tab-2') { color = 'var(--meli-yellow)'; bg = 'rgba(255, 230, 0, 0.1)'; }
+                            if(tabName === 'tab-3') { color = 'var(--flow-green)'; bg = 'rgba(0, 230, 118, 0.1)'; }
+                            if(tabName === 'tab-4') { color = 'var(--pdca-blue)'; bg = 'rgba(0, 229, 255, 0.1)'; }
+                            
+                            evt.currentTarget.style.color = 'var(--white-clean)';
+                            evt.currentTarget.style.borderBottomColor = color;
+                            evt.currentTarget.style.background = bg;
+                        }
+                    </script>
+                </section>
+                <section class="tech-panel" id="section-problem-solver" style="border-color: rgba(0, 229, 255, 0.3);">
+                    <h3 class="topic-header" style="color: var(--pdca-blue); font-size: 1.8rem; border-bottom: 1px solid rgba(0,229,255,0.3); padding-bottom: 10px;">O PAPEL DO "PROBLEM SOLVER" NO MERCADO LIVRE</h3>
+                    
+                    <p style="font-size: 1.25rem;">O cargo de Problem Solver no MELI não é para quem apenas "apaga incêndios". É uma posição de <strong>engenharia cognitiva</strong>.</p>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 2rem 0;">
+                        <div style="background: rgba(255, 42, 42, 0.05); padding: 25px; border-radius: 6px; border-left: 4px solid var(--toc-red);">
+                            <strong style="color: var(--toc-red); display: block; margin-bottom: 10px; font-family: var(--font-display); font-size: 1.2rem;">A ARMADILHA DO "BOMBEIRO"</strong>
+                            <p style="font-size: 1.15rem; color: var(--text-main); margin: 0;">O profissional comum vê uma avaria ou um erro de etiqueta e apenas conserta o pacote. Isso é tratar o sintoma.</p>
+                        </div>
+                        <div style="background: rgba(0, 230, 118, 0.05); padding: 25px; border-radius: 6px; border-left: 4px solid var(--flow-green);">
+                            <strong style="color: var(--flow-green); display: block; margin-bottom: 10px; font-family: var(--font-display); font-size: 1.2rem;">A VISÃO DO PROBLEM SOLVER</strong>
+                            <p style="font-size: 1.15rem; color: var(--text-main); margin: 0;">Ele usa ferramentas como a Árvore da Realidade Atual (CRT) para entender <em>por que</em> aquela etiqueta está saindo errada e busca a causa raiz.</p>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; margin: 3rem 0; font-family: var(--font-mono); color: var(--text-muted); letter-spacing: 2px;">
+                        [ PASSE O RATO NAS LINHAS ABAIXO PARA COMPARAR OS PERFIS ]
+                    </div>
+
+                    <div style="background: var(--bg-absolute); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden; box-shadow: 0 15px 30px rgba(0,0,0,0.5);">
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 2fr 2fr; background: rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.1);">
+                            <div style="padding: 20px; font-family: var(--font-display); color: var(--white-clean); font-weight: bold; border-right: 1px solid rgba(255,255,255,0.1);">CARACTERÍSTICA</div>
+                            <div style="padding: 20px; font-family: var(--font-display); color: var(--toc-red); font-weight: bold; border-right: 1px solid rgba(255,255,255,0.1); text-align: center;">LOGÍSTICO REATIVO (FIREFIGHTER)</div>
+                            <div style="padding: 20px; font-family: var(--font-display); color: var(--flow-green); font-weight: bold; text-align: center;">PROBLEM SOLVER (TOC)</div>
+                        </div>
+
+                        <div class="compare-row" style="display: grid; grid-template-columns: 1fr 2fr 2fr; border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.03)';" onmouseout="this.style.background='transparent';">
+                            <div style="padding: 20px; font-family: var(--font-mono); color: var(--pdca-blue); font-weight: bold; border-right: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center;">FOCO</div>
+                            <div style="padding: 20px; color: var(--text-main); font-size: 1.1rem; border-right: 1px solid rgba(255,255,255,0.05);">Sintomas (pacote parado, erro no código)</div>
+                            <div style="padding: 20px; color: var(--white-clean); font-size: 1.1rem; font-weight: bold;">Causa Raiz (por que o fluxo travou?)</div>
+                        </div>
+
+                        <div class="compare-row" style="display: grid; grid-template-columns: 1fr 2fr 2fr; border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.03)';" onmouseout="this.style.background='transparent';">
+                            <div style="padding: 20px; font-family: var(--font-mono); color: var(--pdca-blue); font-weight: bold; border-right: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center;">AÇÃO</div>
+                            <div style="padding: 20px; color: var(--text-main); font-size: 1.1rem; border-right: 1px solid rgba(255,255,255,0.05);">Remendos pontuais e urgentes</div>
+                            <div style="padding: 20px; color: var(--white-clean); font-size: 1.1rem; font-weight: bold;">Melhoria no processo e na regra (Injeção)</div>
+                        </div>
+
+                        <div class="compare-row" style="display: grid; grid-template-columns: 1fr 2fr 2fr; border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.03)';" onmouseout="this.style.background='transparent';">
+                            <div style="padding: 20px; font-family: var(--font-mono); color: var(--pdca-blue); font-weight: bold; border-right: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center;">VISÃO</div>
+                            <div style="padding: 20px; color: var(--text-main); font-size: 1.1rem; border-right: 1px solid rgba(255,255,255,0.05);">Local (o seu setor)</div>
+                            <div style="padding: 20px; color: var(--white-clean); font-size: 1.1rem; font-weight: bold;">Global (o Ganho de toda a rede)</div>
+                        </div>
+
+                        <div class="compare-row" style="display: grid; grid-template-columns: 1fr 2fr 2fr; transition: 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.03)';" onmouseout="this.style.background='transparent';">
+                            <div style="padding: 20px; font-family: var(--font-mono); color: var(--pdca-blue); font-weight: bold; border-right: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center;">FERRAMENTA</div>
+                            <div style="padding: 20px; color: var(--text-main); font-size: 1.1rem; border-right: 1px solid rgba(255,255,255,0.05);">Intuição e esforço físico</div>
+                            <div style="padding: 20px; color: var(--white-clean); font-size: 1.1rem; font-weight: bold;">Árvores Lógicas e Métricas de Ganho</div>
+                        </div>
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-conclusao">
+                    <div style="background: rgba(0,0,0,0.8); border: 1px solid var(--flow-green); padding: 40px; border-radius: 8px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 30px rgba(0, 230, 118, 0.05);">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 60px; height: 60px; color: var(--flow-green); margin-bottom: 20px;"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
+                        
+                        <h3 style="font-family: var(--font-display); font-size: 2rem; color: var(--white-clean); margin-bottom: 20px; letter-spacing: 2px;">PARA ATUAR EM ALTA PERFORMANCE</h3>
+                        
+                        <p style="font-size: 1.3rem; color: var(--text-main); max-width: 900px; margin: 0 auto; line-height: 1.8;">
+                            No Mercado Livre ou em qualquer gigante do e-commerce, o verdadeiro impacto na carreira acontece quando você deixa de ser um executor de tarefas repetitivas e passa a ser um <strong>consultor estratégico interno</strong>.
+                        </p>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 30px; text-align: left; max-width: 800px; margin-left: auto; margin-right: auto;">
+                            <div style="background: rgba(0, 230, 118, 0.05); padding: 15px 25px; border-radius: 4px; border-left: 4px solid var(--flow-green); display: flex; align-items: center; gap: 15px;">
+                                <span style="font-size: 1.5rem;">👁️</span>
+                                <span style="font-size: 1.2rem; color: var(--white-clean);">Enxergar o fluxo de ponta a ponta, não apenas as caixas.</span>
+                            </div>
+                            <div style="background: rgba(255, 42, 42, 0.05); padding: 15px 25px; border-radius: 4px; border-left: 4px solid var(--toc-red); display: flex; align-items: center; gap: 15px;">
+                                <span style="font-size: 1.5rem;">🛡️</span>
+                                <span style="font-size: 1.2rem; color: var(--white-clean);">Proteger o gargalo (ele é quem manda no faturamento do dia).</span>
+                            </div>
+                            <div style="background: rgba(0, 229, 255, 0.05); padding: 15px 25px; border-radius: 4px; border-left: 4px solid var(--pdca-blue); display: flex; align-items: center; gap: 15px;">
+                                <span style="font-size: 1.5rem;">🧠</span>
+                                <span style="font-size: 1.2rem; color: var(--white-clean);">Usar a lógica para provar que, às vezes, "parar um setor" é o que faz a empresa ganhar mais dinheiro.</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div> <footer style="margin-top: auto; padding: 2rem 5rem; background: var(--bg-panel-deep); border-top: 1px solid var(--border-toc); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; box-shadow: 0 -15px 40px rgba(0,0,0,0.8);">
+                
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                    <span style="font-family: var(--font-display); font-size: 1.4rem; color: var(--white-clean); letter-spacing: 2px;">
+                        MELI <span style="color: var(--meli-yellow); text-shadow: 0 0 15px rgba(255,230,0,0.5);">PDI</span>
+                    </span>
+                    <span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); letter-spacing: 3px;">
+                        LOGISTICS DOCUMENTATION // TOC_SYS_V3.0
+                    </span>
+                </div>
+
+                <div style="display: flex; gap: 40px; font-family: var(--font-code); font-size: 0.85rem;">
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <span style="color: var(--toc-red); text-shadow: 0 0 10px rgba(255,42,42,0.5);">BOTTLENECK IDENTIFIER</span>
+                        <span style="color: var(--text-main);">ONLINE</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <span style="color: var(--flow-green); text-shadow: 0 0 10px rgba(0,230,118,0.5);">THROUGHPUT ENGINE</span>
+                        <span style="color: var(--text-main);">OPTIMIZED</span>
+                    </div>
+                </div>
+
+                <div style="text-align: right; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); letter-spacing: 2px;">
+                    <span style="color: var(--toc-red);">[ PROBLEM SOLVER SECURE CONNECTION ]</span><br>
+                    TERMINAL_ID: CAJAMAR_CD // 2026
+                </div>
+
+            </footer>
+        </main> </div> <script>
+        // Animações de Entrada (Scroll Reveal)
+        document.addEventListener('DOMContentLoaded', () => {
+            const panels = document.querySelectorAll('.tech-panel, .hero-section');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if(entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0) scale(1)';
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            panels.forEach(panel => {
+                panel.style.opacity = '0';
+                panel.style.transform = 'translateY(40px) scale(0.98)';
+                panel.style.transition = 'all 0.7s cubic-bezier(0.2, 0.8, 0.2, 1)';
+                observer.observe(panel);
+            });
+        });
+        
+        // Keyframes CSS dinâmicos inseridos via JS para animações específicas
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @keyframes fade-in {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

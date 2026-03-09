@@ -1,0 +1,1415 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meli PDI - Putwall & Consolidation System</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ==========================================================================
+           01. PUTWALL SYSTEM CORE VARIABLES - THE SMART HIVE
+           ========================================================================== */
+        :root {
+            /* --- PALETA NEON PUTWALL (COLMEIA / SINCRONIZAÇÃO) --- */
+            --neon-yellow: #FFD400;         /* Amarelo Neon Principal - Put-to-Light */
+            --neon-yellow-glow: rgba(255, 212, 0, 0.6);
+            --neon-yellow-dim: rgba(255, 212, 0, 0.15);
+            --neon-yellow-dark: rgba(255, 212, 0, 0.05);
+            
+            --neon-amber: #FFC107;          /* Âmbar - Variações de nicho e alertas */
+            --neon-amber-glow: rgba(255, 193, 7, 0.5);
+            --neon-amber-dim: rgba(255, 193, 7, 0.15);
+            
+            --neon-orange: #FF6D00;         /* Laranja - Problem Solver / Travamentos */
+            --status-green: #00FF66;        /* Sucesso / Lado Pack Liberado */
+            --status-red: #FF003C;          /* Erro Crítico / Dwell Time Estourado */
+            --status-blue: #00E5FF;         /* WMS System Core / Conexão de Dados */
+
+            /* --- BACKGROUNDS PROFUNDOS (ESTRUTURA METÁLICA/DIGITAL) --- */
+            --bg-absolute: #0A0800;         /* Fundo master - Preto com toque de âmbar escuro */
+            --bg-surface: #120F02;          /* Fundo de painéis e colmeias base */
+            --bg-layer-2: #1A1504;          /* Elevação intermediária de nichos */
+            --bg-layer-3: #261F08;          /* Hover states e painéis de foco */
+            
+            /* --- GLASSMORPHISM & MATERIAIS DE NICHOS --- */
+            --glass-bg: rgba(18, 15, 2, 0.85);
+            --glass-border: rgba(255, 212, 0, 0.2);
+            --glass-border-strong: rgba(255, 212, 0, 0.5);
+            --glass-orange-border: rgba(255, 109, 0, 0.3);
+            
+            /* --- TIPOGRAFIA --- */
+            --font-display: 'Orbitron', sans-serif;      /* Títulos e Identificadores de Nicho */
+            --font-main: 'Rajdhani', sans-serif;         /* Leitura Fluida e Descrições */
+            --font-mono: 'Share Tech Mono', monospace;   /* Códigos, LPNs, UPH e Métricas */
+
+            /* --- CORES DE TEXTO --- */
+            --text-pure: #FFFFFF;
+            --text-main: #FFF8E1;           /* Branco com leve tom quente */
+            --text-muted: #BCAAA4;          /* Cinza quente para dados secundários */
+            --text-data: #FFE082;           /* Amarelo pálido para métricas */
+
+            /* --- GRID E MEDIDAS ESTRUTURAIS --- */
+            --sidebar-width: 320px;
+            --topbar-height: 85px;
+            --container-max: 1600px;        /* Putwall precisa de telas largas */
+            
+            /* --- BORDAS E SOMBRAS (ILUMINAÇÃO DE NICHOS) --- */
+            --radius-xl: 16px;
+            --radius-lg: 12px;
+            --radius-md: 8px;
+            --radius-sm: 4px;
+            
+            --shadow-glass: 0 15px 45px rgba(0, 0, 0, 0.9);
+            --shadow-neon-yellow: 0 0 25px var(--neon-yellow-dim);
+            --shadow-neon-amber: 0 0 20px var(--neon-amber-dim);
+
+            /* --- TRANSIÇÕES FLUIDAS (VELOCIDADE DE BIPAGEM) --- */
+            --trans-instant: 0.1s ease-out;  /* Resposta imediata do scanner */
+            --trans-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --trans-smooth: 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            --trans-bounce: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+            /* --- Z-INDEX LAYERS --- */
+            --z-bg: -20;
+            --z-grid: -10;
+            --z-base: 1;
+            --z-content: 10;
+            --z-topbar: 40;
+            --z-sidebar: 50;
+            --z-light: 90;
+            --z-modal: 100;
+        }
+
+        /* ==========================================================================
+           02. GLOBAL RESET & BASE SETTINGS
+           ========================================================================== */
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-absolute);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+        }
+
+        /* CUSTOM SCROLLBAR - ESTILO NICHOS PUTWALL */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-absolute);
+            border-left: 1px solid rgba(255, 212, 0, 0.1);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--neon-yellow-dim);
+            border-radius: 2px;
+            border: 1px solid var(--neon-amber-dim);
+            transition: var(--trans-fast);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--neon-yellow);
+            box-shadow: 0 0 15px var(--neon-yellow);
+        }
+
+        /* ==========================================================================
+           03. TEXT UTILITIES & LIGHT INDICATORS
+           ========================================================================== */
+        .text-yellow { color: var(--neon-yellow); text-shadow: 0 0 10px var(--neon-yellow-glow); font-weight: 700; }
+        .text-amber { color: var(--neon-amber); text-shadow: 0 0 10px var(--neon-amber-glow); font-weight: 700; }
+        .text-orange { color: var(--neon-orange); text-shadow: 0 0 10px rgba(255, 109, 0, 0.6); font-weight: 700; }
+        .text-green { color: var(--status-green); text-shadow: 0 0 10px var(--status-green); font-weight: 700; }
+        .text-red { color: var(--status-red); text-shadow: 0 0 10px var(--status-red); font-weight: 700; }
+        .text-blue { color: var(--status-blue); text-shadow: 0 0 10px rgba(0,229,255,0.6); font-weight: 700; }
+        
+        .text-mono { font-family: var(--font-mono); letter-spacing: 1.5px; text-transform: uppercase; }
+        .text-muted { color: var(--text-muted); }
+
+        /* ==========================================================================
+           04. ADVANCED BACKGROUND (THE SMART HIVE / HONEYCOMB GRID)
+           ========================================================================== */
+        /* Fundo Master com Gradiente Radial (Foco de Luz no Centro) */
+        #putwall-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: var(--z-bg);
+            background: radial-gradient(circle at 50% 50%, var(--bg-surface) 0%, var(--bg-absolute) 80%);
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        /* Padrão SVG Codificado - Colmeia Hexagonal (Honeycomb) */
+        #putwall-bg::before {
+            content: "";
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='103.92304845413264' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 103.92304845413264L60 86.60254037844386L60 51.96152422706632L30 34.64101615137754L0 51.96152422706632L0 86.60254037844386Z' fill='none' stroke='rgba(255, 212, 0, 0.03)' stroke-width='1'/%3E%3Cpath d='M30 51.96152422706632L60 34.64101615137754L60 0L30 -17.32050807568877L0 0L0 34.64101615137754Z' fill='none' stroke='rgba(255, 212, 0, 0.03)' stroke-width='1'/%3E%3C/svg%3E");
+            background-size: 80px 138.56px;
+            transform: perspective(1000px) rotateX(45deg) translateY(-100px);
+            animation: hiveBreathe 30s linear infinite;
+            z-index: var(--z-grid);
+        }
+
+        /* Varredura Horizontal de Sincronização do Putwall */
+        .put-to-light-scan {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(180deg, transparent 0%, rgba(255, 212, 0, 0.05) 50%, transparent 100%);
+            background-size: 100% 200%;
+            opacity: 0.5;
+            z-index: var(--z-grid);
+            pointer-events: none;
+            animation: lightScanSweep 8s ease-in-out infinite alternate;
+        }
+
+        /* ==========================================================================
+           05. GLOBAL KEYFRAMES (PUT-TO-LIGHT ANIMATIONS)
+           ========================================================================== */
+        @keyframes hiveBreathe {
+            0% { transform: perspective(1000px) rotateX(45deg) translateY(-100px) scale(1); }
+            50% { transform: perspective(1000px) rotateX(45deg) translateY(0px) scale(1.05); }
+            100% { transform: perspective(1000px) rotateX(45deg) translateY(-100px) scale(1); }
+        }
+
+        @keyframes lightScanSweep {
+            0% { background-position: 0% -100%; }
+            100% { background-position: 0% 200%; }
+        }
+
+        @keyframes putLightFlash {
+            0%, 100% { box-shadow: 0 0 15px var(--neon-yellow-dim); border-color: var(--glass-border); background: var(--glass-bg); }
+            50% { box-shadow: 0 0 40px var(--neon-yellow), inset 0 0 30px var(--neon-yellow-dim); border-color: var(--neon-yellow); background: rgba(255, 212, 0, 0.1); }
+        }
+
+        @keyframes packSideUnlock {
+            0% { border-color: var(--neon-yellow); box-shadow: inset 0 0 20px var(--neon-yellow-dim); }
+            100% { border-color: var(--status-green); box-shadow: inset 0 0 30px rgba(0, 255, 102, 0.2); }
+        }
+        /* ==========================================================================
+           06. SMART HIVE TYPOGRAPHY (READABILITY AT DISTANCE)
+           ========================================================================== */
+        h1, h2, h3, h4, h5 {
+            font-family: var(--font-display);
+            font-weight: 700;
+            color: var(--text-pure);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        h1 { font-size: 3.5rem; line-height: 1.1; margin-bottom: 1rem; }
+        h2 { font-size: 2.5rem; border-left: 5px solid var(--neon-yellow); padding-left: 20px; margin-bottom: 2rem; }
+        h3 { font-size: 1.6rem; color: var(--neon-yellow); margin-bottom: 1rem; }
+
+        p {
+            font-family: var(--font-main);
+            font-size: 1.2rem;
+            color: var(--text-main);
+            margin-bottom: 1.2rem;
+            text-align: left;
+            line-height: 1.7;
+        }
+
+        /* Tags de Iluminação e Interface */
+        .light-badge {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--bg-absolute);
+            background: var(--neon-yellow);
+            padding: 4px 12px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--glass-border-strong);
+            margin-right: 8px;
+            display: inline-block;
+            box-shadow: 0 0 10px var(--neon-yellow-dim);
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        a { text-decoration: none; color: inherit; transition: var(--trans-fast); }
+        ul, ol { list-style: none; }
+
+        /* ==========================================================================
+           07. SYS-SIDEBAR: CONSOLE DE CONSOLIDAÇÃO (PUTWALL)
+           ========================================================================== */
+        .sys-sidebar {
+            position: fixed;
+            top: 0; left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-right: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            z-index: var(--z-sidebar);
+            box-shadow: 15px 0 40px rgba(0, 0, 0, 0.9), inset -2px 0 20px rgba(255, 212, 0, 0.05);
+            transition: var(--trans-bounce);
+        }
+
+        /* Header do Logo PUTWALL */
+        .sidebar-header {
+            height: var(--topbar-height);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+            background: linear-gradient(to bottom, rgba(255, 212, 0, 0.08), transparent);
+            position: relative;
+        }
+
+        .sidebar-header::after {
+            content: "SMART_HIVE_SYNC";
+            position: absolute;
+            bottom: -9px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--neon-yellow);
+            letter-spacing: 3px;
+            background: var(--bg-absolute);
+            padding: 2px 15px;
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            box-shadow: 0 0 10px var(--neon-yellow-dim);
+        }
+
+        .brand-logo-mini {
+            font-family: var(--font-display);
+            font-size: 1.7rem;
+            font-weight: 900;
+            display: flex;
+            gap: 8px;
+            letter-spacing: 1px;
+        }
+
+        .brand-logo-mini .m { color: var(--text-pure); }
+        .brand-logo-mini .p { color: var(--neon-yellow); text-shadow: 0 0 15px var(--neon-yellow-glow); }
+
+        /* Menu de Navegação - Estrutura da Parede */
+        .sidebar-nav {
+            flex-grow: 1;
+            padding: 3rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            overflow-y: auto;
+        }
+
+        .nav-category {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            margin: 1.5rem 0 0.5rem 0.5rem;
+            font-weight: 700;
+        }
+
+        .nav-category:first-child { margin-top: 0; }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.2rem;
+            color: var(--text-data);
+            font-size: 1.05rem;
+            font-weight: 600;
+            border-radius: var(--radius-md);
+            border: 1px solid transparent;
+            transition: var(--trans-smooth);
+            position: relative;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0;
+            height: 100%; width: 3px;
+            background: var(--neon-yellow);
+            transform: scaleY(0);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-origin: bottom;
+        }
+
+        .nav-item:hover {
+            border-color: rgba(255, 212, 0, 0.2);
+            color: var(--neon-yellow);
+            background: linear-gradient(90deg, rgba(255, 212, 0, 0.1), transparent);
+            transform: translateX(8px);
+        }
+
+        .nav-item:hover::before { transform: scaleY(1); background: var(--neon-yellow); box-shadow: 0 0 15px var(--neon-yellow); }
+
+        .nav-item.active {
+            border-color: var(--neon-yellow);
+            background: var(--neon-yellow-dark);
+            color: var(--neon-yellow);
+            box-shadow: inset 0 0 20px var(--neon-yellow-dim);
+        }
+
+        .nav-item.active::before { transform: scaleY(1); box-shadow: 0 0 15px var(--neon-yellow); }
+
+        /* Link de Alerta: Problem Solver */
+        .nav-item.ps-link:hover {
+            border-color: rgba(255, 109, 0, 0.3);
+            color: var(--neon-orange);
+            background: linear-gradient(90deg, rgba(255, 109, 0, 0.1), transparent);
+        }
+        .nav-item.ps-link:hover::before { background: var(--neon-orange); box-shadow: 0 0 15px var(--neon-orange); }
+
+        .nav-icon {
+            width: 22px; height: 22px; margin-right: 15px;
+            stroke: currentColor; stroke-width: 2; fill: none; z-index: 1;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-item:hover .nav-icon { transform: scale(1.1) rotate(5deg); }
+        .nav-item span { z-index: 1; font-family: var(--font-main); letter-spacing: 0.5px; }
+
+        /* Rodapé do Operador (Wall Status) */
+        .sidebar-footer {
+            padding: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .putwall-avatar {
+            width: 45px; height: 45px;
+            background: var(--bg-layer-2);
+            border: 2px solid var(--neon-yellow);
+            border-radius: var(--radius-sm);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--neon-yellow);
+            font-family: var(--font-mono); font-weight: 900; font-size: 1.2rem;
+            box-shadow: 0 0 15px var(--neon-yellow-dim);
+        }
+
+        .user-info { display: flex; flex-direction: column; }
+        .user-name { color: var(--text-pure); font-size: 0.95rem; font-weight: 700; letter-spacing: 1px; }
+        .user-role { color: var(--neon-amber); font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 2px; }
+        /* ==========================================================================
+           08. TOPBAR: WALL TELEMETRY MONITOR
+           ========================================================================== */
+        .sys-topbar {
+            height: var(--topbar-height);
+            position: fixed;
+            top: 0; right: 0;
+            width: calc(100% - var(--sidebar-width));
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 4rem;
+            border-bottom: 1px solid rgba(255, 212, 0, 0.15);
+            background: rgba(10, 8, 0, 0.85);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            z-index: var(--z-topbar);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            transition: var(--trans-smooth);
+        }
+
+        .wall-telemetry {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            display: flex;
+            gap: 25px;
+            align-items: center;
+            letter-spacing: 2px;
+            background: rgba(255, 212, 0, 0.03);
+            padding: 10px 25px;
+            border-radius: 40px;
+            border: 1px solid rgba(255, 212, 0, 0.2);
+            box-shadow: inset 0 0 15px rgba(255, 212, 0, 0.05);
+        }
+
+        .light-dot {
+            width: 10px; height: 10px;
+            background: var(--neon-yellow);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 10px var(--neon-yellow);
+            animation: lightPulse 1.5s infinite alternate;
+        }
+
+        @keyframes lightPulse {
+            0% { opacity: 0.5; box-shadow: 0 0 5px var(--neon-yellow); }
+            100% { opacity: 1; box-shadow: 0 0 15px var(--neon-yellow), 0 0 30px var(--neon-yellow-glow); }
+        }
+
+        /* ==========================================================================
+           09. MAIN WORKSPACE
+           ========================================================================== */
+        .main-workspace {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 50px 4rem 4rem 4rem;
+            padding-top: calc(var(--topbar-height) + 50px);
+            z-index: var(--z-base);
+            position: relative;
+            min-height: 100vh;
+        }
+
+        /* ==========================================================================
+           10. HERO SECTION (PUTWALL HEADER)
+           ========================================================================== */
+        .hero-section {
+            width: 100%;
+            max-width: var(--container-max);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            margin: 0 auto 6rem auto;
+            scroll-margin-top: calc(var(--topbar-height) + 3rem);
+            position: relative;
+            padding-left: 3rem;
+            border-left: 5px solid var(--neon-yellow);
+            animation: slideInHive 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        .hero-section::before {
+            content: '[WMS_PUTWALL_NODE_ACTIVE]';
+            position: absolute;
+            top: -30px; left: 3rem;
+            font-family: var(--font-mono);
+            color: var(--neon-yellow);
+            font-size: 0.85rem;
+            letter-spacing: 3px;
+            opacity: 0.8;
+            text-shadow: 0 0 5px var(--neon-yellow-glow);
+        }
+
+        .hero-title {
+            font-family: var(--font-display);
+            font-size: clamp(4rem, 6vw, 7rem);
+            font-weight: 900;
+            line-height: 1;
+            letter-spacing: 8px;
+            margin-bottom: 0.5rem;
+            color: transparent;
+            -webkit-text-stroke: 2px var(--neon-yellow);
+            text-shadow: 0 0 25px var(--neon-yellow-glow), inset 0 0 10px var(--neon-yellow-dark);
+            text-transform: uppercase;
+        }
+
+        .hero-title .highlight {
+            color: var(--text-pure);
+            -webkit-text-stroke: 0;
+            text-shadow: 0 0 20px rgba(255,255,255,0.5), 0 0 30px var(--neon-yellow);
+        }
+
+        .hero-subtitle {
+            font-family: var(--font-mono);
+            font-size: 1.6rem;
+            color: var(--neon-amber);
+            text-transform: uppercase;
+            letter-spacing: 6px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-shadow: 0 0 15px var(--neon-amber-glow);
+            margin-top: 15px;
+            background: linear-gradient(90deg, rgba(255, 193, 7, 0.1), transparent);
+            padding: 12px 25px;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            border-left: 3px solid var(--neon-amber);
+            box-shadow: -5px 0 15px rgba(255, 193, 7, 0.1);
+        }
+
+        .hero-desc {
+            font-family: var(--font-main);
+            color: var(--text-muted);
+            font-size: 1.3rem;
+            max-width: 800px;
+            margin-top: 2.5rem;
+            line-height: 1.8;
+            border: 1px dashed rgba(255, 212, 0, 0.3);
+            padding: 2rem;
+            border-radius: var(--radius-md);
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(10px);
+            box-shadow: inset 0 0 20px rgba(255, 212, 0, 0.05);
+        }
+
+        .hero-quote {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            color: var(--neon-yellow);
+            margin-top: 2rem;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px var(--neon-yellow-glow);
+        }
+
+        @keyframes slideInHive {
+            0% { opacity: 0; transform: translateX(-50px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+        /* ==========================================================================
+           11. HIVE GRIDS & SECTION HEADERS
+           ========================================================================== */
+        .content-section {
+            width: 100%;
+            max-width: var(--container-max);
+            margin: 0 auto 7rem auto;
+            scroll-margin-top: calc(var(--topbar-height) + 4rem);
+            position: relative;
+            z-index: var(--z-content);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            margin-bottom: 4rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 1.5rem;
+            position: relative;
+        }
+
+        /* Linha de Conexão (Put-to-Light) no Header */
+        .section-header::after {
+            content: '';
+            position: absolute;
+            bottom: -2px; left: 0;
+            width: 180px; height: 3px;
+            background: linear-gradient(90deg, var(--neon-amber), var(--neon-yellow));
+            box-shadow: 0 0 15px var(--neon-amber), 0 0 20px var(--neon-yellow-glow);
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 2.8rem;
+            color: var(--text-pure);
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 0;
+            text-shadow: 0 0 20px rgba(255, 212, 0, 0.2);
+        }
+
+        .section-title::before {
+            content: '>>_';
+            color: var(--neon-yellow);
+            font-family: var(--font-mono);
+            margin-right: 20px;
+            text-shadow: 0 0 15px var(--neon-yellow-glow);
+        }
+
+        /* Variantes de Títulos (Alerta / Inteligência) */
+        .section-title.alert-title::before { color: var(--neon-orange); text-shadow: 0 0 15px var(--neon-orange); }
+        .section-title.alert-title + .section-header::after { background: var(--neon-orange); box-shadow: 0 0 15px rgba(255, 109, 0, 0.6); }
+
+        .putwall-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 3rem; }
+        .putwall-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.5rem; }
+        .putwall-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; }
+
+        /* ==========================================================================
+           12. HIVE CARDS (GLASSMORPHISM & LIGHTS)
+           ========================================================================== */
+        .hive-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-xl);
+            padding: 3.5rem;
+            box-shadow: var(--shadow-glass), inset 0 0 30px rgba(255, 212, 0, 0.02);
+            position: relative;
+            overflow: hidden;
+            transition: var(--trans-bounce);
+            display: flex;
+            flex-direction: column;
+            z-index: 1;
+        }
+
+        /* Iluminação Interna do Nicho no Hover */
+        .hive-card::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, rgba(255, 212, 0, 0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .hive-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: var(--glass-border-strong);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.9), inset 0 0 40px var(--neon-yellow-dim);
+        }
+
+        .hive-card:hover::after { opacity: 1; }
+
+        .hive-icon {
+            font-size: 3.5rem;
+            margin-bottom: 2rem;
+            color: var(--neon-yellow);
+            filter: drop-shadow(0 0 15px var(--neon-yellow-glow));
+            display: inline-block;
+        }
+
+        .hive-card h3 {
+            font-size: 1.6rem;
+            color: var(--text-pure);
+            margin-bottom: 1.2rem;
+            letter-spacing: 2px;
+            border-bottom: 1px dashed rgba(255,255,255,0.15);
+            padding-bottom: 15px;
+        }
+
+        /* ==========================================================================
+           13. PUT VS PACK (A DIVISÃO DA PAREDE)
+           ========================================================================== */
+        .wall-divider-container {
+            display: flex;
+            align-items: stretch;
+            background: rgba(10, 8, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
+            position: relative;
+            margin-top: 3rem;
+        }
+
+        /* Linha Central (A Parede Física) */
+        .wall-divider-container::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 50%;
+            width: 4px; height: 100%;
+            background: linear-gradient(180deg, transparent, var(--neon-yellow), transparent);
+            transform: translateX(-50%);
+            box-shadow: 0 0 20px var(--neon-yellow);
+            z-index: 5;
+        }
+
+        .wall-side {
+            flex: 1;
+            padding: 4rem;
+            position: relative;
+            transition: var(--trans-smooth);
+        }
+
+        .wall-side.put-side { background: linear-gradient(90deg, rgba(255, 212, 0, 0.05), transparent); }
+        .wall-side.pack-side { background: linear-gradient(270deg, rgba(0, 255, 102, 0.05), transparent); text-align: right; }
+
+        .wall-side:hover { background: rgba(255, 255, 255, 0.02); }
+
+        .side-badge {
+            font-family: var(--font-display);
+            font-size: 1.2rem;
+            padding: 8px 20px;
+            border-radius: var(--radius-sm);
+            display: inline-block;
+            margin-bottom: 2rem;
+            letter-spacing: 2px;
+            font-weight: 700;
+        }
+
+        .put-side .side-badge { color: var(--bg-absolute); background: var(--neon-yellow); box-shadow: 0 0 15px var(--neon-yellow-glow); }
+        .pack-side .side-badge { color: var(--bg-absolute); background: var(--status-green); box-shadow: 0 0 15px rgba(0, 255, 102, 0.5); }
+        /* ==========================================================================
+           14. PROBLEM SOLVER (DESTRAVANDO A PAREDE)
+           ========================================================================== */
+        .ps-zone {
+            background: rgba(26, 10, 0, 0.7);
+            border: 2px solid var(--neon-orange);
+            border-radius: var(--radius-xl);
+            padding: 4rem;
+            position: relative;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.9), inset 0 0 60px rgba(255, 109, 0, 0.1);
+            overflow: hidden;
+        }
+
+        /* Fita de Perigo Laranja (Hazard Tape) */
+        .ps-zone::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 8px;
+            background: repeating-linear-gradient(45deg, var(--neon-orange), var(--neon-orange) 20px, #000 20px, #000 40px);
+            box-shadow: 0 0 15px rgba(255, 109, 0, 0.6);
+        }
+
+        .ps-card {
+            background: rgba(255, 109, 0, 0.03);
+            border: 1px solid rgba(255, 109, 0, 0.2);
+            border-radius: var(--radius-lg);
+            padding: 3rem 2.5rem;
+            transition: var(--trans-smooth);
+            text-align: left;
+            position: relative;
+        }
+
+        .ps-card:hover {
+            background: rgba(255, 109, 0, 0.08);
+            border-color: var(--neon-orange);
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(255, 109, 0, 0.15), inset 0 0 20px rgba(255, 109, 0, 0.1);
+        }
+
+        .ps-icon {
+            font-size: 3rem; color: var(--neon-orange); margin-bottom: 1.5rem;
+            filter: drop-shadow(0 0 10px rgba(255, 109, 0, 0.6));
+        }
+
+        .ps-card h4 { color: var(--text-pure); font-size: 1.4rem; margin-bottom: 1.2rem; letter-spacing: 1px; }
+        .ps-card p { color: var(--text-main); font-size: 1.05rem; }
+
+        .ps-action-btn {
+            display: inline-block; margin-top: 1.5rem; padding: 10px 20px;
+            background: transparent; border: 1px solid var(--neon-orange); color: var(--neon-orange);
+            font-family: var(--font-mono); font-size: 0.9rem; border-radius: var(--radius-sm);
+            text-transform: uppercase; cursor: pointer; transition: var(--trans-fast);
+        }
+        .ps-action-btn:hover { background: var(--neon-orange); color: #000; box-shadow: 0 0 15px var(--neon-orange); }
+
+        /* ==========================================================================
+           15. GOLDEN RULES (REGRAS DE OURO - MURAL)
+           ========================================================================== */
+        .golden-rule-item {
+            background: linear-gradient(180deg, rgba(255, 212, 0, 0.05), transparent);
+            border: 1px solid rgba(255, 212, 0, 0.2);
+            border-top: 3px solid var(--neon-yellow);
+            padding: 2.5rem;
+            border-radius: var(--radius-md);
+            transition: var(--trans-smooth);
+            display: flex; gap: 20px; align-items: flex-start;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .golden-rule-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 0 20px rgba(255, 212, 0, 0.05);
+            background: linear-gradient(180deg, rgba(255, 212, 0, 0.1), transparent);
+        }
+
+        .rule-icon {
+            width: 50px; height: 50px; background: rgba(255, 212, 0, 0.1);
+            border: 1px solid var(--neon-yellow); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--neon-yellow); font-size: 1.5rem; flex-shrink: 0;
+            box-shadow: 0 0 15px var(--neon-yellow-glow);
+            font-weight: bold;
+        }
+
+        .rule-content h4 {
+            color: var(--neon-yellow);
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .rule-content p {
+            font-size: 1rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin: 0;
+        }
+        /* ==========================================================================
+           16. METRICS DASHBOARD (UPH, DWELL TIME, DPMO)
+           ========================================================================== */
+        .metrics-dashboard {
+            background: var(--bg-layer-2);
+            border: 1px solid rgba(255, 212, 0, 0.15);
+            border-radius: var(--radius-xl);
+            padding: 4rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(255, 212, 0, 0.05);
+        }
+
+        .metric-box {
+            background: rgba(10, 8, 0, 0.5);
+            border: 1px dashed rgba(255, 212, 0, 0.2);
+            padding: 2.5rem;
+            border-radius: var(--radius-lg);
+            text-align: center;
+            transition: var(--trans-smooth);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-box:hover {
+            border-color: var(--neon-yellow);
+            background: rgba(255, 212, 0, 0.03);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(255, 212, 0, 0.1);
+        }
+
+        .metric-value {
+            font-family: var(--font-display);
+            font-size: 4.5rem;
+            color: var(--neon-yellow);
+            text-shadow: 0 0 20px var(--neon-yellow-glow);
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+
+        .metric-label {
+            font-family: var(--font-mono);
+            font-size: 1.1rem;
+            color: var(--text-pure);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .metric-desc {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-top: 15px;
+            line-height: 1.4;
+        }
+
+        /* Wall Utilization Indicator */
+        .utilization-container {
+            width: 100%; height: 12px;
+            background: var(--bg-absolute);
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.1);
+            overflow: hidden; margin-top: 15px;
+        }
+        .utilization-bar {
+            height: 100%; width: 75%;
+            background: linear-gradient(90deg, var(--neon-amber), var(--neon-yellow));
+            box-shadow: 0 0 15px var(--neon-yellow-glow);
+            animation: lightPulse 2s infinite alternate;
+        }
+
+        /* ==========================================================================
+           17. DICTIONARY & GLOSSARY (ACCORDIONS)
+           ========================================================================== */
+        .putwall-accordion {
+            background: rgba(18, 15, 2, 0.6);
+            border: 1px solid rgba(255, 212, 0, 0.2);
+            border-radius: var(--radius-md);
+            margin-bottom: 1.2rem;
+            overflow: hidden;
+            transition: var(--trans-smooth);
+        }
+
+        .acc-header {
+            padding: 1.8rem 2.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            color: var(--text-pure);
+            transition: var(--trans-fast);
+        }
+
+        .acc-header:hover { background: rgba(255, 212, 0, 0.05); color: var(--neon-yellow); }
+        .acc-icon { font-family: var(--font-mono); font-size: 1.5rem; color: var(--neon-amber); transition: transform 0.3s ease; }
+
+        .acc-panel {
+            max-height: 0;
+            padding: 0 2.5rem;
+            transition: max-height 0.5s ease, padding 0.5s ease;
+            color: var(--text-main);
+            background: var(--bg-layer-2);
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        .putwall-accordion.active { border-color: var(--neon-yellow); box-shadow: 0 0 25px rgba(255, 212, 0, 0.1); }
+        .putwall-accordion.active .acc-header { color: var(--neon-yellow); border-bottom: 1px dashed rgba(255, 212, 0, 0.2); }
+        .putwall-accordion.active .acc-icon { transform: rotate(45deg); color: var(--neon-yellow); }
+        .putwall-accordion.active .acc-panel { max-height: 400px; padding: 2rem 2.5rem; }
+
+        /* ==========================================================================
+           18. RESPONSIVE DESIGN (MEDIA QUERIES)
+           ========================================================================== */
+        @media (max-width: 1400px) {
+            .hero-title { font-size: 4.5rem; }
+            .putwall-grid-3, .putwall-grid-4 { grid-template-columns: repeat(2, 1fr); }
+            .wall-divider-container { flex-direction: column; }
+            .wall-divider-container::before { width: 100%; height: 4px; top: 50%; left: 0; transform: translateY(-50%); }
+            .wall-side { text-align: left; padding: 3rem; }
+            .wall-side.pack-side { text-align: left; background: linear-gradient(180deg, rgba(0, 255, 102, 0.05), transparent); }
+            .main-workspace { padding: 30px; padding-top: calc(var(--topbar-height) + 30px); }
+        }
+
+        @media (max-width: 1100px) {
+            .putwall-grid-2 { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="putwall-bg"></div>
+    <div class="put-to-light-scan"></div>
+
+    <aside class="sys-sidebar">
+        <div class="sidebar-header">
+            <div class="brand-logo-mini">
+                <span class="m">SMART</span><span class="p">_HIVE</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-category">WMS Wall Routing</div>
+            
+            <a href="#hero" class="nav-item active index-link">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                <span>Painel Global</span>
+            </a>
+            
+            <a href="#conceito" class="nav-item index-link">
+                <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <span>A Lógica da Parede</span>
+            </a>
+
+            <a href="#put-pack" class="nav-item index-link">
+                <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="12" y1="3" x2="12" y2="21"></line></svg>
+                <span>Put vs Pack (Fluxo)</span>
+            </a>
+
+            <div class="nav-category">WMS Intelligence</div>
+
+            <a href="#wms-brain" class="nav-item index-link">
+                <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                <span>Sincronia do Sistema</span>
+            </a>
+
+            <div class="nav-category">Tratamento de Exceções</div>
+
+            <a href="#problem-solver" class="nav-item ps-link index-link">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                <span>Destravando Nichos</span>
+            </a>
+
+            <div class="nav-category">Qualidade e Regras</div>
+
+            <a href="#regras" class="nav-item index-link">
+                <svg class="nav-icon" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                <span>Golden Rules</span>
+            </a>
+
+            <a href="#metricas" class="nav-item index-link">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                <span>Performance & KPIs</span>
+            </a>
+            
+            <a href="#glossario" class="nav-item index-link">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                <span>Glossário Putwall</span>
+            </a>
+
+            <div style="margin-top: 2rem;">
+                <a href="hub.html" class="nav-item" style="border-color: rgba(255,255,255,0.05); color: var(--text-muted);">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                    <span>Sair da Estação</span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="putwall-avatar">P1</div>
+            <div class="user-info">
+                <span class="user-name">Consolidation Opr</span>
+                <span class="user-role">WALL: PW_ALPHA_01</span>
+            </div>
+        </div>
+    </aside>
+
+    <header class="sys-topbar">
+        <div class="wall-telemetry">
+            <span><span class="light-dot"></span> WMS SYNC: <span class="text-yellow">CONNECTED</span></span>
+            <span style="opacity: 0.2;">|</span> 
+            <span>WALL CAPACITY: <span class="text-amber">72%</span></span>
+            <span style="opacity: 0.2;">|</span> 
+            <span>BOTTLENECK: <span class="text-green">NONE</span></span>
+        </div>
+    </header>
+
+    <main class="main-workspace">
+        
+        <section id="hero" class="hero-section content-section">
+            <h1 class="hero-title">PUTWALL <br><span class="highlight">(CONSOLIDAÇÃO)</span></h1>
+            <div class="hero-subtitle">
+                A COLMEIA INTELIGENTE
+            </div>
+            <div class="hero-quote">
+                "Aqui, peças soltas viram pedidos perfeitos."
+            </div>
+            <div class="hero-desc">
+                <p>O Putwall (ou Parede de Colmeias) é o maestro do fluxo de saída. Ele recebe o caos dos itens misturados vindos do Picking e, através de luzes, inteligência e velocidade, os organiza por cliente, preparando o terreno exato para a embalagem final.</p>
+                <p style="margin-top: 15px; font-family: var(--font-mono); color: var(--neon-yellow); font-size: 1.1rem; border-left: 2px solid var(--neon-yellow); padding-left: 15px;">
+                    >> PUT-TO-LIGHT PROTOCOL: ENGAGED. AWAITING FIRST SCAN.
+                </p>
+            </div>
+        </section>
+        <section id="conceito" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">O que é o Putwall?</h2>
+            </div>
+            
+            <div class="putwall-grid-2" style="margin-bottom: 3rem; align-items: center;">
+                <div class="hive-card" style="padding: 2.5rem;">
+                    <h3 style="color: var(--neon-yellow); border: none; font-size: 1.8rem;">O MAESTRO DA CONSOLIDAÇÃO</h3>
+                    <p style="font-size: 1.15rem; color: var(--text-pure); margin-top: 10px;">
+                        Fisicamente, é uma imensa estante dividida em dezenas de nichos (colmeias ou cubbies). A principal função do Putwall é organizar e consolidar <strong>Pedidos Multi</strong> (pedidos com mais de um item).
+                    </p>
+                    <p style="font-family: var(--font-mono); color: var(--text-muted); font-size: 0.95rem;">
+                        Em vez de um Picker andar pelo CD inteiro atrás de 3 itens do Cliente A, ele coleta 300 itens misturados de dezenas de clientes de uma vez (Batch Picking). O Putwall é a fronteira tecnológica onde essa "bagunça" é separada e cada cliente ganha o seu nicho exclusivo.
+                    </p>
+                </div>
+                <div>
+                    
+                </div>
+            </div>
+
+            <div class="putwall-grid-4" style="margin-top: 2rem;">
+                <div class="hive-card" style="padding: 1.5rem; text-align: center;">
+                    <div class="hive-icon" style="font-size: 2.5rem; margin-bottom: 1rem;">📦</div>
+                    <h4 style="font-size: 1.1rem; color: #fff;">Totes Chegam</h4>
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">Caixas vindas do Picking trazem o caos de milhares de itens misturados.</p>
+                </div>
+                <div class="hive-card" style="padding: 1.5rem; text-align: center;">
+                    <div class="hive-icon" style="font-size: 2.5rem; margin-bottom: 1rem;">📡</div>
+                    <h4 style="font-size: 1.1rem; color: #fff;">Bipagem Única</h4>
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">O operador bipa o EAN do produto. O WMS reconhece instantaneamente o dono.</p>
+                </div>
+                <div class="hive-card" style="padding: 1.5rem; text-align: center;">
+                    <div class="hive-icon" style="font-size: 2.5rem; margin-bottom: 1rem;">💡</div>
+                    <h4 style="font-size: 1.1rem; color: #fff;">Put-to-Light</h4>
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">Uma luz acende no exato nicho onde aquele item deve ser depositado.</p>
+                </div>
+                <div class="hive-card" style="padding: 1.5rem; text-align: center;">
+                    <div class="hive-icon" style="font-size: 2.5rem; margin-bottom: 1rem;">✅</div>
+                    <h4 style="font-size: 1.1rem; color: #fff;">Confirmação</h4>
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">O botão é acionado, a luz apaga e o ciclo recomeça em frações de segundo.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="put-pack" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">Os Dois Lados da Parede</h2>
+            </div>
+            <p style="font-size: 1.2rem; margin-bottom: 2rem;">O Putwall não tem fundo. Ele divide duas equipes que trabalham em simbiose através da mesma estrutura.</p>
+
+            <div class="wall-divider-container">
+                <div class="wall-side put-side">
+                    <span class="side-badge">LADO A // PUT (ABASTECIMENTO)</span>
+                    <h3 style="color: var(--neon-yellow); font-size: 1.8rem; margin-bottom: 15px;">O Construtor do Pedido</h3>
+                    <p style="font-size: 1.1rem; color: var(--text-pure); margin-bottom: 15px;">Recebe os totes, bipa os produtos aleatórios e <strong>abastece</strong> as colmeias seguindo estritamente as luzes (Put-to-Light).</p>
+                    <ul style="font-family: var(--font-mono); color: var(--text-muted); font-size: 0.95rem; line-height: 1.8;">
+                        <li><span style="color: var(--neon-yellow);">></span> Foco: Velocidade e Acuracidade de bipe.</li>
+                        <li><span style="color: var(--neon-yellow);">></span> Risco: Jogar no nicho errado por pressa.</li>
+                        <li><span style="color: var(--neon-yellow);">></span> Regra: Empurrar o item para o fundo do nicho.</li>
+                    </ul>
+                </div>
+
+                <div class="wall-side pack-side">
+                    <span class="side-badge">LADO B // PACK (EMBALAGEM)</span>
+                    <h3 style="color: var(--status-green); font-size: 1.8rem; margin-bottom: 15px;">A Finalização do Pedido</h3>
+                    <p style="font-size: 1.1rem; color: var(--text-pure); margin-bottom: 15px;">Vê a luz verde acender (pedido 100% completo). Ele <strong>esvazia</strong> o nicho, embala os itens na caixa do ML e expede.</p>
+                    <ul style="font-family: var(--font-mono); color: var(--text-muted); font-size: 0.95rem; line-height: 1.8;">
+                        <li><span style="color: var(--status-green);">></span> Foco: Fechamento, peso e etiqueta correta.</li>
+                        <li><span style="color: var(--status-green);">></span> Risco: Embalar itens quebrados.</li>
+                        <li><span style="color: var(--status-green);">></span> Regra: Conferência visual antes de selar.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="wms-brain" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">A Ciência do Put-to-Light (WMS)</h2>
+            </div>
+            
+            <div class="putwall-grid-3">
+                <div class="hive-card">
+                    <span class="light-badge">ALGO_01</span>
+                    <div class="hive-icon">⏱️</div>
+                    <h3>Sincronização de Tempos</h3>
+                    <p style="color: var(--text-muted); font-size: 0.95rem;">
+                        Se o cliente comprou um lápis (Corredor A) e uma TV (Corredor Z), o WMS segura a missão do lápis. Ele só envia o Picker do lápis quando a TV estiver quase chegando à parede, para que o lápis não ocupe o nicho atoa por horas esperando a TV.
+                    </p>
+                </div>
+
+                <div class="hive-card">
+                    <span class="light-badge">ALGO_02</span>
+                    <div class="hive-icon">📐</div>
+                    <h3>Alocação Dinâmica</h3>
+                    <p style="color: var(--text-muted); font-size: 0.95rem;">
+                        O nicho não pertence a um cliente para sempre. O WMS lê a cubagem da compra: 10 caixas de sapatos ganham o maior nicho da parede. Uma capinha de celular ganha o menor. Quando esvaziado, o nicho é imediatamente redesignado.
+                    </p>
+                </div>
+
+                <div class="hive-card">
+                    <span class="light-badge">ALGO_03</span>
+                    <div class="hive-icon">🔄</div>
+                    <h3>Fluxo Contínuo (Balanço)</h3>
+                    <p style="color: var(--text-muted); font-size: 0.95rem;">
+                        O segredo é a harmonia. Se o Lado Put é muito rápido, a parede entope e os nichos acabam. Se o Lado Pack é mais rápido, os embaladores ficam ociosos. O WMS balanceia a distribuição de totes para evitar o colapso da colmeia.
+                    </p>
+                </div>
+            </div>
+        </section>
+        <section id="problem-solver" class="content-section">
+            <div class="ps-zone">
+                <div class="section-header">
+                    <h2 class="section-title alert-title">Problem Solver: O Desentupidor de Artérias</h2>
+                </div>
+                <p style="font-size: 1.15rem; color: var(--text-pure); margin-bottom: 3rem;">
+                    O Putwall tem uma capacidade limite. O maior crime operacional aqui é um nicho bloqueado. O Problem Solver atua no monitoramento de <strong>Dwell Time (Tempo de Permanência)</strong>, resolvendo as anomalias para não deixar o coração do CD parar.
+                </p>
+
+                <div class="putwall-grid-2">
+                    <div class="ps-card">
+                        <div class="ps-icon">⏳</div>
+                        <h4>Pesadelo do Shortage</h4>
+                        <p>Pedido com 5 itens. 4 estão no nicho. O 5º nunca chega. O nicho trava por horas. O PS rastreia o item, cancela a linha (Short), libera a embalagem dos 4 itens se o cliente aceitar pacotes parciais, ou gera uma missão de urgência (Scrape) para o estoque.</p>
+                        <button class="ps-action-btn">Acionar Picking Urgente</button>
+                    </div>
+
+                    <div class="ps-card">
+                        <div class="ps-icon" style="color: var(--neon-yellow); filter: drop-shadow(0 0 10px var(--neon-yellow));">➕</div>
+                        <h4 style="color: var(--neon-yellow);">Overage (A Sobra Misteriosa)</h4>
+                        <p>O operador bipou um fone de ouvido, mas soltou dois no nicho sem querer. O lado Pack percebe o item intruso. O PS audita o nicho, retira o item extra e o devolve sistemicamente ao Stow via ICQA.</p>
+                        <button class="ps-action-btn" style="border-color: var(--neon-yellow); color: var(--neon-yellow);">Registrar Overage (Sobra)</button>
+                    </div>
+
+                    <div class="ps-card">
+                        <div class="ps-icon" style="color: var(--status-red); filter: drop-shadow(0 0 10px var(--status-red));">❌</div>
+                        <h4 style="color: var(--status-red);">Cancelamento em Voo</h4>
+                        <p>O cliente arrependeu-se e cancelou a compra exatos 5 minutos antes da embalagem. A tela do PS apita. Ele vai até o nicho, fisicamente "mata" o pedido, esvazia os produtos e os manda de volta para o estoque.</p>
+                        <button class="ps-action-btn" style="border-color: var(--status-red); color: var(--status-red);">Esvaziar Nicho (Cancelado)</button>
+                    </div>
+
+                    <div class="ps-card">
+                        <div class="ps-icon">📐</div>
+                        <h4>Erro de Cubagem (Tetris)</h4>
+                        <p>O WMS jura que 3 pacotes de fraldas cabem no nicho pequeno porque a dimensão mestre está errada. O operador tenta forçar. O PS interrompe, autoriza dividir o envio em duas caixas (<span class="text-mono">SPLIT ORDER</span>) e corrige o WMS.</p>
+                        <button class="ps-action-btn">Autorizar Split Order</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section id="regras" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">Regras de Ouro (Golden Rules)</h2>
+            </div>
+            
+            <div class="putwall-grid-2">
+                <div class="golden-rule-item">
+                    <div class="rule-icon">💡</div>
+                    <div class="rule-content">
+                        <h4>Siga Exclusivamente a Luz</h4>
+                        <p>Nunca tente "adivinhar" o nicho. Só coloque o item se a luz correspondente acender. Um item no nicho errado significa um cliente recebendo o pedido de outra pessoa.</p>
+                    </div>
+                </div>
+                
+                <div class="golden-rule-item">
+                    <div class="rule-icon">☝️</div>
+                    <div class="rule-content">
+                        <h4>Um Item por Vez</h4>
+                        <p>Nunca segure dois ou três itens diferentes na mesma mão para "ganhar tempo". A principal causa de inversão de pedidos é a pressa na bipagem múltipla. Bipou, guardou.</p>
+                    </div>
+                </div>
+                
+                <div class="golden-rule-item">
+                    <div class="rule-icon">🫸</div>
+                    <div class="rule-content">
+                        <h4>Organização do Fundo</h4>
+                        <p>Empurre os itens para o fundo do nicho (Lado Pack). Isso evita que produtos caiam no chão do seu lado e facilita a vida do colega que vai embalar o pedido.</p>
+                    </div>
+                </div>
+                
+                <div class="golden-rule-item">
+                    <div class="rule-icon">✔️</div>
+                    <div class="rule-content">
+                        <h4>Confirmação Física</h4>
+                        <p>Certifique-se de que o item realmente entrou de forma segura no nicho <strong>antes</strong> de apertar o botão de confirmação. Confirmar antes de guardar gera avarias por queda.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="metricas" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">Raio-X da Colmeia (KPIs)</h2>
+            </div>
+            <p style="font-size: 1.2rem; margin-bottom: 2.5rem;">Como um Problem Solver analisa se o Putwall está saudável e eficiente?</p>
+            
+            
+
+            <div class="metrics-dashboard">
+                <div class="putwall-grid-3">
+                    <div class="metric-box">
+                        <div class="metric-value">420</div>
+                        <div class="metric-label">Put UPH</div>
+                        <p class="metric-desc">Unidades colocadas na parede por hora. O ritmo da bipagem de entrada deve acompanhar a velocidade do Pack.</p>
+                    </div>
+
+                    <div class="metric-box">
+                        <div class="metric-value" style="color: var(--status-red);">1.2</div>
+                        <div class="metric-label">DPMO (Múltiplos)</div>
+                        <p class="metric-desc">Defeitos por milhão. Representa a taxa de erro letal: trocar o item de nicho. Tolerância baixíssima.</p>
+                    </div>
+
+                    <div class="metric-box">
+                        <div class="metric-value" style="color: var(--status-green);">14m</div>
+                        <div class="metric-label">Dwell Time Avg</div>
+                        <p class="metric-desc">Tempo médio que um pedido aguarda na colmeia até ser embalado. Quanto menor, mais rápido o fluxo.</p>
+                    </div>
+                </div>
+
+                <div class="hive-card" style="padding: 2.5rem; background: rgba(0,0,0,0.4); border-color: rgba(255, 212, 0, 0.3);">
+                    <h4 class="text-mono" style="margin-bottom: 10px; color: var(--neon-amber);">WALL UTILIZATION % (TAXA DE OCUPAÇÃO)</h4>
+                    <div class="utilization-container">
+                        <div class="utilization-bar" id="wall-capacity-bar"></div>
+                    </div>
+                    <p style="font-size: 0.95rem; margin-top: 15px; color: var(--text-muted);">
+                        STATUS ATUAL: <span class="text-yellow" id="wall-capacity-text">75%</span>. 
+                        Se a parede chega a 100%, ela infarta (gargalo de embalagem). Se fica abaixo de 30%, o Picking está lento. A zona saudável é entre 60% e 85%.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section id="glossario" class="content-section">
+            <h2 class="section-title">Glossário Putwall</h2>
+            
+            <div class="putwall-accordion" onclick="toggleAccordion(this)">
+                <div class="acc-header">Cubby (Nicho / Colmeia) <span class="acc-icon">+</span></div>
+                <div class="acc-panel">O espaço físico na estrutura da parede designado temporariamente para agrupar os itens de um único pedido de cliente.</div>
+            </div>
+
+            <div class="putwall-accordion" onclick="toggleAccordion(this)">
+                <div class="acc-header">Dwell Time (Tempo de Permanência) <span class="acc-icon">+</span></div>
+                <div class="acc-panel">O tempo total que um pedido fica travado no nicho esperando o último item chegar. Dwell Time alto é o maior inimigo do Putwall.</div>
+            </div>
+
+            <div class="putwall-accordion" onclick="toggleAccordion(this)">
+                <div class="acc-header">Split Order (Pedido Dividido) <span class="acc-icon">+</span></div>
+                <div class="acc-panel">Exceção gerada quando os itens de um pedido não cabem fisicamente no maior nicho disponível, exigindo que o envio seja dividido em duas caixas.</div>
+            </div>
+
+            <div class="putwall-accordion" onclick="toggleAccordion(this)">
+                <div class="acc-header">Batch Picking (Coleta em Lote) <span class="acc-icon">+</span></div>
+                <div class="acc-panel">Estratégia do Picking que possibilita a existência do Putwall. O Picker coleta milhares de itens misturados de uma vez para ganhar velocidade de caminhada no CD.</div>
+            </div>
+
+            <div class="putwall-accordion" onclick="toggleAccordion(this)">
+                <div class="acc-header">Scrape (Busca de Urgência) <span class="acc-icon">+</span></div>
+                <div class="acc-panel">Uma missão de Picking gerada com urgência máxima para buscar um item "Shortage" que está travando um pedido no Putwall prestes a estourar o CPT.</div>
+            </div>
+        </section>
+
+        <footer style="text-align: center; padding: 6rem 0; border-top: 1px dashed rgba(255, 212, 0, 0.2);">
+            <div style="font-family: var(--font-display); font-size: 2.2rem; color: var(--text-pure); margin-bottom: 1rem;">
+                “Aqui, peças soltas viram <span class="text-yellow">pedidos perfeitos.”</span>
+            </div>
+            <p class="text-mono" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2rem;">
+                SECURE TERMINAL // MELI PDI – MODULE: PUTWALL_CONSOLIDATION_V5 // STATUS: SYNCHRONIZED
+            </p>
+        </footer>
+
+    </main>
+
+    <script>
+        // 1. Lógica dos Accordions do Glossário
+        function toggleAccordion(element) {
+            const isActive = element.classList.contains('active');
+            
+            // Fecha todos os outros acordeões antes de abrir o novo
+            document.querySelectorAll('.putwall-accordion').forEach(acc => {
+                acc.classList.remove('active');
+            });
+
+            // Se não estava ativo, ativa o clicado
+            if (!isActive) {
+                element.classList.add('active');
+            }
+        }
+
+        // 2. ScrollSpy: Atualiza o menu lateral baseado na posição do scroll
+        const sections = document.querySelectorAll('.content-section');
+        const navLinks = document.querySelectorAll('.index-link');
+
+        window.addEventListener('scroll', () => {
+            let current = "";
+            
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                // Ajuste de offset para compensar a topbar
+                if (pageYOffset >= sectionTop - 250) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').includes(current)) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // 3. Simulação Dinâmica de Wall Capacity (Oscilação de Telemetria)
+        function simulateWallCapacity() {
+            const capacityBar = document.getElementById('wall-capacity-bar');
+            const capacityText = document.getElementById('wall-capacity-text');
+            
+            setInterval(() => {
+                // Oscilação randômica entre 68% e 82% (Zona Saudável)
+                const newCapacity = Math.floor(Math.random() * (82 - 68 + 1)) + 68;
+                
+                capacityBar.style.width = newCapacity + '%';
+                capacityText.innerText = newCapacity + '%';
+                
+                // Muda a cor da barra dependendo do limite para efeito visual
+                if(newCapacity > 80) {
+                    capacityBar.style.background = 'linear-gradient(90deg, var(--neon-orange), var(--status-red))';
+                    capacityBar.style.boxShadow = '0 0 15px var(--status-red)';
+                } else {
+                    capacityBar.style.background = 'linear-gradient(90deg, var(--neon-amber), var(--neon-yellow))';
+                    capacityBar.style.boxShadow = '0 0 15px var(--neon-yellow-glow)';
+                }
+            }, 3500); // Atualiza a cada 3.5 segundos
+        }
+
+        // 4. Inicialização do Sistema (Console Log WMS Simulator)
+        window.onload = () => {
+            simulateWallCapacity();
+            console.log("%c SMART HIVE SYSTEM ONLINE ", "background: #FFD400; color: #000; font-weight: bold; padding: 5px;");
+            console.log("Put-to-Light Nodes... [CONNECTED]");
+            console.log("Batching Synchronization... [STABLE]");
+            console.log("Current Wall Bottleneck: NONE");
+        };
+    </script>
+</body>
+</html>

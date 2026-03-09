@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meli PDI - ICQA & Inventory Control System</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ==========================================================================
+           01. ICQA SYSTEM CORE VARIABLES - DATA TRUTH V1.0
+           ========================================================================== */
+        :root {
+            /* --- PALETA NEON AUDITORIA (ICQA) --- */
+            --neon-blue: #00E5FF;           /* Azul Cyberspace - Precisão/Sistema */
+            --neon-blue-glow: rgba(0, 229, 255, 0.6);
+            --neon-blue-dim: rgba(0, 229, 255, 0.15);
+            --neon-blue-dark: rgba(0, 229, 255, 0.05);
+            
+            --neon-yellow: #FFD600;         /* Amarelo Neon - Investigação/Alerta/PS */
+            --neon-yellow-glow: rgba(255, 214, 0, 0.6);
+            --neon-yellow-dim: rgba(255, 214, 0, 0.15);
+            --neon-yellow-dark: rgba(255, 214, 0, 0.05);
+
+            --status-green: #00FF66;        /* Sucesso / Match de Contagem */
+            --status-green-glow: rgba(0, 255, 102, 0.5);
+            
+            --status-red: #FF003C;          /* Divergência Crítica / Shortage */
+            --status-red-glow: rgba(255, 0, 60, 0.5);
+
+            /* --- BACKGROUNDS PROFUNDOS (AMBIENTE ANALÍTICO) --- */
+            --bg-absolute: #010409;         /* Escuridão total dos dados */
+            --bg-surface: #050B14;          /* Fundo base de painéis */
+            --bg-layer-2: #091321;          /* Elevação intermediária */
+            --bg-layer-3: #0D1C30;          /* Destaques e Hover states */
+            
+            /* --- GLASSMORPHISM & MATERIAIS --- */
+            --glass-bg: rgba(5, 11, 20, 0.75);
+            --glass-border: rgba(0, 229, 255, 0.15);
+            --glass-border-strong: rgba(0, 229, 255, 0.4);
+            --glass-yellow-border: rgba(255, 214, 0, 0.3);
+            
+            /* --- TIPOGRAFIA DE DADOS --- */
+            --font-display: 'Orbitron', sans-serif;      /* Títulos Maiores */
+            --font-main: 'Rajdhani', sans-serif;         /* Textos Longos */
+            --font-mono: 'Share Tech Mono', monospace;   /* Logs, Códigos e EANs */
+
+            /* --- TEXT COLORS --- */
+            --text-pure: #FFFFFF;
+            --text-main: #CBD5E1;
+            --text-muted: #64748B;
+            --text-data: #94A3B8;
+
+            /* --- GRID E MEDIDAS ESTRUTURAIS --- */
+            --sidebar-width: 300px;
+            --topbar-height: 85px;
+            --container-max: 1500px;
+            
+            /* --- ESPAÇAMENTOS (SCALES) --- */
+            --space-xs: 0.5rem;
+            --space-sm: 1rem;
+            --space-md: 2rem;
+            --space-lg: 4rem;
+            --space-xl: 6rem;
+
+            /* --- BORDAS E SOMBRAS --- */
+            --radius-xl: 16px;
+            --radius-lg: 12px;
+            --radius-md: 8px;
+            --radius-sm: 4px;
+            
+            --shadow-glass: 0 10px 30px rgba(0, 0, 0, 0.8);
+            --shadow-neon-blue: 0 0 20px var(--neon-blue-dim);
+            --shadow-neon-yellow: 0 0 20px var(--neon-yellow-dim);
+
+            /* --- TRANSIÇÕES --- */
+            --trans-fast: 0.2s ease-in-out;
+            --trans-smooth: 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            --trans-slow: 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+
+            /* --- Z-INDEX LAYERS --- */
+            --z-bg: -10;
+            --z-grid: -5;
+            --z-base: 1;
+            --z-content: 10;
+            --z-topbar: 40;
+            --z-sidebar: 50;
+            --z-modal: 100;
+        }
+
+        /* ==========================================================================
+           02. GLOBAL RESET & BASE SETTINGS
+           ========================================================================== */
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-absolute);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+        }
+
+        /* CUSTOM SCROLLBAR - ESTILO RADAR */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-absolute);
+            border-left: 1px solid rgba(0, 229, 255, 0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--neon-blue-dim);
+            border-radius: 10px;
+            border: 1px solid var(--bg-absolute);
+            transition: var(--trans-fast);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--neon-blue);
+            box-shadow: 0 0 10px var(--neon-blue);
+        }
+
+        /* ==========================================================================
+           03. TEXT UTILITIES & GLOW MODIFIERS
+           ========================================================================== */
+        .text-blue { color: var(--neon-blue); text-shadow: 0 0 8px var(--neon-blue-glow); }
+        .text-yellow { color: var(--neon-yellow); text-shadow: 0 0 8px var(--neon-yellow-glow); }
+        .text-green { color: var(--status-green); text-shadow: 0 0 8px var(--status-green-glow); }
+        .text-red { color: var(--status-red); text-shadow: 0 0 8px var(--status-red-glow); }
+        
+        .text-mono { font-family: var(--font-mono); letter-spacing: 1px; text-transform: uppercase; }
+        .text-muted { color: var(--text-muted); }
+        .text-data { color: var(--text-data); font-family: var(--font-mono); font-size: 0.9em; }
+
+        /* ==========================================================================
+           04. ADVANCED ICQA BACKGROUND (RADAR & DATA MATRIX)
+           ========================================================================== */
+        #icqa-system-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: var(--z-bg);
+            background: radial-gradient(circle at center, var(--bg-surface) 0%, var(--bg-absolute) 100%);
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        /* Grid Milimétrico de Auditoria */
+        #icqa-system-bg::before {
+            content: "";
+            position: absolute;
+            width: 200%; height: 200%;
+            top: -50%; left: -50%;
+            background-image: 
+                linear-gradient(rgba(0, 229, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 229, 255, 0.04) 1px, transparent 1px);
+            background-size: 40px 40px;
+            transform: perspective(800px) rotateX(45deg);
+            animation: auditGridMove 15s linear infinite;
+        }
+
+        /* Efeito de Radar ICQA (Varredura Contínua) */
+        .radar-sweep {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: var(--z-grid);
+            pointer-events: none;
+            background: conic-gradient(
+                from 0deg at 50% 50%,
+                transparent 0deg,
+                rgba(0, 229, 255, 0.02) 280deg,
+                rgba(0, 229, 255, 0.15) 360deg
+            );
+            animation: radarSpin 8s linear infinite;
+            mix-blend-mode: screen;
+        }
+
+        /* Scanline Horizontal (Leitor de Código de Barras) */
+        .barcode-scanline {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 4px;
+            background: var(--status-red);
+            box-shadow: 0 0 15px var(--status-red), 0 0 30px var(--status-red-glow);
+            opacity: 0.2;
+            z-index: var(--z-modal);
+            pointer-events: none;
+            animation: barcodeSweep 4s ease-in-out infinite alternate;
+        }
+
+        /* ==========================================================================
+           05. GLOBAL KEYFRAMES
+           ========================================================================== */
+        @keyframes auditGridMove {
+            0% { transform: perspective(800px) rotateX(45deg) translateY(-50px); }
+            100% { transform: perspective(800px) rotateX(45deg) translateY(50px); }
+        }
+
+        @keyframes radarSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes barcodeSweep {
+            0% { top: 5%; opacity: 0; }
+            10% { opacity: 0.3; }
+            50% { opacity: 0.5; height: 6px; }
+            90% { opacity: 0.3; }
+            100% { top: 95%; opacity: 0; }
+        }
+
+        @keyframes dataPulse {
+            0%, 100% { opacity: 1; text-shadow: 0 0 10px var(--neon-blue); }
+            50% { opacity: 0.7; text-shadow: 0 0 2px var(--neon-blue-dim); }
+        }
+
+        @keyframes alertFlash {
+            0%, 100% { box-shadow: inset 0 0 20px var(--neon-yellow-dark); border-color: var(--glass-yellow-border); }
+            50% { box-shadow: inset 0 0 40px var(--neon-yellow-dim); border-color: var(--neon-yellow); }
+        }
+        /* ==========================================================================
+           06. ANALYTICAL TYPOGRAPHY RULES
+           ========================================================================== */
+        h1, h2, h3, h4 {
+            font-family: var(--font-display);
+            font-weight: 700;
+            color: var(--text-pure);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+        }
+
+        h1 { font-size: 3rem; line-height: 1.1; }
+        h2 { font-size: 2.2rem; border-left: 4px solid var(--neon-blue); padding-left: 15px; }
+        h3 { font-size: 1.5rem; color: var(--neon-blue); }
+
+        p {
+            font-family: var(--font-main);
+            font-size: 1.2rem;
+            color: var(--text-main);
+            margin-bottom: 1.2rem;
+            text-align: justify;
+        }
+
+        /* Labels Técnicos e Etiquetas de Dados */
+        .data-label {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--neon-blue);
+            background: var(--neon-blue-dark);
+            padding: 3px 8px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--neon-blue-dim);
+            margin-right: 5px;
+        }
+
+        a { text-decoration: none; color: inherit; transition: var(--trans-fast); }
+        ul, ol { list-style: none; }
+
+        /* ==========================================================================
+           07. SYS-SIDEBAR: PAINEL DE CONTROLE ICQA
+           ========================================================================== */
+        .sys-sidebar {
+            position: fixed;
+            top: 0; left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            z-index: var(--z-sidebar);
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.9);
+            transition: var(--trans-smooth);
+        }
+
+        /* Header do Logo ICQA */
+        .sidebar-header {
+            height: var(--topbar-height);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+            background: linear-gradient(to bottom, rgba(0, 229, 255, 0.05), transparent);
+            position: relative;
+        }
+
+        .sidebar-header::after {
+            content: "AUDIT MODE ACTIVE";
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--neon-blue);
+            letter-spacing: 2px;
+            background: var(--bg-absolute);
+            padding: 2px 10px;
+            border: 1px solid var(--neon-blue-dim);
+        }
+
+        .brand-logo-mini {
+            font-family: var(--font-display);
+            font-size: 1.6rem;
+            font-weight: 900;
+            display: flex;
+            gap: 8px;
+        }
+
+        .brand-logo-mini .m { color: #fff; }
+        .brand-logo-mini .p { color: var(--neon-yellow); text-shadow: 0 0 10px var(--neon-yellow-glow); }
+
+        /* Navegação Sidebar */
+        .sidebar-nav {
+            flex-grow: 1;
+            padding: 2.5rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            overflow-y: auto;
+        }
+
+        .nav-category {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin: 1.5rem 0 0.5rem 0.5rem;
+            font-weight: 600;
+        }
+
+        .nav-category:first-child { margin-top: 0; }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.2rem;
+            color: var(--text-data);
+            font-size: 1.1rem;
+            font-weight: 500;
+            border-radius: var(--radius-md);
+            border: 1px solid transparent;
+            transition: var(--trans-smooth);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0;
+            height: 100%; width: 0;
+            background: linear-gradient(90deg, var(--neon-blue-dim), transparent);
+            transition: width 0.3s ease;
+            z-index: 0;
+        }
+
+        .nav-item:hover {
+            border-color: rgba(0, 229, 255, 0.2);
+            color: var(--neon-blue);
+            transform: translateX(10px);
+        }
+
+        .nav-item:hover::before { width: 100%; }
+
+        .nav-item.active {
+            border-color: var(--neon-blue);
+            background: var(--neon-blue-dark);
+            color: var(--neon-blue);
+            box-shadow: inset 0 0 15px var(--neon-blue-dim);
+        }
+
+        /* Destaque para Problem Solver na Sidebar */
+        .nav-item.ps-link:hover {
+            border-color: rgba(255, 214, 0, 0.3);
+            color: var(--neon-yellow);
+        }
+        .nav-item.ps-link::before {
+            background: linear-gradient(90deg, var(--neon-yellow-dim), transparent);
+        }
+
+        .nav-icon {
+            width: 22px;
+            height: 22px;
+            margin-right: 15px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+            z-index: 1;
+        }
+
+        .nav-item span { z-index: 1; font-family: var(--font-main); }
+
+        /* Sidebar Footer (User / System Status) */
+        .sidebar-footer {
+            padding: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-id-badge {
+            width: 42px; height: 42px;
+            background: var(--bg-layer-2);
+            border: 1px solid var(--neon-blue);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center; justify-content: center;
+            color: var(--neon-blue);
+            font-family: var(--font-mono);
+            font-weight: 700;
+            box-shadow: 0 0 10px var(--neon-blue-dim);
+        }
+
+        .user-info { display: flex; flex-direction: column; }
+        .user-name { color: #fff; font-size: 0.9rem; font-weight: 600; }
+        .user-role { color: var(--neon-blue); font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 1px; }
+        /* ==========================================================================
+           08. TOPBAR: DATA STATUS BAR
+           ========================================================================== */
+        .sys-topbar {
+            height: var(--topbar-height);
+            position: fixed;
+            top: 0; right: 0;
+            width: calc(100% - var(--sidebar-width));
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 3rem;
+            border-bottom: 1px solid rgba(0, 229, 255, 0.1);
+            background: rgba(1, 4, 9, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: var(--z-topbar);
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.9);
+        }
+
+        .status-widget {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            letter-spacing: 1.5px;
+            background: var(--bg-layer-2);
+            padding: 8px 20px;
+            border-radius: 30px;
+            border: 1px solid rgba(0, 229, 255, 0.15);
+            box-shadow: inset 0 0 10px rgba(0, 229, 255, 0.05);
+        }
+
+        .status-dot {
+            width: 10px; height: 10px;
+            background: var(--neon-blue);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 10px var(--neon-blue);
+            animation: dataPulse 2s infinite;
+        }
+
+        .status-dot.warning {
+            background: var(--neon-yellow);
+            box-shadow: 0 0 10px var(--neon-yellow);
+        }
+
+        /* ==========================================================================
+           09. MAIN WORKSPACE
+           ========================================================================== */
+        .main-workspace {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 40px;
+            padding-top: calc(var(--topbar-height) + 40px);
+            z-index: var(--z-base);
+            position: relative;
+            min-height: 100vh;
+        }
+
+        /* ==========================================================================
+           10. HERO SECTION (ICQA HEADER)
+           ========================================================================== */
+        .hero-section {
+            width: 100%;
+            max-width: var(--container-max);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            margin: 0 auto 5rem auto;
+            scroll-margin-top: calc(var(--topbar-height) + 2rem);
+            position: relative;
+            padding-left: 2.5rem;
+            border-left: 4px solid var(--neon-blue);
+            animation: fadeInRight 1s ease-out forwards;
+        }
+
+        /* Etiqueta de Sistema no Topo do Título */
+        .hero-section::before {
+            content: '[SYS_AUDIT_INIT_v2.0]';
+            position: absolute;
+            top: -25px; left: 2.5rem;
+            font-family: var(--font-mono);
+            color: var(--neon-blue);
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            opacity: 0.6;
+        }
+
+        .hero-title {
+            font-family: var(--font-display);
+            font-size: clamp(3.5rem, 5vw, 6.5rem);
+            font-weight: 900;
+            line-height: 1.1;
+            letter-spacing: 6px;
+            margin-bottom: 0.5rem;
+            color: transparent;
+            -webkit-text-stroke: 2px var(--neon-blue);
+            text-shadow: 0 0 20px var(--neon-blue-glow), inset 0 0 10px var(--neon-blue-dark);
+            text-transform: uppercase;
+        }
+
+        .hero-subtitle {
+            font-family: var(--font-mono);
+            font-size: 1.5rem;
+            color: var(--neon-yellow);
+            text-transform: uppercase;
+            letter-spacing: 8px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-shadow: 0 0 15px var(--neon-yellow-glow);
+            margin-top: 10px;
+            background: linear-gradient(90deg, rgba(255, 214, 0, 0.1), transparent);
+            padding: 10px 20px;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            border-left: 3px solid var(--neon-yellow);
+        }
+
+        .hero-desc {
+            font-family: var(--font-main);
+            color: var(--text-muted);
+            font-size: 1.25rem;
+            max-width: 700px;
+            margin-top: 2rem;
+            line-height: 1.8;
+            border: 1px dashed rgba(255,255,255,0.1);
+            padding: 1.5rem;
+            border-radius: var(--radius-md);
+            background: rgba(0,0,0,0.3);
+        }
+
+        @keyframes fadeInRight {
+            0% { opacity: 0; transform: translateX(-30px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+        /* ==========================================================================
+           11. ANALYTICAL GRIDS & SECTION HEADERS
+           ========================================================================== */
+        .content-section {
+            width: 100%;
+            max-width: var(--container-max);
+            margin: 0 auto 6rem auto;
+            scroll-margin-top: calc(var(--topbar-height) + 3rem);
+            position: relative;
+            z-index: var(--z-content);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 3rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 1rem;
+            position: relative;
+        }
+
+        /* Linha de Scanner no Header */
+        .section-header::after {
+            content: '';
+            position: absolute;
+            bottom: -1px; left: 0;
+            width: 100px; height: 2px;
+            background: var(--neon-blue);
+            box-shadow: 0 0 10px var(--neon-blue);
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 2.2rem;
+            color: var(--text-pure);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 0;
+        }
+
+        .section-title::before {
+            content: '>>';
+            color: var(--neon-blue);
+            font-family: var(--font-mono);
+            margin-right: 15px;
+            text-shadow: 0 0 10px var(--neon-blue-glow);
+        }
+
+        /* Título de Alerta (Amarelo) */
+        .section-title.alert-title::before {
+            color: var(--neon-yellow);
+            text-shadow: 0 0 10px var(--neon-yellow-glow);
+        }
+        .section-title.alert-title + .section-header::after {
+            background: var(--neon-yellow);
+            box-shadow: 0 0 10px var(--neon-yellow);
+        }
+
+        .audit-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2.5rem; }
+        .audit-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.5rem; }
+        .audit-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; }
+
+        /* ==========================================================================
+           12. AUDIT CARDS (GLASSMORPHISM & DATA TRUTH)
+           ========================================================================== */
+        .audit-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 3rem;
+            box-shadow: var(--shadow-glass), inset 0 0 20px rgba(0, 229, 255, 0.02);
+            position: relative;
+            overflow: hidden;
+            transition: var(--trans-smooth);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Efeito Hover: Radar Interno */
+        .audit-card::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(0, 229, 255, 0.05) 0%, transparent 60%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+        }
+
+        .audit-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--glass-border-strong);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.9), inset 0 0 30px var(--neon-blue-dark);
+        }
+
+        .audit-card:hover::after { opacity: 1; }
+
+        /* Decoração de Cantoneira (Data Target) */
+        .audit-card::before {
+            content: ''; position: absolute; top: 15px; right: 15px; width: 25px; height: 25px;
+            border-top: 2px solid var(--neon-blue); border-right: 2px solid var(--neon-blue);
+            opacity: 0.2; transition: var(--trans-fast);
+        }
+        .audit-card:hover::before { opacity: 1; box-shadow: 2px -2px 10px var(--neon-blue-dim); }
+
+        .audit-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            color: var(--neon-blue);
+            filter: drop-shadow(0 0 8px var(--neon-blue-glow));
+        }
+
+        .audit-card h3 {
+            font-size: 1.4rem;
+            color: var(--text-pure);
+            margin-bottom: 1rem;
+            letter-spacing: 1px;
+            border-bottom: 1px dashed rgba(255,255,255,0.1);
+            padding-bottom: 10px;
+        }
+        /* ==========================================================================
+           13. INTERACTIVE FLIP CARDS (TIPOS DE CONTAGEM)
+           ========================================================================== */
+        .flip-container {
+            perspective: 1000px;
+            width: 100%;
+            height: 350px;
+        }
+
+        .flip-card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-style: preserve-3d;
+            cursor: pointer;
+        }
+
+        .flip-container:hover .flip-card {
+            transform: rotateY(180deg);
+        }
+
+        .flip-front, .flip-back {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0; left: 0;
+            backface-visibility: hidden;
+            border-radius: var(--radius-lg);
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            border: 1px solid var(--glass-border);
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .flip-front {
+            background: linear-gradient(135deg, var(--bg-layer-2), var(--bg-surface));
+            z-index: 2;
+        }
+
+        .flip-back {
+            background: var(--bg-layer-3);
+            transform: rotateY(180deg);
+            border-color: var(--neon-blue);
+            box-shadow: inset 0 0 30px var(--neon-blue-dark);
+        }
+
+        .flip-front .acronym {
+            font-family: var(--font-display);
+            font-size: 3.5rem;
+            color: var(--neon-blue);
+            text-shadow: 0 0 15px var(--neon-blue-glow);
+            margin-bottom: 10px;
+            line-height: 1;
+        }
+
+        .flip-front h4 { font-size: 1.2rem; color: var(--text-main); margin-bottom: 0; }
+        .flip-front .badge-hint {
+            margin-top: 20px; font-family: var(--font-mono); font-size: 0.8rem;
+            color: var(--neon-yellow); border: 1px solid var(--neon-yellow-dim);
+            padding: 5px 15px; border-radius: 20px; animation: dataPulse 2s infinite;
+        }
+
+        .flip-back h4 { color: var(--neon-blue); margin-bottom: 15px; font-size: 1.3rem; }
+        .flip-back p { font-size: 1rem; color: var(--text-main); line-height: 1.5; }
+        .flip-back .trigger-event {
+            margin-top: auto; width: 100%; background: rgba(0,0,0,0.5);
+            padding: 10px; border-radius: var(--radius-sm); border-left: 3px solid var(--neon-yellow);
+            font-family: var(--font-mono); font-size: 0.85rem; color: var(--neon-yellow); text-align: left;
+        }
+
+        /* ==========================================================================
+           14. PROBLEM SOLVER & ROOT CAUSE ANALYSIS (RCA)
+           ========================================================================== */
+        .rca-zone {
+            background: rgba(20, 15, 0, 0.6);
+            border: 1px solid var(--glass-yellow-border);
+            border-radius: var(--radius-xl);
+            padding: 4rem;
+            position: relative;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8), inset 0 0 50px var(--neon-yellow-dark);
+            overflow: hidden;
+        }
+
+        .rca-zone::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 6px;
+            background: repeating-linear-gradient(45deg, var(--neon-yellow), var(--neon-yellow) 20px, #000 20px, #000 40px);
+        }
+
+        .rca-flowchart {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 4rem 0;
+            position: relative;
+        }
+
+        .rca-flowchart::before {
+            content: ''; position: absolute; top: 50%; left: 10%; width: 80%; height: 2px;
+            background: dashed 2px rgba(255, 255, 255, 0.2); z-index: 0;
+        }
+
+        .rca-node {
+            background: var(--bg-layer-2);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            width: 120px; height: 120px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 1; text-align: center; transition: var(--trans-smooth);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+
+        .rca-node:hover { transform: scale(1.1); background: var(--bg-layer-3); border-color: var(--neon-yellow); }
+        .rca-node .node-icon { font-size: 2rem; margin-bottom: 5px; }
+        .rca-node .node-label { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-pure); font-weight: bold; }
+
+        .rca-node.critical {
+            border-color: var(--neon-yellow); box-shadow: 0 0 20px var(--neon-yellow-dim), inset 0 0 15px var(--neon-yellow-dark);
+        }
+        .rca-node.critical .node-icon { animation: alertFlash 1.5s infinite; }
+
+        /* ==========================================================================
+           15. GOLDEN RULES (REGRAS DE OURO - ICQA)
+           ========================================================================== */
+        .golden-rule-item {
+            background: linear-gradient(180deg, rgba(0, 255, 102, 0.05), transparent);
+            border: 1px solid rgba(0, 255, 102, 0.2);
+            border-top: 3px solid var(--status-green);
+            padding: 2rem;
+            border-radius: var(--radius-md);
+            transition: var(--trans-smooth);
+            display: flex; gap: 20px; align-items: flex-start;
+        }
+
+        .golden-rule-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 0 20px rgba(0, 255, 102, 0.05);
+            background: linear-gradient(180deg, rgba(0, 255, 102, 0.1), transparent);
+        }
+
+        .rule-check {
+            width: 40px; height: 40px; background: rgba(0, 255, 102, 0.1);
+            border: 1px solid var(--status-green); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--status-green); font-size: 1.2rem; flex-shrink: 0;
+            box-shadow: 0 0 10px var(--status-green-glow);
+        }
+        /* ==========================================================================
+           16. DASHBOARD & HEATMAP (ZONA DE CALOR ICQA)
+           ========================================================================== */
+        .dashboard-panel {
+            background: var(--bg-layer-2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-lg);
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            position: relative;
+        }
+
+        .acc-target-box {
+            background: rgba(0, 229, 255, 0.03);
+            border: 1px dashed var(--neon-blue-dim);
+            padding: 2rem;
+            border-radius: var(--radius-md);
+            text-align: center;
+        }
+
+        .acc-number {
+            font-family: var(--font-display);
+            font-size: 4rem;
+            color: var(--status-green);
+            text-shadow: 0 0 20px var(--status-green-glow);
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 5px;
+            padding: 2rem;
+            background: var(--bg-absolute);
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .heat-cell {
+            aspect-ratio: 1;
+            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.05);
+            position: relative;
+            cursor: crosshair;
+            transition: var(--trans-fast);
+        }
+
+        .heat-cell:hover { transform: scale(1.2); z-index: 10; border: 1px solid #fff; }
+
+        /* Variações de Calor no Grid */
+        .heat-cell.perfect { background: var(--status-green); box-shadow: 0 0 10px var(--status-green-glow); }
+        .heat-cell.warning { background: var(--neon-yellow); box-shadow: 0 0 10px var(--neon-yellow-glow); }
+        .heat-cell.critical { background: var(--status-red); box-shadow: 0 0 10px var(--status-red-glow); animation: dataPulse 1s infinite; }
+
+        /* ==========================================================================
+           17. INTERACTIVE QUIZ ("O CASO DO PRODUTO FANTASMA")
+           ========================================================================== */
+        .quiz-detective {
+            background: linear-gradient(135deg, rgba(0, 229, 255, 0.02), rgba(0, 0, 0, 0.5));
+            border: 1px solid var(--neon-blue-dim);
+            border-radius: var(--radius-lg);
+            padding: 4rem;
+            text-align: center;
+        }
+
+        .quiz-title {
+            color: var(--neon-blue);
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            font-family: var(--font-display);
+            letter-spacing: 2px;
+        }
+
+        .btn-cyber-blue {
+            background: transparent;
+            border: 1px solid var(--neon-blue-dim);
+            color: var(--text-pure);
+            padding: 15px 30px;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 1.1rem;
+            margin: 10px;
+            transition: var(--trans-fast);
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-cyber-blue:hover {
+            background: var(--neon-blue-dark);
+            border-color: var(--neon-blue);
+            color: var(--neon-blue);
+            box-shadow: 0 0 20px var(--neon-blue-dim), inset 0 0 10px var(--neon-blue-dark);
+        }
+
+        .quiz-feedback {
+            margin-top: 2rem;
+            font-family: var(--font-mono);
+            font-size: 1.2rem;
+            min-height: 30px;
+            transition: var(--trans-smooth);
+        }
+
+        /* ==========================================================================
+           18. DICTIONARY (ACCORDIONS)
+           ========================================================================== */
+        .dict-accordion {
+            background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: var(--radius-sm);
+            margin-bottom: 1rem;
+            overflow: hidden;
+            transition: var(--trans-smooth);
+        }
+
+        .dict-header {
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-family: var(--font-display);
+            font-size: 1.2rem;
+            color: var(--text-pure);
+            transition: var(--trans-fast);
+        }
+
+        .dict-header:hover { background: rgba(0, 229, 255, 0.05); color: var(--neon-blue); }
+
+        .dict-icon { font-family: var(--font-mono); font-size: 1.5rem; color: var(--neon-blue); transition: transform 0.3s ease; }
+
+        .dict-panel {
+            max-height: 0;
+            padding: 0 2rem;
+            transition: max-height 0.4s ease, padding 0.4s ease;
+            color: var(--text-main);
+            background: var(--bg-layer-2);
+        }
+
+        .dict-accordion.active {
+            border-color: var(--neon-blue-dim);
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.05);
+        }
+
+        .dict-accordion.active .dict-header { color: var(--neon-blue); border-bottom: 1px solid rgba(0, 229, 255, 0.1); }
+        .dict-accordion.active .dict-icon { transform: rotate(45deg); color: var(--neon-yellow); }
+        .dict-accordion.active .dict-panel { max-height: 300px; padding: 1.5rem 2rem; }
+
+        /* ==========================================================================
+           19. MEDIA QUERIES (DESKTOP FOCUS)
+           ========================================================================== */
+        @media (max-width: 1400px) {
+            .hero-title { font-size: 4.5rem; }
+            .audit-grid-3, .audit-grid-4 { grid-template-columns: repeat(2, 1fr); }
+            .rca-flowchart { flex-direction: column; gap: 3rem; }
+            .rca-flowchart::before { width: 2px; height: 80%; top: 10%; left: 50%; }
+            .main-workspace { padding: 30px; padding-top: calc(var(--topbar-height) + 30px); }
+        }
+
+        @media (max-width: 1100px) {
+            .flip-container { height: 400px; }
+            .audit-grid-2 { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="icqa-system-bg"></div>
+    <div class="radar-sweep"></div>
+    <div class="barcode-scanline"></div>
+
+    <aside class="sys-sidebar">
+        <div class="sidebar-header">
+            <div class="brand-logo-mini">
+                <span class="m">ICQA</span><span class="p">_SYS</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-category">Central Data Hub</div>
+            
+            <a href="#hero" class="nav-item active index-link">
+                <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                <span>Visão Geral</span>
+            </a>
+            
+            <a href="#conceito" class="nav-item index-link">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                <span>O que é ICQA?</span>
+            </a>
+
+            <div class="nav-category">Auditoria (Count)</div>
+
+            <a href="#tipos-contagem" class="nav-item index-link">
+                <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <span>Tipos de Contagem</span>
+            </a>
+
+            <a href="#problem-solver" class="nav-item ps-link index-link">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                <span>RCA & Root Cause</span>
+            </a>
+
+            <a href="#regras-ouro" class="nav-item index-link">
+                <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                <span>Regras de Ouro</span>
+            </a>
+
+            <div class="nav-category">Simulação & Base</div>
+
+            <a href="#dashboard" class="nav-item index-link">
+                <svg class="nav-icon" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                <span>Heatmap & Dashboard</span>
+            </a>
+
+            <a href="#quiz" class="nav-item index-link">
+                <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                <span>Caso Interativo</span>
+            </a>
+
+            <a href="#dicionario" class="nav-item index-link">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                <span>Dicionário WMS</span>
+            </a>
+
+            <div style="margin-top: 2rem;">
+                <a href="hub.html" class="nav-item" style="border-color: rgba(255,255,255,0.05); color: var(--text-muted);">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                    <span>Sair do Sistema</span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-id-badge">ID</div>
+            <div class="user-info">
+                <span class="user-name">Logistics Operator</span>
+                <span class="user-role">LEVEL: DATA_AUDITOR</span>
+            </div>
+        </div>
+    </aside>
+
+    <header class="sys-topbar">
+        <div class="status-widget">
+            <span><span class="status-dot"></span> WMS SYNC: <span class="text-blue">99.5% ACCURACY</span></span>
+            <span style="opacity: 0.2;">|</span> 
+            <span>AUDIT CYCLE: <span class="text-mono">IN PROGRESS</span></span>
+        </div>
+    </header>
+
+    <main class="main-workspace">
+        
+        <section id="hero" class="hero-section content-section">
+            <h1 class="hero-title">INVENTÁRIO – ICQA</h1>
+            <div class="hero-subtitle">
+                DATA TRUTH SYSTEM
+            </div>
+            <div class="hero-desc">
+                
+                <p>"O estoque é a verdade financeira da operação. O ICQA atua como o sistema nervoso central do Centro de Distribuição, garantindo que o mundo físico e o mundo virtual (WMS) sejam um espelho perfeito."</p>
+                <p style="margin-top: 10px; font-family: var(--font-mono); color: var(--neon-blue); font-size: 1rem;">>> STATUS: AUDIT PROTOCOL INITIATED.</p>
+            </div>
+        </section>
+        <section id="conceito" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">O que é o Inventário (ICQA)?</h2>
+            </div>
+            
+            <div class="audit-card" style="margin-bottom: 3rem; flex-direction: row; gap: 3rem; align-items: center;">
+                <div style="flex: 1;">
+                    <h3 style="font-size: 2rem; color: var(--neon-blue); border: none; margin-bottom: 0;">GUARDIÃO DA VERDADE</h3>
+                    <p style="font-size: 1.2rem; color: var(--text-pure); margin-top: 10px;">
+                        O <strong>ICQA (Inventory Control & Quality Assurance)</strong> atua como a auditoria contínua do Centro de Distribuição. Sua missão é garantir que a quantidade física nas prateleiras seja um espelho exato do que consta no sistema WMS.
+                    </p>
+                    <p style="font-family: var(--font-mono); color: var(--text-muted); font-size: 0.95rem;">
+                        No modelo Fulfillment, o inventário não para a operação. Ele é <strong>cíclico, dinâmico e contínuo</strong>, ocorrendo em paralelo ao fluxo de Inbound e Outbound.
+                    </p>
+                </div>
+                <div style="flex: 1;">
+                    
+                </div>
+            </div>
+
+            <div class="audit-grid-4">
+                <article class="audit-card" style="padding: 2rem;">
+                    <div class="audit-icon">🚫</div>
+                    <h3 style="font-size: 1.1rem;">Evitar Falso Positivo</h3>
+                    <p style="font-size: 0.9rem;">O sistema diz que há 10 iPhones, mas não há nenhum. Sem ICQA, o cliente compra e o pedido é cancelado (Shortage crítico).</p>
+                </article>
+                <article class="audit-card" style="padding: 2rem;">
+                    <div class="audit-icon">👻</div>
+                    <h3 style="font-size: 1.1rem;">Falso Negativo</h3>
+                    <p style="font-size: 0.9rem;">Há produtos no Bin, mas o sistema acusa 0. O item vira um "fantasma", ocupando espaço físico e perdendo vendas de um estoque real.</p>
+                </article>
+                <article class="audit-card" style="padding: 2rem;">
+                    <div class="audit-icon">💰</div>
+                    <h3 style="font-size: 1.1rem;">Saúde Financeira</h3>
+                    <p style="font-size: 0.9rem;">Cada unidade divergente representa capital bloqueado ou perda contábil. O estoque é dinheiro materializado nas prateleiras.</p>
+                </article>
+                <article class="audit-card" style="padding: 2rem;">
+                    <div class="audit-icon">🕵️</div>
+                    <h3 style="font-size: 1.1rem;">Gaps de Processo</h3>
+                    <p style="font-size: 0.9rem;">Mais do que contar, o ICQA identifica <em>onde</em> o erro nasceu. Falha no Stow? Erro de bipagem no Picking? Avarias ocultas?</p>
+                </article>
+            </div>
+        </section>
+
+        <section id="tipos-contagem" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">Tipos de Contagem Contínua</h2>
+            </div>
+            <p style="margin-bottom: 3rem; font-size: 1.2rem;">Passe o mouse sobre os cards para decodificar os protocolos de auditoria (Audit Count Modes).</p>
+
+            <div class="audit-grid-3">
+                <div class="flip-container">
+                    <div class="flip-card">
+                        <div class="flip-front">
+                            <div class="acronym">SBC</div>
+                            <h4>Simple Bin Count</h4>
+                            <div class="badge-hint">HOVER TO DECODE</div>
+                        </div>
+                        <div class="flip-back">
+                            <h4>Simple Bin Count</h4>
+                            <p>Contagem cega focada apenas na quantidade total de itens físicos no Bin, independentemente do EAN (código de barras).</p>
+                            <div class="trigger-event">Gatilho: Verificação rápida de densidade e lotação. O sistema apenas pergunta: "Quantos itens você vê aí?"</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flip-container">
+                    <div class="flip-card">
+                        <div class="flip-front">
+                            <div class="acronym">CC</div>
+                            <h4>Cycle Count</h4>
+                            <div class="badge-hint">HOVER TO DECODE</div>
+                        </div>
+                        <div class="flip-back">
+                            <h4>Cycle Count</h4>
+                            <p>Contagem profunda e detalhada. O auditor deve esvaziar o Bin e bipar EAN por EAN. Valida a identidade de cada produto.</p>
+                            <div class="trigger-event">Gatilho: Divergência detectada no SBC ou cronograma contínuo de auditoria de qualidade (Acuracidade).</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flip-container">
+                    <div class="flip-card">
+                        <div class="flip-front">
+                            <div class="acronym">SRC</div>
+                            <h4>Search Count</h4>
+                            <div class="badge-hint">HOVER TO DECODE</div>
+                        </div>
+                        <div class="flip-back">
+                            <h4>Search Count</h4>
+                            <p>Contagem investigativa. O operador busca por um item específico (ASIN/EAN) que o sistema acredita estar perdido em uma zona ou bin.</p>
+                            <div class="trigger-event">Gatilho: Um Picker relatou "Item Não Encontrado" (Shortage) em um pedido de cliente ativo.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section id="problem-solver" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title alert-title">Problem Solver: Investigador de Dados</h2>
+            </div>
+            
+            <div class="rca-zone">
+                <h3 style="color: var(--neon-yellow); margin-bottom: 1.5rem; font-size: 2rem; border-bottom: 1px dashed rgba(255, 214, 0, 0.3); padding-bottom: 15px;">
+                    ROOT CAUSE ANALYSIS (RCA)
+                </h3>
+                <p style="font-size: 1.15rem; color: var(--text-pure); margin-bottom: 2rem;">
+                    O Problem Solver do ICQA não é apenas um "corretor de erros". Ele é um analista de dados cuja missão é descobrir a <strong>Causa Raiz</strong> da divergência. Tratar o sintoma sem curar a doença faz o erro voltar.
+                </p>
+                
+                
+
+                <div class="rca-flowchart">
+                    <div class="rca-node">
+                        <div class="node-icon">📦</div>
+                        <div class="node-label">1. STOW<br>ERRO INICIAL</div>
+                        <span class="data-label" style="position: absolute; top: -30px; background: rgba(255,0,0,0.2); border-color: red; color: #ff6666;">FALHA</span>
+                    </div>
+                    
+                    <div class="rca-node">
+                        <div class="node-icon">🛒</div>
+                        <div class="node-label">2. PICKING<br>EXPLOSÃO</div>
+                        <span class="data-label" style="position: absolute; top: -30px;">IMPACTO</span>
+                    </div>
+                    
+                    <div class="rca-node critical">
+                        <div class="node-icon" style="color: var(--neon-yellow);">⚠️</div>
+                        <div class="node-label" style="color: var(--neon-yellow);">3. PS ICQA<br>INVESTIGAÇÃO</div>
+                        <span class="data-label" style="position: absolute; top: -30px; background: rgba(255, 214, 0, 0.2); border-color: var(--neon-yellow); color: var(--neon-yellow);">RCA</span>
+                    </div>
+                    
+                    <div class="rca-node">
+                        <div class="node-icon">✅</div>
+                        <div class="node-label">4. SISTEMA<br>CORRIGIDO</div>
+                        <span class="data-label" style="position: absolute; top: -30px; background: rgba(0, 255, 102, 0.2); border-color: var(--status-green); color: var(--status-green);">MATCH</span>
+                    </div>
+                </div>
+
+                <div class="audit-grid-2" style="margin-top: 4rem;">
+                    <div>
+                        <h4 style="color: var(--neon-yellow); font-family: var(--font-mono); margin-bottom: 15px;">[+] Add Sistêmico (Overage)</h4>
+                        <p style="font-size: 0.95rem;">Produto existe fisicamente, mas o WMS desconhece. O PS insere o item no inventário (ganho contábil) após verificar se não pertence a outro bin ou se não sofreu "Missing" em outra estação.</p>
+                    </div>
+                    <div>
+                        <h4 style="color: var(--status-red); font-family: var(--font-mono); margin-bottom: 15px;">[-] Delete Sistêmico (Shortage)</h4>
+                        <p style="font-size: 0.95rem;">Produto consta no WMS, mas o físico não existe. O PS deve declarar a perda do item (despesa contábil) apenas após esgotar todas as buscas físicas no entorno do bin.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section id="regras-ouro" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">Regras de Ouro (Golden Rules ICQA)</h2>
+            </div>
+            
+            <div class="audit-grid-2">
+                <div class="golden-rule-item">
+                    <div class="rule-check">✓</div>
+                    <div>
+                        <h4 class="text-green">Acuracidade acima de Velocidade</h4>
+                        <p style="font-size: 0.95rem;">No ICQA, o tempo não é a métrica principal. Um erro na contagem de auditoria destrói a confiança do sistema. Conte duas vezes se necessário.</p>
+                    </div>
+                </div>
+                
+                <div class="golden-rule-item">
+                    <div class="rule-check">✓</div>
+                    <div>
+                        <h4 class="text-green">Esvazie o Bin</h4>
+                        <p style="font-size: 0.95rem;">Nunca conte itens dentro da prateleira. Retire tudo, coloque no tote de apoio, conte na superfície plana e devolva organizando.</p>
+                    </div>
+                </div>
+                
+                <div class="golden-rule-item">
+                    <div class="rule-check">✓</div>
+                    <div>
+                        <h4 class="text-green">Inspecione os seis lados</h4>
+                        <p style="font-size: 0.95rem;">Valide se o produto não sofreu avaria (leaks, amassados, violação). Um item no endereço certo mas quebrado é uma divergência de qualidade.</p>
+                    </div>
+                </div>
+                
+                <div class="golden-rule-item">
+                    <div class="rule-check">✓</div>
+                    <div>
+                        <h4 class="text-green">Dúvida = Escalação</h4>
+                        <p style="font-size: 0.95rem;">EAN ilegível? Produto sem etiqueta? Se não há certeza absoluta da identidade do item, ele deve ser isolado para o Problem Solver.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="dashboard" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">Data Truth Dashboard</h2>
+            </div>
+
+            <div class="audit-grid-2">
+                <div class="dashboard-panel">
+                    <div class="acc-target-box">
+                        <div class="text-mono" style="font-size: 0.8rem; margin-bottom: 10px;">GLOBAL ACCURACY TARGET</div>
+                        <div class="acc-number">99.5%</div>
+                        <div class="text-green" style="font-family: var(--font-mono); font-size: 0.9rem;">STATUS: WITHIN MARGIN</div>
+                    </div>
+                    
+                    <div style="margin-top: 10px;">
+                        <h4 class="text-mono" style="font-size: 0.9rem; color: var(--text-muted);">Audit Cycle Progress</h4>
+                        <div style="height: 8px; background: var(--bg-absolute); border-radius: 4px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden;">
+                            <div style="width: 78%; height: 100%; background: var(--neon-blue); box-shadow: 0 0 10px var(--neon-blue-glow);"></div>
+                        </div>
+                        <p style="font-size: 0.8rem; margin-top: 10px; text-align: right;" class="text-data">78% OF BINS AUDITED THIS WEEK</p>
+                    </div>
+                </div>
+
+                <div class="dashboard-panel" style="padding: 1.5rem;">
+                    <h4 class="text-mono" style="font-size: 0.85rem; margin-bottom: 15px; text-align: center;">Warehouse Quality Heatmap</h4>
+                    <div class="heatmap-grid" id="heatmap-container">
+                        </div>
+                    <div style="display: flex; justify-content: space-around; margin-top: 15px; font-size: 0.7rem;" class="text-mono">
+                        <span><span style="color: var(--status-green);">■</span> MATCH</span>
+                        <span><span style="color: var(--neon-yellow);">■</span> REVIEW</span>
+                        <span><span style="color: var(--status-red);">■</span> CRITICAL</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="quiz" class="content-section">
+            <div class="quiz-detective">
+                <div class="quiz-title">O CASO DO PRODUTO FANTASMA</div>
+                <p style="color: var(--text-main); font-size: 1.1rem; margin-bottom: 2rem;">
+                    <strong>Cenário:</strong> Um Picker reportou um "Shortage" (não encontrou o produto) no Bin 04-A-12. O sistema diz que há 1 unidade de um Relógio Luxo. Você chega ao Bin e ele parece vazio à primeira vista.
+                </p>
+                <div class="quiz-options">
+                    <button class="btn-cyber-blue" onclick="playDetective('wrong')">Declarar Perda Imediata</button>
+                    <button class="btn-cyber-blue" onclick="playDetective('partial')">Realizar um SBC (Contagem Simples)</button>
+                    <button class="btn-cyber-blue" onclick="playDetective('correct')">Esvaziar Bin e Inspecionar Cantos</button>
+                </div>
+                <div id="quiz-response" class="quiz-feedback"></div>
+            </div>
+        </section>
+
+        <div class="audit-grid-2">
+            <section id="amnesty" class="content-section">
+                <h2 class="section-title">Amnesty Flow (Itens Órfãos)</h2>
+                <div class="audit-card" style="border-left: 4px solid var(--neon-yellow);">
+                    <p style="font-size: 1rem;">
+                        O <strong>Amnesty</strong> é o processo de coletar itens encontrados "caídos" ou "esquecidos" fora de seus Bins. 
+                    </p>
+                    <ul style="font-size: 0.9rem; color: var(--text-muted); margin-top: 15px;">
+                        <li>• Itens coletados são levados para a Amnesty Box.</li>
+                        <li>• O Problem Solver ICQA bipa o item e o bin de origem.</li>
+                        <li>• O item é reintegrado ao sistema (Add sistêmico).</li>
+                        <li>• <strong>Sem punição:</strong> O foco é a integridade do estoque.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="dicionario" class="content-section">
+                <h2 class="section-title">Dicionário ICQA</h2>
+                <div class="dict-accordion" onclick="toggleAccordion(this)">
+                    <div class="dict-header">Overage (Sobra) <span class="dict-icon">+</span></div>
+                    <div class="dict-panel">Quando há mais itens físicos no Bin do que o registrado no WMS. Requer um "Add" sistêmico.</div>
+                </div>
+                <div class="dict-accordion" onclick="toggleAccordion(this)">
+                    <div class="dict-header">Shortage (Falta) <span class="dict-icon">+</span></div>
+                    <div class="dict-panel">Quando o sistema acusa um produto que não está fisicamente no endereço. Requer um "Delete" após busca exaustiva.</div>
+                </div>
+                <div class="dict-accordion" onclick="toggleAccordion(this)">
+                    <div class="dict-header">Scrap (Dano) <span class="dict-icon">+</span></div>
+                    <div class="dict-panel">Itens que perdem sua condição de venda por avaria física ou validade expirada. São removidos do estoque "bom".</div>
+                </div>
+                <div class="dict-accordion" onclick="toggleAccordion(this)">
+                    <div class="dict-header">Bin Sujo <span class="dict-icon">+</span></div>
+                    <div class="dict-panel">Endereço com itens de SKUs diferentes misturados sem organização, dificultando a contagem e o picking.</div>
+                </div>
+            </section>
+        </div>
+
+        <footer style="text-align: center; padding: 5rem 0; border-top: 1px dashed rgba(0, 229, 255, 0.1);">
+            <div style="font-family: var(--font-display); font-size: 1.8rem; color: var(--text-pure); margin-bottom: 1rem;">
+                “O estoque é a verdade financeira da operação. <br>
+                <span class="text-blue">Se o número mente, o sistema inteiro sofre.”</span>
+            </div>
+            <p class="text-mono" style="font-size: 0.8rem; color: var(--text-muted);">© 2024 MELI PDI – ICQA MODULE // SECURE DATA TERMINAL</p>
+        </footer>
+
+    </main>
+
+    <script>
+        // 1. Gerador de Heatmap (Simulação Visual)
+        const heatmap = document.getElementById('heatmap-container');
+        for (let i = 0; i < 100; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'heat-cell';
+            const rand = Math.random();
+            if (rand > 0.92) cell.className += ' critical';
+            else if (rand > 0.8) cell.className += ' warning';
+            else if (rand > 0.3) cell.className += ' perfect';
+            heatmap.appendChild(cell);
+        }
+
+        // 2. Lógica do Dicionário (Accordion)
+        function toggleAccordion(element) {
+            const isActive = element.classList.contains('active');
+            document.querySelectorAll('.dict-accordion').forEach(acc => acc.classList.remove('active'));
+            if (!isActive) element.classList.add('active');
+        }
+
+        // 3. Lógica do Quiz (Detetive)
+        function playDetective(choice) {
+            const feedback = document.getElementById('quiz-response');
+            if (choice === 'wrong') {
+                feedback.innerHTML = '<span class="text-red">ERRO: Jamais delete sem investigar. O item pode estar escondido no fundo do Bin ou sob a aba da prateleira.</span>';
+            } else if (choice === 'partial') {
+                feedback.innerHTML = '<span class="text-yellow">INSUFICIENTE: O SBC apenas confirma que você não viu nada. Mas o ICQA exige busca ativa em caso de divergência.</span>';
+            } else {
+                feedback.innerHTML = '<span class="text-green">CORRETO: Investigação de Raiz! Muitos "Shortages" são resolvidos ao retirar todos os produtos e encontrar o item fino/pequeno preso no vão do Bin.</span>';
+            }
+        }
+
+        // 4. Scroll Spy (Atualização da Sidebar)
+        window.addEventListener('scroll', () => {
+            const sections = document.querySelectorAll('.content-section');
+            const navLinks = document.querySelectorAll('.index-link');
+            let current = "";
+
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (pageYOffset >= sectionTop - 200) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').includes(current)) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // 5. System Log
+        console.log("%c ICQA SYSTEM ONLINE ", "background: #00E5FF; color: #000; font-weight: bold;");
+        console.log("Integrity Level: 99.5%");
+    </script>
+</body>
+</html>

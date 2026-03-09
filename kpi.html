@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics & KPIs | MeLi PDI Terminal</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ==========================================================================
+           01. ROOT VARIABLES (ANALYTICS / DATA THEME)
+           ========================================================================== */
+        :root {
+            /* Palette Base: Deep Tech Navy */
+            --bg-absolute: #010409; 
+            --bg-panel-deep: rgba(4, 13, 33, 0.85);
+            --bg-card-glass: rgba(10, 25, 50, 0.65);
+            --bg-card-hover: rgba(15, 35, 70, 0.85);
+
+            /* Tema de Cores KPI (Dados e Saúde Operacional) */
+            --green-data: #00FF66;
+            --green-glow: rgba(0, 255, 102, 0.5);
+            --green-dim: rgba(0, 255, 102, 0.1);
+
+            --blue-tech: #00BFFF;
+            --blue-glow: rgba(0, 191, 255, 0.5);
+            --blue-dim: rgba(0, 191, 255, 0.1);
+
+            /* Cores de Suporte e Alertas */
+            --meli-yellow: #FFE600;
+            --red-alert: #FF003C;
+            --purple-insight: #B026FF;
+
+            /* Tipografia */
+            --font-display: 'Orbitron', sans-serif;
+            --font-body: 'Rajdhani', sans-serif;
+            --font-mono: 'Share Tech Mono', monospace;
+            --font-code: 'Fira Code', monospace;
+
+            /* Cores de Texto */
+            --text-title: #FFFFFF;
+            --text-main: #E2E8F0;
+            --text-muted: #8B9BB4;
+
+            /* Bordas e Sombras (Glassmorphism) */
+            --border-data: rgba(0, 255, 102, 0.3);
+            --border-active: rgba(0, 191, 255, 0.6);
+            --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.9);
+            --shadow-neon-green: 0 0 15px var(--green-glow), inset 0 0 10px var(--green-dim);
+            --shadow-neon-blue: 0 0 15px var(--blue-glow), inset 0 0 10px var(--blue-dim);
+            
+            /* Medidas Estruturais (TRAVADAS PARA DESKTOP) */
+            --sidebar-width: 280px;
+            --topbar-height: 80px;
+            --radius-card: 8px;
+            --transition-hud: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        /* ==========================================================================
+           02. CSS RESET & GLOBAL SETUP (FORCED DESKTOP)
+           ========================================================================== */
+        *, *::before, *::after {
+            margin: 0; padding: 0; box-sizing: border-box;
+        }
+
+        html { font-size: 16px; scroll-behavior: smooth; }
+
+        body {
+            background-color: var(--bg-absolute);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            min-height: 100vh;
+            min-width: 1200px; /* <--- TRAVA ABSOLUTA DE DESKTOP */
+            overflow-x: auto;  
+            display: flex;
+            position: relative;
+        }
+
+        /* Custom Scrollbar - Data Green Style */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg-absolute); border-left: 1px solid var(--border-data); border-top: 1px solid var(--border-data); }
+        ::-webkit-scrollbar-thumb { background: var(--green-dim); border: 1px solid var(--green-data); border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--green-data); box-shadow: 0 0 15px var(--green-data); }
+
+        /* Tipografia Global */
+        h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--text-title); }
+        p { font-size: 1.2rem; line-height: 1.7; margin-bottom: 1.2rem; }
+        strong { color: var(--green-data); font-weight: 600; text-shadow: 0 0 8px var(--green-dim); }
+
+        /* ==========================================================================
+           03. BACKGROUND EFFECTS (DATA MATRIX & RADIALS)
+           ========================================================================== */
+        body::before {
+            content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -3;
+            /* Grid no estilo Data Science */
+            background-image: 
+                linear-gradient(rgba(0, 191, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 191, 255, 0.04) 1px, transparent 1px);
+            background-size: 40px 40px; pointer-events: none;
+        }
+
+        body::after {
+            content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2;
+            background: radial-gradient(circle at 10% 20%, rgba(0, 255, 102, 0.03) 0%, transparent 40%),
+                        radial-gradient(circle at 90% 80%, rgba(0, 191, 255, 0.03) 0%, transparent 40%);
+            pointer-events: none;
+        }
+
+        /* ==========================================================================
+           04. GLOBAL KEYFRAMES (DATA ANIMATIONS)
+           ========================================================================== */
+        @keyframes scanline-v { 0% { transform: translateY(-100%); } 100% { transform: translateY(100vh); } }
+        
+        @keyframes pulse-data {
+            0% { box-shadow: 0 0 10px var(--green-dim); border-color: rgba(0, 255, 102, 0.3); }
+            50% { box-shadow: 0 0 25px var(--green-glow); border-color: var(--green-data); }
+            100% { box-shadow: 0 0 10px var(--green-dim); border-color: rgba(0, 255, 102, 0.3); }
+        }
+
+        @keyframes data-stream {
+            0% { height: 0%; opacity: 0; }
+            50% { height: 100%; opacity: 1; }
+            100% { height: 0%; opacity: 0; top: 100%; }
+        }
+
+        @keyframes fill-bar {
+            0% { width: 0%; }
+            100% { width: var(--target-width); }
+        }
+
+        @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(30px); } 100% { opacity: 1; transform: translateY(0); } }
+
+        .hud-scanner {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 2px;
+            background: linear-gradient(to right, transparent, var(--green-data), transparent);
+            opacity: 0.3; z-index: 9999; pointer-events: none; animation: scanline-v 8s linear infinite;
+        }
+        /* ==========================================================================
+           05. GLOBAL LAYOUT (GRID E WRAPPERS)
+           ========================================================================== */
+        .app-wrapper {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+            position: relative;
+            z-index: 10;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            /* Sem margin-left, pois a sidebar não é mais 'fixed' */
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background: radial-gradient(circle at top right, rgba(0, 255, 102, 0.03), transparent 60%);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 4rem 4rem 4rem;
+        }
+
+        /* ==========================================================================
+           06. SIDEBAR (TERMINAL NAVIGATION) - ACOMPANHA A PÁGINA (DESKTOP)
+           ========================================================================== */
+        .sys-sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-panel-deep);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border-data);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0; /* Garante que a barra não seja espremida */
+            z-index: 100;
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.9);
+        }
+
+        /* Feixe de luz vertical verde simbolizando fluxo de dados */
+        .sys-sidebar::after {
+            content: '';
+            position: absolute;
+            top: 0; right: -1px;
+            width: 2px; height: 100%;
+            background: linear-gradient(to bottom, transparent, var(--green-data), transparent);
+            opacity: 0.6;
+        }
+
+        .sidebar-brand {
+            height: var(--topbar-height);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 1px dashed var(--border-data);
+            background: radial-gradient(circle at top, var(--green-dim), transparent);
+            position: relative;
+        }
+
+        .sidebar-brand::before {
+            content: '';
+            position: absolute;
+            bottom: -1px; left: 0; width: 40%; height: 2px;
+            background: var(--green-data);
+            box-shadow: 0 0 10px var(--green-data);
+        }
+
+        .brand-logo {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: var(--text-title);
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+
+        .brand-logo span {
+            color: var(--meli-yellow);
+            text-shadow: 0 0 15px rgba(255, 230, 0, 0.5);
+        }
+
+        .brand-sub {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--green-data);
+            letter-spacing: 4px;
+            margin-top: 5px;
+            text-transform: uppercase;
+        }
+
+        /* Menu de Navegação */
+        .nav-menu {
+            flex-grow: 1;
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 20px;
+            color: var(--text-muted);
+            font-family: var(--font-body);
+            font-size: 1.05rem;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-decoration: none;
+            position: relative;
+            transition: var(--transition-hud);
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid transparent;
+            border-radius: var(--radius-card);
+            clip-path: polygon(0 0, 100% 0, 100% 70%, 92% 100%, 0 100%);
+        }
+
+        /* Linha de seleção do menu (Azul Tech no Hover) */
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0;
+            height: 100%; width: 3px;
+            background: var(--blue-tech);
+            transform: scaleY(0);
+            transition: 0.3s;
+        }
+
+        .nav-link:hover {
+            color: var(--text-pure);
+            background: rgba(0, 191, 255, 0.05);
+            border-color: rgba(0, 191, 255, 0.2);
+            padding-left: 25px;
+        }
+
+        .nav-link:hover::before {
+            transform: scaleY(1);
+            box-shadow: 0 0 15px var(--blue-glow);
+        }
+
+        /* Estado ATIVO (Página Atual: KPI Analytics) */
+        .nav-link.active {
+            color: var(--green-data);
+            background: var(--green-dim);
+            border-color: var(--border-data);
+        }
+
+        .nav-link.active::before {
+            background: var(--green-data);
+            transform: scaleY(1);
+            box-shadow: 0 0 15px var(--green-glow);
+        }
+
+        .nav-icon {
+            width: 20px; height: 20px;
+            fill: none; stroke: currentColor; stroke-width: 2;
+            transition: 0.3s;
+        }
+
+        .nav-link:hover .nav-icon {
+            transform: scale(1.1);
+            color: var(--blue-tech);
+        }
+
+        .nav-link.active .nav-icon {
+            color: var(--green-data);
+        }
+
+        /* ==========================================================================
+           07. TOPBAR (SYSTEM HEADER)
+           ========================================================================== */
+        .sys-topbar {
+            height: var(--topbar-height);
+            width: 100%;
+            background: var(--bg-panel-deep);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--border-data);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 4rem;
+            position: sticky;
+            top: 0;
+            z-index: 90;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+        }
+
+        .topbar-path {
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .topbar-path span {
+            color: var(--blue-tech);
+            text-shadow: 0 0 8px var(--blue-dim);
+        }
+
+        /* Status em Modo "Data Sync" / Verde Saúde */
+        .topbar-status {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-family: var(--font-code);
+            font-size: 0.8rem;
+            color: var(--green-data);
+            letter-spacing: 1px;
+            border: 1px solid rgba(0, 255, 102, 0.4);
+            padding: 8px 15px;
+            border-radius: 4px;
+            background: rgba(0, 255, 102, 0.05);
+            box-shadow: 0 0 10px var(--green-dim);
+        }
+
+        .status-dot-sync {
+            width: 8px; height: 8px;
+            background: var(--green-data);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--green-glow);
+            animation: pulse-data 2s infinite alternate;
+        }
+        /* ==========================================================================
+           08. HERO SECTION (MAIN TITLE & DATA HEADER)
+           ========================================================================== */
+        .hero-section {
+            margin-bottom: 3rem;
+            position: relative;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-data);
+        }
+
+        .hero-section::after {
+            content: '';
+            position: absolute;
+            bottom: -1px; left: 0;
+            width: 250px; height: 3px;
+            background: var(--green-data);
+            box-shadow: 0 0 15px var(--green-glow);
+        }
+
+        .hero-title-wrapper {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .hero-title {
+            font-size: 4.5rem;
+            font-weight: 900;
+            color: var(--text-title);
+            letter-spacing: 5px;
+            line-height: 1.1;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+        }
+
+        .hero-title span {
+            color: var(--blue-tech);
+            text-shadow: 0 0 20px var(--blue-glow);
+        }
+
+        .hero-subtitle {
+            font-family: var(--font-mono);
+            font-size: 1.5rem;
+            color: var(--text-main);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .hero-subtitle::before {
+            content: '[DATA_SCIENCE]';
+            font-size: 1rem;
+            color: var(--green-data);
+            background: var(--green-dim);
+            padding: 4px 10px;
+            border: 1px solid rgba(0, 255, 102, 0.3);
+            border-radius: 4px;
+        }
+
+        .hero-quote {
+            margin-top: 1.5rem;
+            font-family: var(--font-body);
+            font-size: 1.3rem;
+            color: var(--blue-tech);
+            font-style: italic;
+            border-left: 4px solid var(--blue-tech);
+            padding-left: 15px;
+            background: linear-gradient(90deg, var(--blue-dim), transparent);
+            padding: 10px 15px;
+            border-radius: 0 4px 4px 0;
+        }
+
+        /* ==========================================================================
+           09. INTERACTIVE DASHBOARD (KPI CARDS & VISUALS)
+           ========================================================================== */
+        .kpi-dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); /* 4 Cards travados no Desktop */
+            gap: 20px;
+            margin-bottom: 3rem;
+        }
+
+        .kpi-data-card {
+            background: var(--bg-card-glass);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--border-active);
+            border-radius: var(--radius-card);
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition-hud);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .kpi-data-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 191, 255, 0.15);
+            border-color: var(--blue-tech);
+            background: rgba(0, 191, 255, 0.05);
+        }
+
+        .kpi-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .kpi-title {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+        }
+
+        .kpi-value {
+            font-family: var(--font-mono);
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-pure);
+            text-shadow: 0 0 10px rgba(255,255,255,0.2);
+            margin: 10px 0;
+        }
+
+        /* Cores específicas de Status de KPI */
+        .kpi-value.status-good { color: var(--green-data); text-shadow: 0 0 15px var(--green-glow); }
+        .kpi-value.status-alert { color: var(--meli-yellow); text-shadow: 0 0 15px rgba(255,230,0,0.4); }
+        .kpi-value.status-danger { color: var(--red-alert); text-shadow: 0 0 15px var(--red-glow); }
+
+        /* Barra de Progresso Visual */
+        .progress-track {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--blue-tech);
+            box-shadow: 0 0 10px var(--blue-glow);
+            width: 0%; /* Será animado via JS */
+        }
+
+        .progress-fill.fill-green { background: var(--green-data); box-shadow: 0 0 10px var(--green-glow); }
+        .progress-fill.fill-yellow { background: var(--meli-yellow); box-shadow: 0 0 10px rgba(255,230,0,0.5); }
+        .progress-fill.fill-red { background: var(--red-alert); box-shadow: 0 0 10px var(--red-glow); }
+
+        /* ==========================================================================
+           10. CONTENT PANELS & INTERACTIVE TOOLS (CALC & SIM)
+           ========================================================================== */
+        .tech-panel {
+            background: var(--bg-card-glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 191, 255, 0.2);
+            border-radius: var(--radius-card);
+            padding: 3rem; margin-bottom: 3rem; position: relative;
+            box-shadow: var(--shadow-glass); transition: var(--transition-hud);
+        }
+        
+        .tech-panel:hover {
+            border-color: var(--blue-tech); background: var(--bg-card-hover);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.9), inset 0 0 20px var(--blue-dim);
+        }
+        
+        /* Cantoneiras HUD Blue */
+        .tech-panel::before, .tech-panel::after {
+            content: ''; position: absolute; width: 30px; height: 30px;
+            border: 2px solid var(--blue-tech); opacity: 0.5; transition: 0.3s;
+        }
+        .tech-panel::before { top: 15px; left: 15px; border-right: none; border-bottom: none; }
+        .tech-panel::after { bottom: 15px; right: 15px; border-left: none; border-top: none; }
+        
+        .panel-header { display: flex; align-items: center; gap: 20px; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 1.5rem; }
+        .panel-title { font-size: 2rem; color: var(--text-title); letter-spacing: 2px; }
+        
+        .panel-icon {
+            width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
+            background: var(--blue-dim); border: 1px solid var(--border-active); border-radius: var(--radius-card);
+            color: var(--blue-tech); font-size: 1.8rem; box-shadow: var(--shadow-neon-blue);
+        }
+        
+        .highlight-box {
+            background: rgba(0, 255, 102, 0.05); border-left: 4px solid var(--green-data);
+            padding: 1.5rem; margin: 1.5rem 0; font-family: var(--font-mono); font-size: 1.1rem; color: var(--text-pure);
+        }
+        
+        .cyber-list { list-style: none; margin-top: 1.5rem; }
+        .cyber-list li { position: relative; padding-left: 35px; margin-bottom: 1.5rem; font-size: 1.15rem; line-height: 1.6; }
+        .cyber-list li::before { content: '>'; position: absolute; left: 0; top: 0; font-family: var(--font-mono); color: var(--blue-tech); font-size: 1.4rem; font-weight: 900; text-shadow: 0 0 10px var(--blue-glow); }
+        .list-title { display: block; color: var(--text-pure); font-family: var(--font-display); font-size: 1.2rem; margin-bottom: 5px; }
+
+        /* Estilos Base para Inputs da Calculadora e Simulador */
+        .cyber-input {
+            width: 100%; padding: 12px 15px; background: rgba(0,0,0,0.5);
+            border: 1px solid var(--border-active); border-radius: 4px;
+            color: var(--green-data); font-family: var(--font-mono); font-size: 1.2rem;
+            outline: none; transition: 0.3s;
+        }
+        .cyber-input:focus { border-color: var(--green-data); box-shadow: 0 0 10px var(--green-dim); }
+        
+        .cyber-btn {
+            background: var(--blue-dim); border: 1px solid var(--blue-tech);
+            color: var(--blue-tech); padding: 12px 25px; font-family: var(--font-display);
+            font-size: 1rem; cursor: pointer; border-radius: 4px; transition: 0.3s;
+            text-transform: uppercase; letter-spacing: 1px; width: 100%;
+        }
+        .cyber-btn:hover { background: var(--blue-tech); color: var(--bg-absolute); box-shadow: 0 0 15px var(--blue-glow); }
+        /* EFEITOS ADICIONAIS DATA */
+        .data-text {
+            color: var(--green-data);
+            font-family: var(--font-mono);
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(0, 255, 102, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hud-scanner"></div>
+
+    <div class="app-wrapper">
+        
+        <aside class="sys-sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">MELI<span>PDI</span></div>
+                <div class="brand-sub">SYS.MODULE // ACTIVE</div>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    <span>Home Dashboard</span>
+                </a>
+                
+                <a href="hub.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                    <span>Hub de Setores</span>
+                </a>
+                
+                <a href="glossario.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                    <span>Glossário Técnico</span>
+                </a>
+                
+                <a href="sla-detalhado.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <span>Deep Dive: SLA</span>
+                </a>
+
+                <a href="backlog-detalhado.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                    <span>Monitor: Backlog</span>
+                </a>
+
+                <div style="height: 1px; background: var(--border-data); margin: 15px 0; opacity: 0.5;"></div>
+
+                <a href="#" class="nav-link active">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    <span>Analytics: KPIs</span>
+                </a>
+
+                <a href="#" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                    <span>Meus Projetos</span>
+                </a>
+            </nav>
+
+            <div style="padding: 20px; border-top: 1px dashed var(--border-data); text-align: center;">
+                <div style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--green-data); opacity: 0.5; letter-spacing: 1.5px;">
+                    SECURE CONNECTION<br>OSASCO_CD // 2026
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            
+            <header class="sys-topbar">
+                <div class="topbar-path">
+                    MELI PDI <span>/</span> DATA_SCIENCE <span>/</span> KPI_ANALYTICS.exe
+                </div>
+                <div class="topbar-status">
+                    STATUS: DATA SYNC
+                    <div class="status-dot-sync"></div>
+                </div>
+            </header>
+
+            <div class="container">
+                
+                <section class="hero-section">
+                    <div class="hero-title-wrapper">
+                        <h1 class="hero-title">KPI <span>_</span></h1>
+                    </div>
+                    <div class="hero-subtitle">Key Performance Indicator</div>
+                    
+                    <div class="hero-quote">
+                        "O que não pode ser medido, não pode ser gerenciado." – Peter Drucker
+                    </div>
+                </section>
+
+                <div class="kpi-dashboard-grid" id="main-dashboard">
+                    <div class="kpi-data-card" style="border-color: rgba(0, 255, 102, 0.4);">
+                        <div class="kpi-card-header">
+                            <span class="kpi-title" style="color: var(--green-data);">OTIF GLOBAL</span>
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--green-data)" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        </div>
+                        <div>
+                            <div class="kpi-value status-good" data-target="94.2">0.0</div><span style="color: var(--text-muted); font-family: var(--font-mono);">%</span>
+                            <div class="progress-track"><div class="progress-fill fill-green" style="--target-width: 94.2%;"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="kpi-data-card" style="border-color: rgba(0, 191, 255, 0.4);">
+                        <div class="kpi-card-header">
+                            <span class="kpi-title" style="color: var(--blue-tech);">LEAD TIME MÉDIO</span>
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--blue-tech)" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        </div>
+                        <div>
+                            <div class="kpi-value" style="color: var(--blue-tech); text-shadow: 0 0 15px var(--blue-glow);" data-target="2.1">0.0</div><span style="color: var(--text-muted); font-family: var(--font-mono);">DIAS</span>
+                            <div class="progress-track"><div class="progress-fill" style="--target-width: 60%;"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="kpi-data-card" style="border-color: rgba(255, 230, 0, 0.4);">
+                        <div class="kpi-card-header">
+                            <span class="kpi-title" style="color: var(--meli-yellow);">TAXA DE AVARIAS</span>
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--meli-yellow)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        </div>
+                        <div>
+                            <div class="kpi-value status-alert" data-target="1.8">0.0</div><span style="color: var(--text-muted); font-family: var(--font-mono);">%</span>
+                            <div class="progress-track"><div class="progress-fill fill-yellow" style="--target-width: 18%;"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="kpi-data-card" style="border-color: rgba(255, 0, 60, 0.4);">
+                        <div class="kpi-card-header">
+                            <span class="kpi-title" style="color: var(--red-alert);">BACKLOG CRÍTICO</span>
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--red-alert)" stroke-width="2"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                        </div>
+                        <div>
+                            <div class="kpi-value status-danger" data-target="320">0</div><span style="color: var(--text-muted); font-family: var(--font-mono);">UNID</span>
+                            <div class="progress-track"><div class="progress-fill fill-red" style="--target-width: 85%;"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <section class="tech-panel" id="section-history">
+                    <div class="panel-header">
+                        <div class="panel-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+                        </div>
+                        <h2 class="panel-title">SEÇÃO 1 // HISTÓRIA E DEFINIÇÃO</h2>
+                    </div>
+
+                    <p>
+                        Embora o termo "KPI" tenha se popularizado com a administração moderna, o conceito de <em>medir para gerenciar</em> remonta à Revolução Industrial. A necessidade inicial era estritamente mecânica: monitorar a eficiência de máquinas de tear e processos produtivos básicos.
+                    </p>
+
+                    <div class="highlight-box" style="border-left-color: var(--blue-tech); background: rgba(0, 191, 255, 0.05);">
+                        <span style="color: var(--blue-tech); font-weight: bold;">[O QUE É UM KPI DE LOGÍSTICA?]</span><br>
+                        KPI é a sigla para <strong>Key Performance Indicator</strong> (Indicador-Chave de Desempenho). Na logística, são métricas quantitativas utilizadas para avaliar a performance de processos (armazenamento, transporte, compras). <em>Diferente de uma métrica comum (que mede qualquer coisa), o KPI foca exclusivamente no que é estratégico para o sucesso do negócio.</em>
+                    </div>
+                </section>
+
+                <section class="tech-panel" id="section-purpose" style="border-color: rgba(0, 255, 102, 0.3);">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(0, 255, 102, 0.1); border-color: var(--green-data); color: var(--green-data); box-shadow: 0 0 15px var(--green-glow);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--text-pure);">SEÇÃO 2 // PARA QUE SERVE?</h2>
+                    </div>
+
+                    <p>
+                        Os KPIs não servem apenas para a diretoria "olhar números" em uma tela. Eles são o aparelho de Raio-X da operação. Sem eles, a gestão atua às cegas. Suas principais funções são:
+                    </p>
+
+                    <ul class="cyber-list">
+                        <li><strong class="list-title" style="color: var(--green-data);">Tomada de Decisão:</strong> Basear escolhas táticas em dados reais e matemáticos, não na intuição de um supervisor.</li>
+                        <li><strong class="list-title" style="color: var(--green-data);">Identificação de Gargalos:</strong> Descobrir cirurgicamente onde o processo logístico está travado (Backlog) ou custando caro demais.</li>
+                        <li><strong class="list-title" style="color: var(--green-data);">Melhoria Contínua:</strong> Estabelecer uma "Baseline" (linha de base) e acompanhar a evolução da operação semana após semana.</li>
+                        <li><strong class="list-title" style="color: var(--green-data);">Transparência Total:</strong> Alinhar a expectativa matemática entre o chão de fábrica, a gerência e o cliente final.</li>
+                    </ul>
+                </section>
+
+                <section class="tech-panel" id="section-rules">
+                    <div class="panel-header">
+                        <div class="panel-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 6.91 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        </div>
+                        <h2 class="panel-title">SEÇÃO 3 // REGRAS DE OURO DOS KPIS</h2>
+                    </div>
+
+                    <p>
+                        Se você cria indicadores errados, sua equipe fará esforços imensos na direção errada. Todo gestor logístico deve tatuar estas regras antes de criar um novo painel:
+                    </p>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 2rem 0;">
+                        <div style="background: rgba(0,0,0,0.4); border-left: 3px solid var(--blue-tech); padding: 15px;">
+                            <strong style="color: var(--blue-tech);">1. METODOLOGIA SMART</strong>
+                            <p style="font-size: 0.95rem; margin-top: 5px; color: var(--text-main);">O KPI precisa ser: <strong>S</strong>pecific (Específico), <strong>M</strong>easurable (Mensurável), <strong>A</strong>ttainable (Atingível), <strong>R</strong>elevant (Relevante) e <strong>T</strong>ime-bound (Com Prazo).</p>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.4); border-left: 3px solid var(--blue-tech); padding: 15px;">
+                            <strong style="color: var(--blue-tech);">2. MENOS É MAIS</strong>
+                            <p style="font-size: 0.95rem; margin-top: 5px; color: var(--text-main);">Não adianta medir 50 coisas se você não tem braço para agir sobre nenhuma. Foque em 3 a 5 indicadores que realmente movem o ponteiro do negócio.</p>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.4); border-left: 3px solid var(--blue-tech); padding: 15px;">
+                            <strong style="color: var(--blue-tech);">3. CONFIABILIDADE (LIXO ENTRA, LIXO SAI)</strong>
+                            <p style="font-size: 0.95rem; margin-top: 5px; color: var(--text-main);">Se o operador bipa a caixa errada, o sistema gera um dado mentiroso. O KPI só é tão bom quanto a disciplina de quem coleta a informação na doca.</p>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.4); border-left: 3px solid var(--blue-tech); padding: 15px;">
+                            <strong style="color: var(--blue-tech);">4. GESTÃO À VISTA</strong>
+                            <p style="font-size: 0.95rem; margin-top: 5px; color: var(--text-main);">Um KPI escondido na planilha do diretor não serve para nada. Ele deve estar em uma TV na parede do armazém, visível para quem realmente executa o trabalho.</p>
+                        </div>
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-implementation" style="border-color: rgba(0, 191, 255, 0.4);">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(0, 191, 255, 0.1); border-color: var(--blue-tech); color: var(--blue-tech); box-shadow: 0 0 15px rgba(0, 191, 255, 0.3);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--text-pure);">SEÇÃO 4 // GUIA DE IMPLEMENTAÇÃO</h2>
+                    </div>
+
+                    <p>Muitos projetos de Analytics falham porque tentam medir a operação inteira no primeiro dia. Para implementar KPIs de forma cirúrgica, siga este protocolo tático:</p>
+
+                    <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 2rem;">
+                        <div style="background: rgba(0,0,0,0.5); border: 1px solid var(--border-active); padding: 20px; border-radius: 8px; display: flex; gap: 20px; align-items: flex-start;">
+                            <div style="font-family: var(--font-display); font-size: 2.5rem; color: var(--blue-tech); line-height: 1;">01</div>
+                            <div>
+                                <h4 style="color: var(--blue-tech); font-size: 1.2rem; margin-bottom: 5px;">O DIAGNÓSTICO (ONDE DÓI?)</h4>
+                                <p style="margin: 0; font-size: 1.05rem; color: var(--text-main);">Antes de escolher números, entenda os problemas. Identifique os gargalos perguntando à equipe: <em>"O que mais gera reclamação do cliente?"</em> Escolha apenas uma área para começar (ex: Recebimento). Tentar medir o CD inteiro do zero leva ao abandono do projeto.</p>
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.5); border: 1px solid var(--border-active); padding: 20px; border-radius: 8px; display: flex; gap: 20px; align-items: flex-start;">
+                            <div style="font-family: var(--font-display); font-size: 2.5rem; color: var(--blue-tech); line-height: 1;">02</div>
+                            <div>
+                                <h4 style="color: var(--blue-tech); font-size: 1.2rem; margin-bottom: 5px;">SELEÇÃO ESTRATÉGICA (MÉTRICA vs KPI)</h4>
+                                <p style="margin: 0; font-size: 1.05rem; color: var(--text-main);">Não caia na armadilha das "métricas de vaidade". Use a Regra dos 3: Comece com no máximo 3 KPIs por área. Para transporte, por exemplo, foque apenas em: OTIF, Custo de Frete e Índice de Avarias.</p>
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.5); border: 1px solid var(--border-active); padding: 20px; border-radius: 8px; display: flex; gap: 20px; align-items: flex-start;">
+                            <div style="font-family: var(--font-display); font-size: 2.5rem; color: var(--blue-tech); line-height: 1;">03</div>
+                            <div>
+                                <h4 style="color: var(--blue-tech); font-size: 1.2rem; margin-bottom: 5px;">MAPEAMENTO DA FONTE DA VERDADE</h4>
+                                <p style="margin: 0; font-size: 1.05rem; color: var(--text-main);">De onde virão os dados? ERP (Gestão), WMS (Armazém) ou TMS (Transportes)? Defina quem insere o dado e quando. Em logística, a disciplina operacional é mais importante que o software analítico.</p>
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.5); border: 1px solid var(--border-active); padding: 20px; border-radius: 8px; display: flex; gap: 20px; align-items: flex-start;">
+                            <div style="font-family: var(--font-display); font-size: 2.5rem; color: var(--blue-tech); line-height: 1;">04</div>
+                            <div>
+                                <h4 style="color: var(--blue-tech); font-size: 1.2rem; margin-bottom: 5px;">ESTABELECER A BASELINE (MARCO ZERO)</h4>
+                                <p style="margin: 0; font-size: 1.05rem; color: var(--text-main);">Ninguém sabe se 90% de OTIF é bom se não souber quanto era ontem. <em>Meça sem intervir:</em> Durante 15 dias, apenas colete os dados para entender o desempenho atual. Suba as metas degrau por degrau.</p>
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.5); border: 1px solid var(--border-active); padding: 20px; border-radius: 8px; display: flex; gap: 20px; align-items: flex-start;">
+                            <div style="font-family: var(--font-display); font-size: 2.5rem; color: var(--blue-tech); line-height: 1;">05</div>
+                            <div>
+                                <h4 style="color: var(--blue-tech); font-size: 1.2rem; margin-bottom: 5px;">RITUAIS DE ANÁLISE (AÇÕES)</h4>
+                                <p style="margin: 0; font-size: 1.05rem; color: var(--text-main);">Um KPI estático não tem valor. Crie "Reuniões Flash" de 10 minutos diários no chão da operação em frente ao painel. A pergunta-chave é sempre: <strong>"O número está vermelho? O que faremos hoje para mudar isso?"</strong></p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="tech-panel" id="section-types" style="border-color: rgba(0, 255, 102, 0.3);">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(0, 255, 102, 0.1); border-color: var(--green-data); color: var(--green-data); box-shadow: 0 0 15px var(--green-glow);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--text-pure);">SEÇÃO 5 // TIPOS DE KPIs</h2>
+                    </div>
+
+                    <p>A classificação dos indicadores permite entender qual parte do "organismo" logístico está doente. Eles se dividem em quatro grandes frentes analíticas:</p>
+
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 2rem;">
+                        <div style="background: rgba(0,0,0,0.4); border-left: 4px solid var(--blue-tech); padding: 20px; border-radius: 4px;">
+                            <h3 style="color: var(--blue-tech); font-size: 1.3rem; margin-bottom: 10px;">1. KPIs OPERACIONAIS (VELOCIDADE)</h3>
+                            <p style="font-size: 1rem; color: var(--text-main); margin-bottom: 10px;">Medem o desempenho bruto das atividades no dia a dia. É o motor do Centro de Distribuição.</p>
+                            <ul style="list-style-type: none; font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-muted);">
+                                <li>> Throughput (Unidades/Hora)</li>
+                                <li>> Produtividade por Operador</li>
+                                <li>> Tempo de Ciclo do Pedido</li>
+                            </ul>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.4); border-left: 4px solid var(--purple-insight); padding: 20px; border-radius: 4px;">
+                            <h3 style="color: var(--purple-insight); font-size: 1.3rem; margin-bottom: 10px;">2. KPIs DE QUALIDADE (PRECISÃO)</h3>
+                            <p style="font-size: 1rem; color: var(--text-main); margin-bottom: 10px;">Avaliam o nível de falhas da operação. Velocidade sem qualidade gera devoluções e custos dobrados.</p>
+                            <ul style="list-style-type: none; font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-muted);">
+                                <li>> Taxa de Erros de Picking</li>
+                                <li>> Índice de Avarias (Damages)</li>
+                                <li>> Taxa de Inconsistência de Inventário</li>
+                            </ul>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.4); border-left: 4px solid var(--meli-yellow); padding: 20px; border-radius: 4px;">
+                            <h3 style="color: var(--meli-yellow); font-size: 1.3rem; margin-bottom: 10px;">3. KPIs FINANCEIROS (CUSTO)</h3>
+                            <p style="font-size: 1rem; color: var(--text-main); margin-bottom: 10px;">Medem o impacto da logística na rentabilidade da empresa. Operações maduras buscam o equilíbrio perfeito.</p>
+                            <ul style="list-style-type: none; font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-muted);">
+                                <li>> Custo Logístico por Pedido</li>
+                                <li>> Custo de Frete vs Ticket Médio</li>
+                                <li>> Custo de Armazenamento por m²</li>
+                            </ul>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.4); border-left: 4px solid var(--green-data); padding: 20px; border-radius: 4px;">
+                            <h3 style="color: var(--green-data); font-size: 1.3rem; margin-bottom: 10px;">4. CUSTOMER SERVICE (EXPERIÊNCIA)</h3>
+                            <p style="font-size: 1rem; color: var(--text-main); margin-bottom: 10px;">Medem o que o cliente sente na ponta. Na logística de e-commerce, o cliente é o juiz final da operação.</p>
+                            <ul style="list-style-type: none; font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-muted);">
+                                <li>> OTIF (On-Time In-Full)</li>
+                                <li>> Lead Time Global de Entrega</li>
+                                <li>> Taxa de Contatos por Atraso (WISMO)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="tech-panel" id="section-fundamentals">
+                    <div class="panel-header">
+                        <div class="panel-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                        </div>
+                        <h2 class="panel-title">SEÇÃO 6 // KPIs FUNDAMENTAIS</h2>
+                    </div>
+
+                    <p>Dominar a logística requer o entendimento profundo dos indicadores classe mundial. Abaixo, a anatomia das principais métricas que rodam no painel de um Centro de Distribuição de alta performance:</p>
+
+                    <div style="margin-top: 2rem;">
+                        
+                        <div style="margin-bottom: 30px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 20px;">
+                            <h3 style="font-family: var(--font-display); font-size: 1.5rem; color: var(--green-data); margin-bottom: 10px;">[01] OTIF (ON-TIME IN-FULL)</h3>
+                            <p style="margin-bottom: 15px;">A métrica rainha. Mede a excelência absoluta: se o pedido foi entregue rigorosamente no prazo (On-Time), completo e sem erros ou avarias (In-Full).</p>
+                            <div style="background: rgba(0, 255, 102, 0.05); padding: 15px; border-left: 2px solid var(--green-data); font-family: var(--font-mono); font-size: 1.1rem; color: var(--text-pure);">
+                                FÓRMULA: OTIF = (Pedidos Perfeitos ÷ Total de Pedidos Expedidos) × 100<br>
+                                <span style="font-size: 0.9rem; color: var(--text-muted);">ALVO CLASSE MUNDIAL: > 95%</span>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 30px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 20px;">
+                            <h3 style="font-family: var(--font-display); font-size: 1.5rem; color: var(--blue-tech); margin-bottom: 10px;">[02] LEAD TIME LOGÍSTICO</h3>
+                            <p style="margin-bottom: 15px;">O cronômetro do cliente. Mede a velocidade da cadeia logística desde o momento exato do clique em "Comprar" até o pacote estar nas mãos do comprador.</p>
+                            <div style="background: rgba(0, 191, 255, 0.05); padding: 15px; border-left: 2px solid var(--blue-tech); font-family: var(--font-mono); font-size: 1.1rem; color: var(--text-pure);">
+                                CONCEITO: Data/Hora da Entrega - Data/Hora do Pagamento Aprovado<br>
+                                <span style="font-size: 0.9rem; color: var(--text-muted);">FOCO: Reduzir atritos entre processos (WIP) para abaixar o tempo médio.</span>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 30px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 20px;">
+                            <h3 style="font-family: var(--font-display); font-size: 1.5rem; color: var(--purple-insight); margin-bottom: 10px;">[03] PERFECT ORDER RATE (PEDIDO PERFEITO)</h3>
+                            <p style="margin-bottom: 15px;">O indicador mais rígido existente. Para ser perfeito, ele não pode ter tido nenhum problema em estoque, nenhuma avaria, ter faturado a nota correta e chegado no prazo combinado.</p>
+                            <div style="background: rgba(176, 38, 255, 0.05); padding: 15px; border-left: 2px solid var(--purple-insight); font-family: var(--font-mono); font-size: 1.1rem; color: var(--text-pure);">
+                                FÓRMULA: % Corretos × % Sem Avarias × % No Prazo × % Nota Correta<br>
+                                <span style="font-size: 0.9rem; color: var(--text-muted);">ALVO CLASSE MUNDIAL: > 90% (Altamente desafiador)</span>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 10px;">
+                            <h3 style="font-family: var(--font-display); font-size: 1.5rem; color: var(--meli-yellow); margin-bottom: 10px;">[04] FILL RATE E TEMPO DE PICKING</h3>
+                            <p style="margin-bottom: 15px;"><strong>Fill Rate:</strong> Percentual de pedidos atendidos sem ruptura de estoque (Shortage). Mostra a acuracidade virtual vs física.<br>
+                            <strong>Tempo de Picking:</strong> Velocidade de separação física dentro do armazém (Batch picking, Putwall, etc). Essencial para dimensionar equipes de piso de fábrica.</p>
+                        </div>
+
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-calculator">
+                    <div class="panel-header">
+                        <div class="panel-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                        </div>
+                        <h2 class="panel-title">SEÇÃO 7 // CALCULADORA DE OTIF</h2>
+                    </div>
+
+                    <p>Insira os dados da sua operação atual para calcular o seu nível de serviço (On-Time In-Full) real. A matemática não aceita intuições.</p>
+
+                    <div style="display: flex; gap: 30px; margin-top: 2rem; background: rgba(0,0,0,0.4); padding: 2rem; border: 1px dashed var(--border-active); border-radius: 8px;">
+                        
+                        <div style="flex: 1; display: flex; flex-direction: column; gap: 15px;">
+                            <div>
+                                <label style="font-family: var(--font-mono); color: var(--blue-tech); font-size: 0.9rem;">TOTAL DE PEDIDOS EXPEDIDOS:</label>
+                                <input type="number" id="calc-total" class="cyber-input" placeholder="Ex: 1000">
+                            </div>
+                            <div>
+                                <label style="font-family: var(--font-mono); color: var(--blue-tech); font-size: 0.9rem;">PEDIDOS PERFEITOS (No prazo e sem erro):</label>
+                                <input type="number" id="calc-correct" class="cyber-input" placeholder="Ex: 920">
+                            </div>
+                            <button id="btn-calc-otif" class="cyber-btn" style="margin-top: 10px;">PROCESSAR DADOS</button>
+                        </div>
+
+                        <div style="flex: 1; background: var(--bg-absolute); border: 1px solid var(--blue-tech); border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: inset 0 0 20px rgba(0, 191, 255, 0.1);">
+                            <span style="font-family: var(--font-display); color: var(--text-muted); font-size: 1rem; letter-spacing: 2px;">RESULTADO OTIF</span>
+                            <div id="calc-result" style="font-family: var(--font-mono); font-size: 3.5rem; color: var(--blue-tech); font-weight: bold; text-shadow: 0 0 15px var(--blue-glow); margin: 10px 0;">--%</div>
+                            <span id="calc-status" style="font-family: var(--font-body); font-size: 1rem; color: var(--text-main);">Aguardando inserção de dados...</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="tech-panel" id="section-simulator" style="border-color: rgba(255, 230, 0, 0.4);">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(255, 230, 0, 0.1); border-color: var(--meli-yellow); color: var(--meli-yellow); box-shadow: 0 0 15px rgba(255, 230, 0, 0.3);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--text-pure);">SEÇÃO 8 // SIMULADOR DE DECISÃO</h2>
+                    </div>
+
+                    <p>O verdadeiro teste de um gestor logístico é como ele reage ao gargalo. Avalie o cenário crítico abaixo e escolha sua estratégia tática. O sistema irá prever o impacto nos seus KPIs.</p>
+
+                    <div class="highlight-box" style="border-left-color: var(--meli-yellow); background: rgba(255, 230, 0, 0.05); color: var(--text-pure);">
+                        <strong style="color: var(--meli-yellow); font-size: 1.2rem;">[CENÁRIO CRÍTICO DETECTADO]</strong><br>
+                        Seu Centro de Distribuição está com um atraso massivo na área de Packing (Embalagem). O Backlog não para de crescer e o Cut-off (horário limite do transporte) é em 3 horas. O que você faz?
+                    </div>
+
+                    <div style="display: flex; gap: 15px; margin: 2rem 0;">
+                        <button class="cyber-btn sim-btn" data-action="team" style="border-color: var(--blue-tech); color: var(--blue-tech);">1. Aumentar Equipe (Mover Pessoas)</button>
+                        <button class="cyber-btn sim-btn" data-action="auto" style="border-color: var(--purple-insight); color: var(--purple-insight);">2. Ligar Esteira Rápida (Automação)</button>
+                        <button class="cyber-btn sim-btn" data-action="layout" style="border-color: var(--green-data); color: var(--green-data);">3. Mudar Layout de Caixas</button>
+                    </div>
+
+                    <div id="sim-output" style="background: rgba(0,0,0,0.8); border: 1px dashed var(--text-muted); padding: 20px; border-radius: 4px; min-height: 120px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 1.1rem; color: var(--text-main);">
+                        Aguardando input do comando... Selecione uma ação para ver o impacto nos KPIs.
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-errors" style="border-color: rgba(255, 0, 60, 0.4);">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(255, 0, 60, 0.1); border-color: var(--red-alert); color: var(--red-alert); box-shadow: 0 0 15px rgba(255, 0, 60, 0.3);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--text-pure);">SEÇÃO 9 // ERROS COMUNS (ARMADILHAS)</h2>
+                    </div>
+
+                    <p>Mesmo sendo ferramentas indispensáveis, muitos projetos de inteligência logística fracassam miseravelmente por erros clássicos de implementação de liderança:</p>
+
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 2rem;">
+                        <div style="background: rgba(255,0,60,0.05); border-left: 3px solid var(--red-alert); padding: 15px;">
+                            <strong style="color: var(--red-alert);">MEDIR COISA DEMAIS</strong>
+                            <p style="font-size: 0.95rem; margin-top: 5px; color: var(--text-main);">Quando a empresa tenta acompanhar 40 indicadores de uma vez, a equipe perde o foco. Se tudo é prioridade, nada é prioridade. O painel vira ruído visual.</p>
+                        </div>
+                        <div style="background: rgba(255,0,60,0.05); border-left: 3px solid var(--red-alert); padding: 15px;">
+                            <strong style="color: var(--red-alert);">METAS IRREAIS (GAMIFICATION TÓXICO)</strong>
+                            <p style="font-size: 0.95rem; margin-top: 5px; color: var(--text-main);">Exigir 100% de OTIF em uma operação desestruturada gera desmotivação ou, pior, <em>manipulação sistêmica de números</em> para bater a meta artificialmente.</p>
+                        </div>
+                        <div style="background: rgba(255,0,60,0.05); border-left: 3px solid var(--red-alert); padding: 15px;">
+                            <strong style="color: var(--red-alert);">INDICADORES SEM AÇÃO (VANITY METRICS)</strong>
+                            <p style="font-size: 0.95rem; margin-top: 5px; color: var(--text-main);">O KPI precisa gerar uma ação física. Sem rituais de análise de causa raiz e planos de ação, os números viram apenas relatórios bonitos que ninguém lê.</p>
+                        </div>
+                        <div style="background: rgba(255,0,60,0.05); border-left: 3px solid var(--red-alert); padding: 15px;">
+                            <strong style="color: var(--red-alert);">DADOS ERRADOS (LIXO ENTRA, LIXO SAI)</strong>
+                            <p style="font-size: 0.95rem; margin-top: 5px; color: var(--text-main);">Automação baseada em processos furados apenas acelera o erro. Se o sistema não reflete o estoque físico, o seu Dashboard de KPI está mentindo para você.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="tech-panel" id="section-map">
+                    <div class="panel-header">
+                        <div class="panel-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>
+                        </div>
+                        <h2 class="panel-title">SEÇÃO 10 // O MAPA DA LOGÍSTICA</h2>
+                    </div>
+
+                    <p>Um centro de distribuição saudável monitora cada macroprocesso com KPIs específicos, formando a espinha dorsal de dados da operação:</p>
+
+                    <div style="display: flex; justify-content: space-between; margin: 3rem 0; text-align: center; gap: 15px;">
+                        <div style="flex: 1; border: 1px solid var(--green-data); padding: 20px; border-radius: 8px; background: rgba(0,255,102,0.05);">
+                            <strong style="color: var(--green-data); font-family: var(--font-display); font-size: 1.2rem;">[INBOUND]</strong>
+                            <ul style="list-style-type: none; padding: 0; margin-top: 15px; font-family: var(--font-mono); color: var(--text-muted); font-size: 0.95rem; line-height: 1.8;">
+                                <li>Doc-to-Stock Time</li>
+                                <li>Acuracidade de Recebimento</li>
+                                <li>Taxa de Devolução Rápida</li>
+                            </ul>
+                        </div>
+                        <div style="flex: 1; border: 1px solid var(--meli-yellow); padding: 20px; border-radius: 8px; background: rgba(255,230,0,0.05);">
+                            <strong style="color: var(--meli-yellow); font-family: var(--font-display); font-size: 1.2rem;">[WAREHOUSE]</strong>
+                            <ul style="list-style-type: none; padding: 0; margin-top: 15px; font-family: var(--font-mono); color: var(--text-muted); font-size: 0.95rem; line-height: 1.8;">
+                                <li>Produtividade de Picking</li>
+                                <li>Taxa de Erro de Separação</li>
+                                <li>Giro de Estoque (Turnover)</li>
+                            </ul>
+                        </div>
+                        <div style="flex: 1; border: 1px solid var(--blue-tech); padding: 20px; border-radius: 8px; background: rgba(0,191,255,0.05);">
+                            <strong style="color: var(--blue-tech); font-family: var(--font-display); font-size: 1.2rem;">[OUTBOUND]</strong>
+                            <ul style="list-style-type: none; padding: 0; margin-top: 15px; font-family: var(--font-mono); color: var(--text-muted); font-size: 0.95rem; line-height: 1.8;">
+                                <li>OTIF (On-Time In-Full)</li>
+                                <li>Lead Time de Expedição</li>
+                                <li>Custo de Frete por Unidade</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 4rem; text-align: center; border-top: 1px solid rgba(0, 255, 102, 0.3); border-bottom: 1px solid rgba(0, 255, 102, 0.3); padding: 3rem 0; background: radial-gradient(circle at center, rgba(0, 255, 102, 0.05), transparent 70%);">
+                        <h2 style="font-family: var(--font-display); font-size: 2.2rem; color: var(--text-title); line-height: 1.4; text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);">
+                            Na logística moderna, os KPIs funcionam como o <span style="color: var(--blue-tech); text-shadow: 0 0 20px var(--blue-glow);">painel de instrumentos de um avião</span>.<br>
+                            Sem eles, a gestão atua com base em opiniões.<br>
+                            Com eles, <span style="color: var(--green-data); border-bottom: 2px solid var(--green-data);">a gestão atua com base em estratégia.</span>
+                        </h2>
+                    </div>
+                </section>
+
+            </div> <footer style="margin-top: auto; padding: 2rem 4rem; background: var(--bg-panel-deep); border-top: 1px solid var(--border-data); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; box-shadow: 0 -10px 30px rgba(0,0,0,0.5);">
+                
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                    <span style="font-family: var(--font-display); font-size: 1.2rem; color: var(--text-pure); letter-spacing: 2px;">
+                        MELI <span style="color: var(--meli-yellow); text-shadow: 0 0 10px rgba(255,230,0,0.5);">PDI</span>
+                    </span>
+                    <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); letter-spacing: 2px;">
+                        LOGISTICS DOCUMENTATION // ANALYTICS_MODULE_V3.0
+                    </span>
+                </div>
+
+                <div style="display: flex; gap: 30px; font-family: var(--font-code); font-size: 0.8rem;">
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <span style="color: var(--green-data); text-shadow: 0 0 8px var(--green-dim);">DATA SYNC</span>
+                        <span style="color: var(--text-main);">100% SECURE</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <span style="color: var(--blue-tech); text-shadow: 0 0 8px var(--blue-dim);">DB LATENCY</span>
+                        <span style="color: var(--text-main);">4ms</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <span style="color: var(--purple-insight); text-shadow: 0 0 8px var(--purple-insight);">ALGORITHM</span>
+                        <span style="color: var(--text-main);">PREDICTIVE</span>
+                    </div>
+                </div>
+
+                <div style="text-align: right; font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); letter-spacing: 1px;">
+                    <span style="color: var(--green-data);">[ TERMINAL ONLINE ]</span><br>
+                    TERMINAL_ID: OSASCO_CD // 2026
+                </div>
+
+            </footer>
+
+        </main> </div> ```
+
+---
+
+### Parte 12 de 12: Core JavaScript (Interações e Animações)
+
+Cole o bloco abaixo **imediatamente após** o código da Parte 11. É ele quem vai fazer as contas, as barras encherem sozinhas e o simulador responder:
+
+```html
+    <script>
+        /**
+         * MELI PDI - KPI & ANALYTICS MODULE
+         * ENGINE: Cyber_Data_v4.0
+         * DESC: Intersection Observer, OTIF Calculator, and Simulation Logic
+         */
+
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // 1. SYSTEM BOOT LOG
+            console.log("%c[SYS_BOOT]%c Inicializando Módulo de Analytics...", "color: #00FF66; font-weight: bold;", "color: #E2E8F0;");
+            console.log("%c[MODULE]%c Sincronizando dados de OTIF, Fill Rate e Lead Time...", "color: #00BFFF; font-weight: bold;", "color: #E2E8F0;");
+            
+            setTimeout(() => {
+                console.log("%c[STATUS]%c Bancos de dados carregados. Painéis interativos operacionais.", "color: #B026FF; font-weight: bold;", "color: #E2E8F0;");
+            }, 1000);
+
+            // 2. INTERSECTION OBSERVER (ANIMAÇÃO DOS PAINÉIS DE VIDRO)
+            const animatedElements = document.querySelectorAll('.tech-panel');
+            
+            animatedElements.forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(30px)';
+                el.style.transition = 'opacity 0.7s ease-out, transform 0.7s cubic-bezier(0.25, 1, 0.5, 1)';
+            });
+
+            const elementObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                        
+                        const originalBorder = getComputedStyle(entry.target).borderColor;
+                        entry.target.style.borderColor = 'var(--text-pure)';
+                        
+                        setTimeout(() => {
+                            entry.target.style.borderColor = originalBorder;
+                        }, 250);
+
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+
+            animatedElements.forEach(el => {
+                elementObserver.observe(el);
+            });
+
+            // 3. ANIMAÇÃO DE NÚMEROS DO DASHBOARD TOP (Contagem progressiva)
+            const kpiValues = document.querySelectorAll('.kpi-value');
+            
+            setTimeout(() => {
+                kpiValues.forEach(kpi => {
+                    const target = parseFloat(kpi.getAttribute('data-target'));
+                    const isInt = target % 1 === 0;
+                    let current = 0;
+                    const increment = target / 40; // velocidade da animação
+                    
+                    const updateCounter = () => {
+                        current += increment;
+                        if (current < target) {
+                            kpi.innerText = isInt ? Math.ceil(current) : current.toFixed(1);
+                            requestAnimationFrame(updateCounter);
+                        } else {
+                            kpi.innerText = isInt ? target : target.toFixed(1);
+                        }
+                    };
+                    updateCounter();
+                });
+                
+                // Anima as barras de progresso via CSS alterando a width
+                const progressFills = document.querySelectorAll('.progress-fill');
+                progressFills.forEach(fill => {
+                    fill.style.animation = 'fill-bar 1.5s ease-out forwards';
+                });
+            }, 500);
+
+            // 4. LÓGICA DA CALCULADORA DE OTIF
+            const btnCalc = document.getElementById('btn-calc-otif');
+            const inputTotal = document.getElementById('calc-total');
+            const inputCorrect = document.getElementById('calc-correct');
+            const resultDisplay = document.getElementById('calc-result');
+            const statusDisplay = document.getElementById('calc-status');
+
+            btnCalc.addEventListener('click', () => {
+                const total = parseFloat(inputTotal.value);
+                const correct = parseFloat(inputCorrect.value);
+
+                if (isNaN(total) || isNaN(correct) || total <= 0) {
+                    resultDisplay.innerText = "ERR";
+                    resultDisplay.style.color = "var(--red-alert)";
+                    statusDisplay.innerText = "[!] Insira valores numéricos válidos.";
+                    statusDisplay.style.color = "var(--red-alert)";
+                    return;
+                }
+
+                if (correct > total) {
+                    resultDisplay.innerText = "ERR";
+                    statusDisplay.innerText = "[!] Pedidos perfeitos não podem exceder o total.";
+                    statusDisplay.style.color = "var(--red-alert)";
+                    return;
+                }
+
+                const otif = ((correct / total) * 100).toFixed(1);
+                resultDisplay.innerText = otif + "%";
+                
+                // Muda a cor e o status baseado na performance
+                if (otif >= 95) {
+                    resultDisplay.style.color = "var(--green-data)";
+                    statusDisplay.innerText = "Excelente! Nível de Serviço Classe Mundial.";
+                    statusDisplay.style.color = "var(--green-data)";
+                } else if (otif >= 90) {
+                    resultDisplay.style.color = "var(--blue-tech)";
+                    statusDisplay.innerText = "Operação Estável. Busque melhorias pontuais.";
+                    statusDisplay.style.color = "var(--blue-tech)";
+                } else if (otif >= 80) {
+                    resultDisplay.style.color = "var(--meli-yellow)";
+                    statusDisplay.innerText = "Alerta! Necessário revisar processos de qualidade.";
+                    statusDisplay.style.color = "var(--meli-yellow)";
+                } else {
+                    resultDisplay.style.color = "var(--red-alert)";
+                    statusDisplay.innerText = "Crítico! Risco de churn de clientes elevado.";
+                    statusDisplay.style.color = "var(--red-alert)";
+                }
+            });
+
+            // 5. LÓGICA DO SIMULADOR LOGÍSTICO
+            const simBtns = document.querySelectorAll('.sim-btn');
+            const simOutput = document.getElementById('sim-output');
+
+            const scenarios = {
+                team: `<div style="color: var(--blue-tech); font-family: var(--font-display); font-size: 1.2rem; margin-bottom: 10px;">AÇÃO SELECIONADA: AUMENTAR EQUIPE</div>
+                       <p style="margin: 5px 0;"><strong>[IMPACTO NO CUSTO]:</strong> Aumento imediato de despesas (Horas Extras).</p>
+                       <p style="margin: 5px 0;"><strong>[IMPACTO NO SLA]:</strong> Positivo no curto prazo. O Backlog diminui rapidamente.</p>
+                       <p style="margin: 5px 0; color: var(--text-muted); font-size: 0.95rem;"><strong>ANÁLISE:</strong> É a clássica "Força Bruta". Salva o SLA de hoje, mas encarece o Custo por Pedido. Não resolve a causa raiz estrutural do atraso.</p>`,
+                
+                auto: `<div style="color: var(--purple-insight); font-family: var(--font-display); font-size: 1.2rem; margin-bottom: 10px;">AÇÃO SELECIONADA: LIGAR AUTOMAÇÃO</div>
+                       <p style="margin: 5px 0;"><strong>[IMPACTO NO THROUGHPUT]:</strong> Aceleração exponencial do fluxo de caixas.</p>
+                       <p style="margin: 5px 0;"><strong>[IMPACTO NA QUALIDADE]:</strong> Possível risco de avarias (Damages) se a rampa de saída não der vazão.</p>
+                       <p style="margin: 5px 0; color: var(--text-muted); font-size: 0.95rem;"><strong>ANÁLISE:</strong> Solução técnica. Resolve o backlog, mas o próximo gargalo (ex: Expedição) vai estourar. É preciso avisar a etapa seguinte sobre o tsunami de pacotes.</p>`,
+                
+                layout: `<div style="color: var(--green-data); font-family: var(--font-display); font-size: 1.2rem; margin-bottom: 10px;">AÇÃO SELECIONADA: MUDAR LAYOUT (KAIZEN)</div>
+                         <p style="margin: 5px 0;"><strong>[IMPACTO OPERACIONAL]:</strong> Reduz a movimentação inútil. Elimina o desperdício.</p>
+                         <p style="margin: 5px 0;"><strong>[IMPACTO NO SLA]:</strong> Lento no curto prazo (curva de aprendizado), mas permanente no longo prazo.</p>
+                         <p style="margin: 5px 0; color: var(--text-muted); font-size: 0.95rem;"><strong>ANÁLISE:</strong> A verdadeira mentalidade do Problem Solver. Em vez de contratar mais gente, você melhora a ergonomia. O processo fica mais barato e produtivo para sempre.</p>`
+            };
+
+            simBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const action = e.target.getAttribute('data-action');
+                    simOutput.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        simOutput.innerHTML = scenarios[action];
+                        simOutput.style.opacity = '1';
+                        simOutput.style.borderColor = getComputedStyle(e.target).borderColor;
+                        simOutput.style.boxShadow = `0 0 20px ${getComputedStyle(e.target).borderColor.replace(')', ', 0.2)').replace('rgb', 'rgba')}`;
+                    }, 300);
+                });
+            });
+
+        });
+    </script>
+</body>
+</html>

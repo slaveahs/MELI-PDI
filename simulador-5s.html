@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador 5S | MELI PDI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-absolute: #050505;
+            --bg-panel: #101015;
+            --meli-yellow: #FFE600;
+            --cyan-tech: #00E5FF;
+            --red-alert: #FF2D2D;
+            --pass-green: #00FF66;
+            --text-pure: #FFFFFF;
+            --text-main: #E2E8F0;
+            --text-muted: #8AA6A6;
+            --font-title: 'Orbitron', sans-serif;
+            --font-body: 'Rajdhani', sans-serif;
+            --font-mono: 'Share Tech Mono', monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-absolute);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: radial-gradient(circle at center, rgba(255, 230, 0, 0.03) 0%, transparent 70%);
+        }
+
+        /* HEADER & HUD */
+        header {
+            width: 100%; max-width: 1000px;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 20px; border-bottom: 1px solid rgba(255,230,0,0.2);
+            background: var(--bg-panel); margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+        }
+
+        .title-area h1 { font-family: var(--font-title); color: var(--meli-yellow); font-size: 1.5rem; text-transform: uppercase; letter-spacing: 2px; }
+        .title-area p { font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-muted); }
+
+        .hud { display: flex; gap: 30px; }
+        .hud-box { background: rgba(0,0,0,0.6); border: 1px solid var(--text-muted); padding: 10px 20px; border-radius: 4px; text-align: center; }
+        .hud-box span { display: block; font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px; }
+        .hud-box strong { font-family: var(--font-mono); font-size: 1.8rem; color: var(--text-pure); }
+        #target-number { color: var(--cyan-tech); text-shadow: 0 0 10px rgba(0,229,255,0.5); }
+        #timer-display { color: var(--meli-yellow); }
+
+        /* MAIN CONTAINER */
+        main { width: 100%; max-width: 1000px; flex-grow: 1; position: relative; display: flex; flex-direction: column; }
+
+        /* GAME BOARD */
+        #game-board {
+            flex-grow: 1; background: var(--bg-panel); border: 1px dashed rgba(255,255,255,0.1);
+            position: relative; border-radius: 8px; overflow: hidden; min-height: 500px;
+        }
+
+        /* PHASE 3 GRID STYLE */
+        #game-board.grid-mode {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px; padding: 20px;
+            align-content: center; justify-items: center;
+        }
+
+        /* NUMBER NODES */
+        .number-node {
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(255,255,255,0.05); border: 2px solid var(--text-muted);
+            color: var(--text-pure); font-family: var(--font-title); font-weight: bold;
+            border-radius: 50%; cursor: pointer; user-select: none;
+            transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+            z-index: 10;
+        }
+
+        .number-node:hover {
+            border-color: var(--cyan-tech); color: var(--cyan-tech);
+            box-shadow: 0 0 15px rgba(0,229,255,0.4); z-index: 100 !important;
+        }
+
+        .number-node.found {
+            background: rgba(0,255,102,0.2); border-color: var(--pass-green);
+            color: transparent; pointer-events: none; opacity: 0.3;
+        }
+
+        .number-node.error { animation: flashError 0.3s; }
+
+        @keyframes flashError {
+            0%, 100% { background: rgba(255,255,255,0.05); border-color: var(--text-muted); }
+            50% { background: rgba(255,45,45,0.5); border-color: var(--red-alert); box-shadow: 0 0 20px var(--red-alert); }
+        }
+
+        /* SCREENS (Modals) */
+        .screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5,5,5,0.95); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; text-align: center;
+            z-index: 1000; border-radius: 8px; padding: 40px;
+        }
+
+        .hidden { display: none !important; }
+
+        .screen h2 { font-family: var(--font-title); font-size: 2.5rem; color: var(--meli-yellow); margin-bottom: 15px; }
+        .screen p { font-size: 1.2rem; max-width: 600px; margin-bottom: 30px; line-height: 1.6; }
+        
+        .cyber-btn {
+            background: transparent; border: 2px solid var(--meli-yellow); color: var(--meli-yellow);
+            padding: 15px 40px; font-family: var(--font-title); font-size: 1.2rem; cursor: pointer;
+            text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; border-radius: 4px;
+        }
+        .cyber-btn:hover { background: var(--meli-yellow); color: #000; box-shadow: 0 0 20px rgba(255,230,0,0.5); }
+
+        /* RESULTS CHART */
+        .chart-container { width: 100%; max-width: 600px; margin: 30px 0; text-align: left; }
+        .bar-row { display: flex; align-items: center; margin-bottom: 15px; }
+        .bar-label { width: 150px; font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-main); }
+        .bar-track { flex-grow: 1; background: rgba(255,255,255,0.1); height: 30px; border-radius: 4px; position: relative; overflow: hidden; }
+        .bar-fill { height: 100%; background: var(--meli-yellow); width: 0%; transition: width 1s ease-out; display: flex; align-items: center; padding-left: 10px; font-family: var(--font-mono); color: #000; font-weight: bold; }
+        .bar-fill.cyan { background: var(--cyan-tech); }
+        .bar-fill.green { background: var(--pass-green); }
+
+        .lesson-box {
+            background: rgba(0,255,102,0.05); border-left: 4px solid var(--pass-green);
+            padding: 20px; margin-top: 20px; font-family: var(--font-display); font-size: 1.2rem; color: var(--pass-green);
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="title-area">
+            <h1>Simulador 5S</h1>
+            <p>Treinamento Tático de Organização Logística</p>
+        </div>
+        <div class="hud">
+            <div class="hud-box">
+                <span>BUSCAR:</span>
+                <strong id="target-number">1</strong>
+            </div>
+            <div class="hud-box" style="border-color: var(--meli-yellow);">
+                <span>CRONÔMETRO:</span>
+                <strong id="timer-display">0.0s</strong>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div id="info-screen" class="screen">
+            <h2 id="info-title">JOGO DOS NÚMEROS</h2>
+            <p id="info-desc">Neste simulador, você sentirá na pele o impacto do 5S na produtividade. Seu objetivo é clicar nos números em ordem crescente (do 1 ao 49) o mais rápido possível.</p>
+            <button id="btn-action" class="cyber-btn" onclick="startPhase()">INICIAR FASE 1</button>
+        </div>
+
+        <div id="results-screen" class="screen hidden">
+            <h2>RELATÓRIO DE PRODUTIVIDADE</h2>
+            <p>Veja como o tempo de execução despenca quando o ambiente é submetido aos pilares do 5S.</p>
+            
+            <div class="chart-container">
+                <div class="bar-row">
+                    <div class="bar-label">Fase 1 (Caos):</div>
+                    <div class="bar-track"><div id="bar-f1" class="bar-fill"></div></div>
+                </div>
+                <div class="bar-row">
+                    <div class="bar-label">Fase 2 (Seiri):</div>
+                    <div class="bar-track"><div id="bar-f2" class="bar-fill cyan"></div></div>
+                </div>
+                <div class="bar-row">
+                    <div class="bar-label">Fase 3 (Seiton):</div>
+                    <div class="bar-track"><div id="bar-f3" class="bar-fill green"></div></div>
+                </div>
+            </div>
+
+            <div class="lesson-box">
+                "Quanto mais organizado o ambiente, maior a produtividade e menor o desperdício de tempo."
+            </div>
+            
+            <button class="cyber-btn" style="margin-top: 30px;" onclick="location.reload()">REINICIAR SIMULAÇÃO</button>
+        </div>
+
+        <div id="game-board"></div>
+    </main>
+
+    <script>
+        // ESTADO DO JOGO
+        let currentPhase = 1;
+        let expectedNumber = 1;
+        let timerInterval;
+        let startTime;
+        let times = { phase1: 0, phase2: 0, phase3: 0 };
+        const MAX_TARGET = 49;
+
+        // ELEMENTOS DO DOM
+        const gameBoard = document.getElementById('game-board');
+        const infoScreen = document.getElementById('info-screen');
+        const infoTitle = document.getElementById('info-title');
+        const infoDesc = document.getElementById('info-desc');
+        const btnAction = document.getElementById('btn-action');
+        const targetDisplay = document.getElementById('target-number');
+        const timerDisplay = document.getElementById('timer-display');
+        const resultsScreen = document.getElementById('results-screen');
+
+        // FUNÇÃO PARA INICIAR A FASE ATUAL
+        function startPhase() {
+            infoScreen.classList.add('hidden');
+            expectedNumber = 1;
+            targetDisplay.innerText = expectedNumber;
+            gameBoard.innerHTML = '';
+            gameBoard.className = ''; // Limpa classes (como grid-mode)
+
+            generateNumbers();
+            
+            // Inicia o relógio
+            startTime = Date.now();
+            timerInterval = setInterval(updateTimer, 100);
+        }
+
+        // ATUALIZAR O CRONÔMETRO
+        function updateTimer() {
+            const currentTime = Date.now();
+            const elapsedTime = ((currentTime - startTime) / 1000).toFixed(1);
+            timerDisplay.innerText = `${elapsedTime}s`;
+        }
+
+        // GERAR OS NÚMEROS NO TABULEIRO
+        function generateNumbers() {
+            let totalNumbers = currentPhase === 1 ? 99 : 49;
+            let numbersArray = [];
+
+            for (let i = 1; i <= totalNumbers; i++) {
+                numbersArray.push(i);
+            }
+
+            // Embaralha o array
+            numbersArray = numbersArray.sort(() => Math.random() - 0.5);
+
+            if (currentPhase === 3) {
+                // FASE 3: SEITON (Grid Perfeito)
+                gameBoard.classList.add('grid-mode');
+                // Para ficar em ordem perfeita na Fase 3, não usamos o array embaralhado
+                for (let i = 1; i <= 49; i++) {
+                    createNode(i, true);
+                }
+            } else {
+                // FASE 1 e 2: CAOS ABSOLUTO
+                numbersArray.forEach(num => createNode(num, false));
+            }
+        }
+
+        // CRIAR ELEMENTO HTML DO NÚMERO
+        function createNode(number, isGrid) {
+            const node = document.createElement('div');
+            node.classList.add('number-node');
+            node.innerText = number;
+
+            if (!isGrid) {
+                // Posicionamento e Rotação Aleatória
+                node.style.position = 'absolute';
+                const size = Math.floor(Math.random() * 20) + 40; // Entre 40px e 60px
+                node.style.width = `${size}px`;
+                node.style.height = `${size}px`;
+                node.style.fontSize = `${size * 0.4}px`;
+
+                // Garante que fique dentro dos limites (10% a 90% para não cortar)
+                const posX = Math.random() * 85;
+                const posY = Math.random() * 85;
+                node.style.left = `${posX}%`;
+                node.style.top = `${posY}%`;
+
+                if (currentPhase === 1) {
+                    const rotation = Math.floor(Math.random() * 360);
+                    node.style.transform = `rotate(${rotation}deg)`;
+                }
+            } else {
+                // Estilo padronizado para Fase 3
+                node.style.width = '60px';
+                node.style.height = '60px';
+                node.style.fontSize = '24px';
+            }
+
+            // Evento de Clique
+            node.addEventListener('click', () => handleClick(node, number));
+            gameBoard.appendChild(node);
+        }
+
+        // LÓGICA DE CLIQUE E VERIFICAÇÃO
+        function handleClick(node, number) {
+            if (node.classList.contains('found')) return;
+
+            if (number === expectedNumber) {
+                // Acerto
+                node.classList.add('found');
+                expectedNumber++;
+                
+                if (expectedNumber > MAX_TARGET) {
+                    endPhase();
+                } else {
+                    targetDisplay.innerText = expectedNumber;
+                }
+            } else {
+                // Erro
+                node.classList.add('error');
+                setTimeout(() => node.classList.remove('error'), 300);
+            }
+        }
+
+        // FINALIZAR FASE E SALVAR TEMPO
+        function endPhase() {
+            clearInterval(timerInterval);
+            const finalTime = ((Date.now() - startTime) / 1000).toFixed(1);
+            
+            if (currentPhase === 1) times.phase1 = parseFloat(finalTime);
+            if (currentPhase === 2) times.phase2 = parseFloat(finalTime);
+            if (currentPhase === 3) times.phase3 = parseFloat(finalTime);
+
+            if (currentPhase < 3) {
+                // Prepara a próxima fase
+                currentPhase++;
+                setupNextPhaseScreen(finalTime);
+            } else {
+                // Fim do Jogo
+                showResults();
+            }
+        }
+
+        // TELA DE TRANSIÇÃO ENTRE FASES
+        function setupNextPhaseScreen(time) {
+            infoScreen.classList.remove('hidden');
+            
+            if (currentPhase === 2) {
+                infoTitle.innerText = `FASE 1 CONCLUÍDA (${time}s)`;
+                infoTitle.style.color = "var(--red-alert)";
+                infoDesc.innerHTML = "O caos rouba seu tempo. Vamos aplicar o <strong>SEIRI (Senso de Utilização)</strong>. Os números de 50 a 99 (desnecessários) foram removidos do setor. A desordem continua, mas o excesso sumiu.";
+                btnAction.innerText = "INICIAR FASE 2";
+            } else if (currentPhase === 3) {
+                infoTitle.innerText = `FASE 2 CONCLUÍDA (${time}s)`;
+                infoTitle.style.color = "var(--cyan-tech)";
+                infoDesc.innerHTML = "Melhorou, mas a caça aos números cansa a mente. Vamos aplicar o <strong>SEITON (Senso de Organização)</strong>. Um lugar para cada coisa e cada coisa em seu lugar.";
+                btnAction.innerText = "INICIAR FASE 3";
+            }
+        }
+
+        // RENDERIZAR GRÁFICOS DE RESULTADO FINAL
+        function showResults() {
+            gameBoard.innerHTML = '';
+            targetDisplay.innerText = 'CONCLUÍDO';
+            resultsScreen.classList.remove('hidden');
+
+            const maxTime = Math.max(times.phase1, times.phase2, times.phase3);
+
+            // Anima as barras com base na percentagem do maior tempo
+            setTimeout(() => {
+                const b1 = document.getElementById('bar-f1');
+                b1.style.width = `${(times.phase1 / maxTime) * 100}%`;
+                b1.innerText = `${times.phase1}s`;
+
+                const b2 = document.getElementById('bar-f2');
+                b2.style.width = `${(times.phase2 / maxTime) * 100}%`;
+                b2.innerText = `${times.phase2}s`;
+
+                const b3 = document.getElementById('bar-f3');
+                b3.style.width = `${(times.phase3 / maxTime) * 100}%`;
+                b3.innerText = `${times.phase3}s`;
+            }, 500);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metodologia 5S & Maturidade Lean | MeLi PDI Terminal</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        /* ==========================================================================
+           01. ROOT VARIABLES (ULTRA LEAN / 5S THEME)
+           ========================================================================== */
+        :root {
+            /* Palette Base: Deep Void Dark */
+            --bg-absolute: #010603; 
+            --bg-panel-deep: rgba(3, 15, 8, 0.85);
+            --bg-card-glass: rgba(5, 25, 12, 0.55);
+            --bg-card-hover: rgba(10, 40, 20, 0.85);
+
+            /* Tema de Cores 5S (Verde Produtividade e Branco Esterilizado) */
+            --lean-green: #00FF66;
+            --lean-glow: rgba(0, 255, 102, 0.6);
+            --lean-dim: rgba(0, 255, 102, 0.15);
+
+            --white-clean: #FFFFFF;
+            --white-glow: rgba(255, 255, 255, 0.5);
+            --white-dim: rgba(255, 255, 255, 0.05);
+
+            /* Cores de Alerta e Hierarquia (Meli / Belts) */
+            --meli-yellow: #FFE600;
+            --yellow-glow: rgba(255, 230, 0, 0.5);
+            --red-alert: #FF003C;
+            --cyan-tech: #00E5FF;
+            --purple-wms: #8A2BE2;
+
+            /* Tipografia */
+            --font-display: 'Orbitron', sans-serif;
+            --font-body: 'Rajdhani', sans-serif;
+            --font-mono: 'Share Tech Mono', monospace;
+            --font-code: 'Fira Code', monospace;
+
+            /* Cores de Texto */
+            --text-title: #FFFFFF;
+            --text-main: #E2E8F0;
+            --text-muted: #648270;
+
+            /* Bordas e Sombras (Advanced Glassmorphism) */
+            --border-lean: rgba(0, 255, 102, 0.3);
+            --shadow-glass: 0 15px 35px 0 rgba(0, 0, 0, 0.9);
+            --shadow-neon-green: 0 0 20px var(--lean-glow), inset 0 0 15px var(--lean-dim);
+            
+            /* Medidas Estruturais (TRAVADAS PARA DESKTOP) */
+            --sidebar-width: 300px;
+            --topbar-height: 80px;
+            --radius-card: 6px; 
+            --transition-hud: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        /* ==========================================================================
+           02. CSS RESET & GLOBAL SETUP (FORCED DESKTOP)
+           ========================================================================== */
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { font-size: 16px; scroll-behavior: smooth; }
+
+        body {
+            background-color: var(--bg-absolute);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            min-height: 100vh;
+            min-width: 1200px; /* <--- TRAVA ABSOLUTA DE DESKTOP */
+            overflow-x: hidden;  
+            display: flex;
+            position: relative;
+        }
+
+        /* Custom Scrollbar - Lean Style V2 */
+        ::-webkit-scrollbar { width: 12px; height: 12px; }
+        ::-webkit-scrollbar-track { background: var(--bg-absolute); border-left: 1px solid rgba(0, 255, 102, 0.1); }
+        ::-webkit-scrollbar-thumb { background: var(--lean-dim); border: 1px solid var(--lean-green); border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--lean-green); box-shadow: 0 0 20px var(--lean-green); }
+
+        /* Tipografia Global */
+        h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--text-title); line-height: 1.2; }
+        p { font-size: 1.25rem; line-height: 1.8; margin-bottom: 1.5rem; color: var(--text-main); }
+        strong { color: var(--lean-green); font-weight: 700; text-shadow: 0 0 8px var(--lean-dim); }
+
+        /* ==========================================================================
+           03. ADVANCED BACKGROUND EFFECTS (DYNAMIC GRID)
+           ========================================================================== */
+        body::before {
+            content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -3;
+            /* Grid limpa, mais densa e tecnológica */
+            background-image: 
+                linear-gradient(rgba(0, 255, 102, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 40px 40px; pointer-events: none;
+            mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.2) 100%);
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.2) 100%);
+        }
+
+        body::after {
+            content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2;
+            background: radial-gradient(circle at 80% 10%, rgba(0, 255, 102, 0.05) 0%, transparent 50%),
+                        radial-gradient(circle at 20% 90%, rgba(0, 229, 255, 0.03) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        /* ==========================================================================
+           04. GLOBAL KEYFRAMES (LEAN ANIMATIONS)
+           ========================================================================== */
+        @keyframes scanline-v { 0% { transform: translateY(-100%); } 100% { transform: translateY(100vh); } }
+        
+        @keyframes pulse-lean {
+            0% { box-shadow: 0 0 10px var(--lean-dim); border-color: rgba(0, 255, 102, 0.3); }
+            50% { box-shadow: 0 0 25px var(--lean-glow); border-color: var(--lean-green); }
+            100% { box-shadow: 0 0 10px var(--lean-dim); border-color: rgba(0, 255, 102, 0.3); }
+        }
+
+        @keyframes float3D {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .hud-scanner {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 3px;
+            background: linear-gradient(to right, transparent, var(--lean-green), var(--white-clean), var(--lean-green), transparent);
+            opacity: 0.2; z-index: 9999; pointer-events: none; animation: scanline-v 7s linear infinite;
+        }
+        /* ==========================================================================
+           05. GLOBAL LAYOUT (GRID E WRAPPERS)
+           ========================================================================== */
+        .app-wrapper {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+            position: relative;
+            z-index: 10;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background: radial-gradient(circle at top left, rgba(0, 255, 102, 0.02), transparent 70%);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1500px; /* Alargado para acomodar o gráfico lado a lado */
+            margin: 0 auto;
+            padding: 3rem 5rem 5rem 5rem;
+        }
+
+        /* ==========================================================================
+           06. SIDEBAR (TERMINAL NAVIGATION)
+           ========================================================================== */
+        .sys-sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-panel-deep);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-right: 1px solid rgba(0, 255, 102, 0.2);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0; 
+            z-index: 100;
+            box-shadow: 15px 0 40px rgba(0, 0, 0, 0.95);
+            position: sticky; top: 0; height: 100vh;
+        }
+
+        .sys-sidebar::after {
+            content: ''; position: absolute; top: 0; right: -1px; width: 2px; height: 100%;
+            background: linear-gradient(to bottom, transparent, var(--lean-green), transparent); opacity: 0.8;
+        }
+
+        .sidebar-brand {
+            height: var(--topbar-height); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; border-bottom: 1px dashed var(--border-lean);
+            background: radial-gradient(circle at top, var(--lean-dim), transparent); position: relative;
+        }
+
+        .sidebar-brand::before {
+            content: ''; position: absolute; bottom: -1px; left: 0; width: 50%; height: 2px;
+            background: var(--lean-green); box-shadow: 0 0 15px var(--lean-green);
+        }
+
+        .brand-logo { font-family: var(--font-display); font-size: 2rem; font-weight: 900; color: var(--white-clean); letter-spacing: 3px; text-shadow: 0 0 10px rgba(255, 255, 255, 0.2); }
+        .brand-logo span { color: var(--lean-green); text-shadow: 0 0 15px var(--lean-glow); }
+        .brand-sub { font-family: var(--font-mono); font-size: 0.75rem; color: var(--lean-green); letter-spacing: 5px; margin-top: 5px; text-transform: uppercase; }
+
+        .nav-menu { flex-grow: 1; padding: 2.5rem 1.5rem; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
+
+        .nav-link {
+            display: flex; align-items: center; gap: 15px; padding: 14px 20px;
+            color: var(--text-muted); font-family: var(--font-body); font-size: 1.1rem;
+            font-weight: 600; letter-spacing: 1.5px; text-decoration: none; position: relative;
+            transition: var(--transition-hud); background: rgba(255, 255, 255, 0.01);
+            border: 1px solid transparent; border-radius: var(--radius-card);
+            clip-path: polygon(0 0, 100% 0, 100% 75%, 95% 100%, 0 100%);
+        }
+
+        .nav-link::before {
+            content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 4px;
+            background: var(--lean-green); transform: scaleY(0); transition: 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .nav-link:hover { color: var(--text-pure); background: rgba(0, 255, 102, 0.05); border-color: rgba(0, 255, 102, 0.2); padding-left: 28px; }
+        .nav-link:hover::before { transform: scaleY(1); box-shadow: 0 0 15px var(--lean-glow); }
+
+        .nav-link.active { color: var(--bg-absolute); background: var(--lean-green); border-color: var(--lean-green); font-weight: 900; }
+        .nav-link.active::before { background: var(--white-clean); transform: scaleY(1); box-shadow: 0 0 15px var(--white-glow); }
+
+        .nav-icon { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; transition: 0.3s; }
+        .nav-link:hover .nav-icon { transform: scale(1.15); color: var(--lean-green); }
+        .nav-link.active .nav-icon { color: var(--bg-absolute); }
+
+        /* ==========================================================================
+           07. TOPBAR (SYSTEM HEADER)
+           ========================================================================== */
+        .sys-topbar {
+            height: var(--topbar-height); width: 100%; background: var(--bg-panel-deep);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-lean); display: flex; align-items: center;
+            justify-content: space-between; padding: 0 5rem; position: sticky; top: 0; z-index: 90;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8);
+        }
+
+        .topbar-path { font-family: var(--font-mono); font-size: 0.95rem; color: var(--text-muted); letter-spacing: 2px; display: flex; align-items: center; gap: 10px; }
+        .topbar-path span { color: var(--lean-green); text-shadow: 0 0 8px var(--lean-dim); }
+
+        .topbar-status {
+            display: flex; align-items: center; gap: 20px; font-family: var(--font-code);
+            font-size: 0.85rem; color: var(--lean-green); letter-spacing: 1.5px;
+            border: 1px solid rgba(0, 255, 102, 0.5); padding: 8px 18px; border-radius: 4px;
+            background: rgba(0, 255, 102, 0.05); box-shadow: 0 0 15px var(--lean-dim);
+        }
+
+        .status-dot-lean { width: 10px; height: 10px; background: var(--lean-green); border-radius: 50%; box-shadow: 0 0 12px var(--lean-glow); animation: pulse-lean 1.2s infinite alternate; }
+        /* ==========================================================================
+           08. HERO SECTION
+           ========================================================================== */
+        .hero-section {
+            margin-bottom: 4rem; position: relative; padding-bottom: 3rem;
+            border-bottom: 1px solid rgba(0, 255, 102, 0.3); display: flex; flex-direction: column;
+        }
+
+        .hero-section::after {
+            content: ''; position: absolute; bottom: -2px; left: 0; width: 300px; height: 4px;
+            background: var(--lean-green); box-shadow: 0 0 20px var(--lean-glow);
+        }
+
+        .hero-title-wrapper { position: relative; display: inline-block; margin-bottom: 1rem; }
+        .hero-title { font-size: 4.5rem; font-weight: 900; color: var(--text-title); letter-spacing: 5px; line-height: 1.1; text-shadow: 0 0 30px rgba(255, 255, 255, 0.1); }
+        .hero-title span { color: var(--white-clean); text-shadow: 0 0 25px var(--white-glow); }
+
+        .hero-subtitle { font-family: var(--font-mono); font-size: 1.6rem; color: var(--text-main); letter-spacing: 4px; text-transform: uppercase; margin-top: 10px; display: flex; align-items: center; gap: 15px; }
+        .hero-subtitle::before { content: '[LEAN_METHODOLOGY_V2]'; font-size: 1rem; color: var(--bg-absolute); background: var(--lean-green); padding: 4px 12px; border-radius: 2px; font-weight: bold; }
+
+        /* ==========================================================================
+           09. CONTENT PANELS & ADVANCED GLASSMORPHISM
+           ========================================================================== */
+        .tech-panel {
+            background: var(--bg-card-glass); backdrop-filter: blur(15px);
+            border: 1px solid rgba(0, 255, 102, 0.2); border-radius: var(--radius-card);
+            padding: 4rem; margin-bottom: 4rem; position: relative;
+            box-shadow: var(--shadow-glass); transition: var(--transition-hud);
+            transform-style: preserve-3d; perspective: 1000px;
+        }
+        
+        .tech-panel:hover {
+            border-color: var(--lean-green); background: var(--bg-card-hover);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.95), inset 0 0 30px var(--lean-dim);
+            transform: translateY(-5px);
+        }
+        
+        .tech-panel::before, .tech-panel::after { content: ''; position: absolute; width: 40px; height: 40px; border: 3px solid var(--lean-green); opacity: 0.7; transition: 0.4s; }
+        .tech-panel::before { top: 20px; left: 20px; border-right: none; border-bottom: none; }
+        .tech-panel::after { bottom: 20px; right: 20px; border-left: none; border-top: none; }
+        
+        .panel-header { display: flex; align-items: center; gap: 25px; margin-bottom: 2.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 1.5rem; }
+        .panel-title { font-size: 2.2rem; color: var(--text-title); letter-spacing: 3px; }
+        
+        .panel-icon {
+            width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;
+            background: rgba(0, 255, 102, 0.05); border: 1px solid var(--lean-green); border-radius: var(--radius-card);
+            color: var(--lean-green); font-size: 2rem; box-shadow: var(--shadow-neon-green);
+        }
+
+        /* Tipografia de Conteúdo Avançada */
+        .topic-header { font-family: var(--font-display); font-size: 1.4rem; color: var(--white-clean); margin-top: 2.5rem; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 1px; }
+        .senso-title { font-family: var(--font-display); font-size: 1.8rem; color: var(--lean-green); margin-top: 3rem; margin-bottom: 1.5rem; padding-bottom: 15px; border-bottom: 1px dashed rgba(0,255,102,0.3); display: inline-block; width: 100%; }
+
+        .highlight-box { background: rgba(255, 255, 255, 0.03); border-left: 5px solid var(--white-clean); padding: 2rem; margin: 2rem 0; font-family: var(--font-mono); font-size: 1.2rem; color: var(--text-pure); box-shadow: inset 0 0 20px rgba(255,255,255,0.02); }
+        
+        .cyber-list { list-style: none; margin: 2rem 0; }
+        .cyber-list li { position: relative; padding-left: 35px; margin-bottom: 1.5rem; font-size: 1.2rem; line-height: 1.7; color: var(--text-main); transition: 0.3s; }
+        .cyber-list li:hover { color: var(--white-clean); transform: translateX(5px); }
+        .cyber-list li::before { content: '>'; position: absolute; left: 0; top: 0; font-family: var(--font-mono); color: var(--lean-green); font-size: 1.5rem; font-weight: 900; text-shadow: 0 0 10px var(--lean-glow); }
+
+        /* ==========================================================================
+           10. QUIZ DE MATURIDADE 5S (CSS SPECIFIC)
+           ========================================================================== */
+        .quiz-wrapper { display: flex; gap: 40px; margin-top: 3rem; align-items: flex-start; }
+        .quiz-questions { flex: 1; background: rgba(0,0,0,0.6); padding: 2rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
+        .quiz-radar { width: 450px; background: rgba(0,0,0,0.8); padding: 2rem; border-radius: 8px; border: 1px solid var(--lean-green); box-shadow: 0 0 30px rgba(0,255,102,0.1); display: flex; flex-direction: column; align-items: center; }
+        
+        .question-card { margin-bottom: 2rem; display: none; animation: fadeIn 0.5s ease-in; }
+        .question-card.active { display: block; }
+        .question-text { font-size: 1.3rem; color: var(--white-clean); margin-bottom: 1.5rem; font-family: var(--font-body); }
+        
+        .quiz-option { 
+            display: block; width: 100%; text-align: left; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); 
+            padding: 15px 20px; margin-bottom: 10px; color: var(--text-main); font-family: var(--font-body); font-size: 1.1rem; 
+            border-radius: 4px; cursor: pointer; transition: 0.3s; 
+        }
+        .quiz-option:hover { background: rgba(0, 255, 102, 0.1); border-color: var(--lean-green); color: var(--white-clean); transform: translateX(10px); }
+
+        .radar-canvas-container { width: 100%; height: 350px; position: relative; margin-top: 1rem; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Botões Globais */
+        .cyber-btn-large {
+            display: inline-flex; align-items: center; justify-content: center; gap: 15px;
+            background: rgba(0,255,102,0.1); border: 2px solid var(--lean-green);
+            color: var(--lean-green); padding: 18px 40px; font-family: var(--font-display);
+            font-size: 1.2rem; font-weight: 700; cursor: pointer; border-radius: 4px; transition: 0.3s;
+            text-transform: uppercase; letter-spacing: 2px; text-decoration: none;
+        }
+        .cyber-btn-large:hover { background: var(--lean-green); color: #000; box-shadow: 0 0 30px var(--lean-glow); transform: translateY(-3px); }
+        /* EFEITOS ADICIONAIS 5S E QUIZ */
+        .lean-text {
+            color: var(--lean-green);
+            font-family: var(--font-mono);
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(0, 255, 102, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hud-scanner"></div>
+
+    <div class="app-wrapper">
+        <aside class="sys-sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">MELI<span>PDI</span></div>
+                <div class="brand-sub">SYS.MODULE // ACTIVE</div>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    <span>Home Dashboard</span>
+                </a>
+                
+                <a href="termos-detalhados.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                    <span>Hub de Setores</span>
+                </a>
+
+                <div style="height: 1px; background: rgba(0, 255, 102, 0.2); margin: 15px 0; opacity: 0.5;"></div>
+
+                <a href="#" class="nav-link active">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    <span>Metodologia 5S & Lean</span>
+                </a>
+                
+                <a href="#section-quiz" class="nav-link" style="color: var(--meli-yellow);">
+                    <svg class="nav-icon" viewBox="0 0 24 24" style="stroke: var(--meli-yellow);"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <span>Quiz Maturidade 5S</span>
+                </a>
+
+                <a href="simulador-5s.html" class="nav-link" target="_blank">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    <span>Simulador 5S (Jogo)</span>
+                </a>
+            </nav>
+
+            <div style="padding: 20px; border-top: 1px dashed rgba(0, 255, 102, 0.3); text-align: center;">
+                <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--lean-green); opacity: 0.6; letter-spacing: 2px;">
+                    SECURE CONNECTION<br>OSASCO_CD // 2026
+                </div>
+            </div>
+        </aside>
+        <main class="main-content">
+            
+            <header class="sys-topbar">
+                <div class="topbar-path">
+                    MELI PDI <span>/</span> CONTINUOUS_IMPROVEMENT <span>/</span> 5S_MASTER.exe
+                </div>
+                <div class="topbar-status">
+                    STATUS: LEAN V2 ACTIVE
+                    <div class="status-dot-lean"></div>
+                </div>
+            </header>
+
+            <div class="container">
+                
+                <section class="hero-section">
+                    <div class="hero-title-wrapper">
+                        <h1 class="hero-title">5S & LEAN <span>_</span></h1>
+                    </div>
+                    <div class="hero-subtitle">A Fundação da Alta Performance Logística</div>
+                    
+                    <div style="margin-top: 2rem; border-left: 5px solid var(--lean-green); padding-left: 20px; background: linear-gradient(90deg, rgba(0,255,102,0.05), transparent); padding: 20px;">
+                        <p style="font-family: var(--font-body); font-size: 1.4rem; color: var(--white-clean); font-style: italic; margin: 0;">
+                            "Mais importante do que limpar é não sujar. Quando o ambiente está organizado de forma inteligente, os problemas ficam visíveis rapidamente."
+                        </p>
+                    </div>
+                </section>
+
+                <section class="tech-panel" id="section-intro">
+                    <div class="panel-header">
+                        <div class="panel-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                        </div>
+                        <h2 class="panel-title">SEÇÃO 1 // A IMPORTÂNCIA DA LOGÍSTICA E DO 5S</h2>
+                    </div>
+
+                    <p>
+                        Com o crescimento do comércio eletrônico e das cadeias de suprimentos globais, a logística deixou de ser apenas uma área de apoio dentro das empresas. Hoje ela é um dos fatores mais importantes para que uma empresa consiga competir no mercado.
+                    </p>
+                    
+                    <div class="highlight-box">
+                        Atualmente, as entregas precisam ser cada vez mais rápidas e os clientes estão mais exigentes. Por isso, as empresas precisam ter operações logísticas extremamente eficientes. <strong style="color: var(--lean-green); font-size: 1.3rem;">Não é mais um diferencial: é uma necessidade para sobreviver no mercado.</strong>
+                    </div>
+
+                    <p>
+                        Dentro desse cenário surge a metodologia 5S, criada no Japão após a Segunda Guerra Mundial e popularizada pelo Sistema Toyota de Produção (TPS). Essa metodologia se tornou uma base fundamental para operações que buscam alto desempenho.
+                    </p>
+
+                    
+
+                </section>
+                <section class="tech-panel" id="section-o-que-e">
+                    <div class="panel-header">
+                        <div class="panel-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                        </div>
+                        <h2 class="panel-title">SEÇÃO 2 // O QUE É E O SEU PAPEL NA LOGÍSTICA</h2>
+                    </div>
+
+                    <h3 class="topic-header">O QUE É A METODOLOGIA 5S</h3>
+                    <p>Muitas pessoas pensam que o 5S é apenas um programa de limpeza ou organização, mas isso é um erro.</p>
+                    <p>Na verdade, o 5S é uma filosofia de gestão que busca:</p>
+                    <ul class="cyber-list">
+                        <li>Eliminar desperdícios</li>
+                        <li>Organizar melhor os recursos</li>
+                        <li>Criar um ambiente de trabalho seguro</li>
+                        <li>Aumentar a produtividade</li>
+                        <li>Melhorar a eficiência das operações</li>
+                    </ul>
+                    
+                    <p>A ideia central é simples: <strong style="color: var(--white-clean); font-size: 1.3rem;">quando o ambiente está desorganizado, surgem perdas invisíveis.</strong></p>
+                    
+                    <div style="background: rgba(255, 0, 60, 0.05); border: 1px dashed var(--red-alert); padding: 25px; border-radius: 6px; margin: 2rem 0; position: relative; overflow: hidden;" onmouseover="this.style.background='rgba(255, 0, 60, 0.1)';">
+                        <div style="position: absolute; top: -10px; right: -10px; font-size: 5rem; opacity: 0.1; color: var(--red-alert); font-family: var(--font-display);">!</div>
+                        <span style="display: block; margin-bottom: 15px; color: var(--red-alert); font-family: var(--font-display); font-size: 1.2rem;">POR EXEMPLO:</span>
+                        <ul style="list-style: none; color: var(--text-main); font-size: 1.15rem; line-height: 1.8;">
+                            <li><strong style="color: var(--red-alert);">✖</strong> tempo perdido procurando ferramentas</li>
+                            <li><strong style="color: var(--red-alert);">✖</strong> mercadorias mal posicionadas</li>
+                            <li><strong style="color: var(--red-alert);">✖</strong> documentos difíceis de encontrar</li>
+                            <li><strong style="color: var(--red-alert);">✖</strong> movimentação desnecessária dentro da operação</li>
+                        </ul>
+                        <p style="margin-top: 15px; margin-bottom: 0; color: var(--white-clean); border-top: 1px solid rgba(255,0,60,0.3); padding-top: 10px;">Tudo isso gera perda de tempo, dinheiro e energia da equipe.</p>
+                    </div>
+
+                    <p>Quando o ambiente é organizado de forma inteligente, os problemas ficam visíveis rapidamente, facilitando a correção e permitindo melhorias constantes, algo muito ligado ao conceito de melhoria contínua (<strong style="color: var(--lean-green); text-transform: uppercase;">Kaizen</strong>).</p>
+
+                    <h3 class="topic-header" style="margin-top: 3.5rem;">O PAPEL DO 5S NA LOGÍSTICA</h3>
+                    <p>Em centros de distribuição e operações logísticas grandes, onde milhares de produtos são movimentados diariamente, erros precisam ser quase zero.</p>
+                    
+                    
+
+                    <p>Nesse contexto, o 5S funciona como a base para outras metodologias mais avançadas, como:</p>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 2rem 0;">
+                        <div style="background: rgba(0, 255, 102, 0.05); border: 1px solid var(--border-lean); padding: 15px; text-align: center; border-radius: 4px; font-family: var(--font-mono); color: var(--lean-green); transition: 0.3s;" onmouseover="this.style.background='var(--lean-green)'; this.style.color='#000';">Just-in-Time (JIT)</div>
+                        <div style="background: rgba(0, 255, 102, 0.05); border: 1px solid var(--border-lean); padding: 15px; text-align: center; border-radius: 4px; font-family: var(--font-mono); color: var(--lean-green); transition: 0.3s;" onmouseover="this.style.background='var(--lean-green)'; this.style.color='#000';">Mapeamento do Fluxo de Valor (VSM)</div>
+                        <div style="background: rgba(0, 255, 102, 0.05); border: 1px solid var(--border-lean); padding: 15px; text-align: center; border-radius: 4px; font-family: var(--font-mono); color: var(--lean-green); transition: 0.3s;" onmouseover="this.style.background='var(--lean-green)'; this.style.color='#000';">Sistema Kanban</div>
+                        <div style="background: rgba(0, 255, 102, 0.05); border: 1px solid var(--border-lean); padding: 15px; text-align: center; border-radius: 4px; font-family: var(--font-mono); color: var(--lean-green); transition: 0.3s;" onmouseover="this.style.background='var(--lean-green)'; this.style.color='#000';">Lean Manufacturing</div>
+                        <div style="background: rgba(0, 255, 102, 0.05); border: 1px solid var(--border-lean); padding: 15px; text-align: center; border-radius: 4px; font-family: var(--font-mono); color: var(--lean-green); transition: 0.3s;" onmouseover="this.style.background='var(--lean-green)'; this.style.color='#000';">Lean Logistics</div>
+                    </div>
+
+                    <p style="font-size: 1.3rem; color: var(--white-clean); text-align: center; padding: 20px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.02);">Sem organização e padronização, essas metodologias simplesmente não funcionam.</p>
+                </section>
+                <section class="tech-panel" id="section-melhoria">
+                    <div class="panel-header">
+                        <div class="panel-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                        </div>
+                        <h2 class="panel-title">SEÇÃO 3 // COMO O 5S MELHORA A OPERAÇÃO</h2>
+                    </div>
+
+                    <p>Quando aplicado corretamente, o 5S ajuda a reduzir vários tipos de desperdício que existem dentro das operações. Entre eles:</p>
+                    
+                    <ul class="cyber-list" style="columns: 2; column-gap: 40px;">
+                        <li>movimentação desnecessária de pessoas</li>
+                        <li>transporte desnecessário de materiais</li>
+                        <li>excesso de estoque parado</li>
+                        <li>superprodução</li>
+                        <li>processos desnecessários</li>
+                        <li>tempo de espera</li>
+                        <li>erros e defeitos</li>
+                    </ul>
+
+                    <div style="background: rgba(0,0,0,0.8); padding: 30px; border-left: 5px solid var(--meli-yellow); margin: 3rem 0; box-shadow: inset 0 0 30px rgba(255,230,0,0.05);">
+                        <strong style="color: var(--meli-yellow); font-family: var(--font-display); font-size: 1.4rem; display: block; margin-bottom: 15px;">UM EXEMPLO SIMPLES:</strong>
+                        <p style="margin: 0; font-size: 1.25rem; color: var(--white-clean); line-height: 1.8;">se um operador perde tempo procurando um produto, uma etiqueta ou uma ferramenta, a produtividade da operação diminui. Mas quando tudo está organizado e padronizado, o trabalho flui muito mais rápido.</p>
+                    </div>
+
+                    <p>Isso gera:</p>
+                    
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 4rem;">
+                        <div style="flex: 1; min-width: 200px; background: rgba(255,255,255,0.03); padding: 25px; border-radius: 6px; text-align: center; border-bottom: 3px solid var(--lean-green); transition: 0.3s;" onmouseover="this.style.transform='translateY(-10px)';">
+                            <svg viewBox="0 0 24 24" style="width: 40px; height: 40px; stroke: var(--lean-green); fill: none; stroke-width: 2; margin-bottom: 15px;"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                            <br><span style="color: var(--white-clean); font-family: var(--font-display); font-size: 1.1rem;">Aumento da<br>produtividade</span>
+                        </div>
+                        <div style="flex: 1; min-width: 200px; background: rgba(255,255,255,0.03); padding: 25px; border-radius: 6px; text-align: center; border-bottom: 3px solid var(--lean-green); transition: 0.3s;" onmouseover="this.style.transform='translateY(-10px)';">
+                            <svg viewBox="0 0 24 24" style="width: 40px; height: 40px; stroke: var(--lean-green); fill: none; stroke-width: 2; margin-bottom: 15px;"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                            <br><span style="color: var(--white-clean); font-family: var(--font-display); font-size: 1.1rem;">Redução de<br>custos logísticos</span>
+                        </div>
+                        <div style="flex: 1; min-width: 200px; background: rgba(255,255,255,0.03); padding: 25px; border-radius: 6px; text-align: center; border-bottom: 3px solid var(--lean-green); transition: 0.3s;" onmouseover="this.style.transform='translateY(-10px)';">
+                            <svg viewBox="0 0 24 24" style="width: 40px; height: 40px; stroke: var(--lean-green); fill: none; stroke-width: 2; margin-bottom: 15px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                            <br><span style="color: var(--white-clean); font-family: var(--font-display); font-size: 1.1rem;">Operações<br>mais seguras</span>
+                        </div>
+                        <div style="flex: 1; min-width: 200px; background: rgba(255,255,255,0.03); padding: 25px; border-radius: 6px; text-align: center; border-bottom: 3px solid var(--lean-green); transition: 0.3s;" onmouseover="this.style.transform='translateY(-10px)';">
+                            <svg viewBox="0 0 24 24" style="width: 40px; height: 40px; stroke: var(--lean-green); fill: none; stroke-width: 2; margin-bottom: 15px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                            <br><span style="color: var(--white-clean); font-family: var(--font-display); font-size: 1.1rem;">Maior satisfação<br>do cliente final</span>
+                        </div>
+                    </div>
+
+                    <h3 class="topic-header">O DESDOBRAMENTO DOS CINCO SENSOS</h3>
+                    <p>O 5S é formado por cinco palavras japonesas que representam etapas de organização e disciplina dentro de um ambiente de trabalho.</p>
+                    <p>Essas etapas devem ser aplicadas na ordem correta, porque cada uma prepara o ambiente para a próxima. Se essa sequência não for respeitada, o programa pode perder força ou até falhar com o tempo.</p>
+                    <p>Os cinco sensos funcionam como um processo contínuo de melhoria, onde organização, limpeza e disciplina caminham juntas para melhorar a eficiência da operação.</p>
+                </section>
+                <section class="tech-panel" id="section-seiri">
+                    <span class="senso-title">1. SEIRI — SENSO DE UTILIZAÇÃO</span>
+                    
+                    <h3 class="topic-header">O QUE É</h3>
+                    <p>O Seiri é o primeiro passo do 5S. Ele consiste em separar o que é necessário do que não é necessário dentro do ambiente de trabalho.</p>
+                    <p>Ou seja, é fazer uma análise de tudo que existe no setor e identificar:</p>
+                    <ul class="cyber-list">
+                        <li>o que realmente é usado no dia a dia</li>
+                        <li>o que está parado</li>
+                        <li>o que está quebrado</li>
+                        <li>o que está obsoleto ou sem utilidade</li>
+                    </ul>
+
+                    <h3 class="topic-header" style="margin-top: 3rem;">PARA QUE SERVE</h3>
+                    <p>O objetivo do Seiri é reduzir o excesso de coisas no ambiente. Quando há muitos objetos desnecessários no setor, acontecem problemas como: perda de espaço, dificuldade para encontrar materiais, aumento da desorganização, redução da produtividade.</p>
+                    <p>Na logística isso é ainda mais importante, porque espaço físico é muito valioso. <strong style="color: var(--meli-yellow);">Em centros de distribuição, ocupar espaço com itens que não têm utilidade significa desperdício de dinheiro e de capacidade operacional.</strong></p>
+
+                    <h3 class="topic-header" style="margin-top: 3rem;">CONCEITO NA PRÁTICA</h3>
+                    <p>Para aplicar o Seiri, cada item do setor deve ser avaliado com base em duas perguntas:</p>
+                    <div style="display: flex; gap: 20px; justify-content: center; margin: 2rem 0;">
+                        <div style="background: rgba(0, 255, 102, 0.1); border: 1px solid var(--lean-green); padding: 20px; border-radius: 8px; font-family: var(--font-display); font-size: 1.2rem; color: var(--white-clean); text-align: center;">
+                            1. Esse item é realmente necessário?
+                        </div>
+                        <div style="background: rgba(0, 255, 102, 0.1); border: 1px solid var(--lean-green); padding: 20px; border-radius: 8px; font-family: var(--font-display); font-size: 1.2rem; color: var(--white-clean); text-align: center;">
+                            2. Com que frequência ele é usado?
+                        </div>
+                    </div>
+                    <p>Se algo não tem utilidade ou quase nunca é usado, ele deve ser separado.</p>
+
+                    <h3 class="topic-header" style="margin-top: 4rem; color: var(--red-alert); text-shadow: 0 0 15px rgba(255,0,60,0.5);">TÉCNICA DA ETIQUETA VERMELHA (RED TAG)</h3>
+                    <div style="display: flex; gap: 40px; align-items: flex-start; margin-top: 2rem; background: rgba(255,0,60,0.03); padding: 30px; border-radius: 8px; border: 1px dashed rgba(255,0,60,0.3);">
+                        <div style="width: 150px; height: 250px; background: var(--red-alert); border-radius: 10px 10px 50% 50% / 10px 10px 20px 20px; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 20px; box-shadow: 0 10px 25px rgba(255,0,60,0.4); flex-shrink: 0;">
+                            <div style="width: 25px; height: 25px; background: #FFF; border-radius: 50%; border: 3px solid #333; margin-bottom: 20px;"></div>
+                            <span style="color: #FFF; font-family: var(--font-display); font-weight: 900; font-size: 1.5rem; writing-mode: vertical-rl; text-orientation: mixed; letter-spacing: 5px;">QUARENTENA</span>
+                        </div>
+                        <div>
+                            <p>Uma das ferramentas mais usadas no Seiri é a etiqueta vermelha. O processo funciona assim:</p>
+                            <ul class="cyber-list" style="--lean-green: var(--red-alert); --lean-glow: rgba(255,0,60,0.5);">
+                                <li>Itens com utilidade duvidosa recebem uma etiqueta vermelha.</li>
+                                <li>Esses itens são levados para uma área de quarentena.</li>
+                                <li>Eles ficam ali por um período determinado (exemplo: 30 dias).</li>
+                            </ul>
+                            <p>Se ninguém precisar do item nesse período, ele pode ser: <strong>descartado, reciclado, vendido como sucata, doado ou reaproveitado em outro setor</strong>. Esse processo ajuda a limpar o ambiente sem correr risco de descartar algo importante.</p>
+                        </div>
+                    </div>
+
+                    <h3 class="topic-header" style="margin-top: 3rem;">MUDANÇA DE MENTALIDADE E EXEMPLO PRÁTICO NA EMPRESA</h3>
+                    <p>O Seiri também trabalha um aspecto psicológico importante: o desapego. Muitas pessoas guardam objetos pensando: <em style="color: var(--meli-yellow);">"Um dia posso precisar disso."</em> Esse tipo de pensamento faz os setores acumularem materiais desnecessários. O Seiri quebra essa cultura e incentiva uma lógica mais eficiente: <strong>manter apenas o que realmente gera valor para a operação.</strong></p>
+                    
+                    <p>Uma prática comum após aplicar o Seiri é criar um almoxarifado de itens usados. Funciona assim: Antes de comprar novos materiais, os funcionários verificam se já existe algo disponível nesse estoque interno.</p>
+                    <p>Exemplos de itens reaproveitados: calculadoras, pranchetas, leitores de código de barras, materiais de escritório, equipamentos operacionais.</p>
+                    
+                    <div style="background: rgba(0,0,0,0.5); padding: 20px; border-radius: 4px; display: inline-block; margin-top: 1rem; border-left: 3px solid var(--cyan-tech);">
+                        <span style="font-family: var(--font-mono); color: var(--cyan-tech); font-size: 1.1rem; display: block; margin-bottom: 5px;">RESULTADOS GERADOS:</span>
+                        <strong style="color: var(--white-clean); font-size: 1.2rem;">redução de custos e melhor aproveitamento dos recursos da empresa.</strong>
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-seiton">
+                    <span class="senso-title">2. SEITON — SENSO DE ORGANIZAÇÃO</span>
+                    
+                    <h3 class="topic-header">O QUE É</h3>
+                    <p>O Seiton é o segundo passo da metodologia 5S. Depois que o Seiri já eliminou tudo que era desnecessário, o Seiton tem como objetivo organizar corretamente os itens que ficaram.</p>
+                    
+                    <div style="background: rgba(0, 255, 102, 0.05); padding: 30px; border: 1px dashed var(--lean-green); border-radius: 8px; text-align: center; margin: 3rem 0; cursor: crosshair; transition: 0.4s; box-shadow: inset 0 0 20px rgba(0,255,102,0.02);" onmouseover="this.style.background='rgba(0, 255, 102, 0.15)'; this.style.transform='scale(1.02)'; this.style.boxShadow='inset 0 0 30px rgba(0,255,102,0.1)';" onmouseout="this.style.background='rgba(0, 255, 102, 0.05)'; this.style.transform='scale(1)'; this.style.boxShadow='inset 0 0 20px rgba(0,255,102,0.02)';">
+                        <p style="font-family: var(--font-mono); font-size: 1.1rem; color: var(--text-muted); margin-bottom: 10px; letter-spacing: 2px;">A IDEIA PRINCIPAL NA ENGENHARIA DE PRODUÇÃO:</p>
+                        <strong style="font-family: var(--font-display); font-size: 2rem; color: var(--white-clean); letter-spacing: 1px; text-shadow: 0 0 15px rgba(255,255,255,0.4); display: block; margin-bottom: 15px;">“Um lugar para cada coisa e cada coisa em seu lugar.”</strong>
+                        <p style="font-size: 1.2rem; color: var(--text-main); margin: 0;">Ou seja, tudo dentro do setor precisa ter um local definido e padronizado.</p>
+                    </div>
+
+                    <h3 class="topic-header">PARA QUE SERVE</h3>
+                    <p>O Seiton serve principalmente para reduzir o tempo que as pessoas gastam procurando coisas. Em um ambiente desorganizado, os trabalhadores perdem muito tempo tentando encontrar: ferramentas, equipamentos, documentos e mercadorias.</p>
+                    <p>Quando tudo está bem organizado: <strong style="color: var(--lean-green);">qualquer pessoa consegue encontrar algo rapidamente, o trabalho flui melhor e a produtividade aumenta.</strong> O objetivo ideal é que até um funcionário novo consiga localizar um item rapidamente, usar e depois devolver ao lugar correto.</p>
+
+                    <h3 class="topic-header" style="margin-top: 4rem;">ORGANIZAÇÃO BASEADA NO USO (PASSE O RATO)</h3>
+                    <p>No Seiton, os itens não são organizados de forma aleatória. A organização deve levar em conta a frequência de uso. Isso também melhora a ergonomia, evitando que o trabalhador fique se abaixando ou andando demais.</p>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-top: 2rem; margin-bottom: 3rem;">
+                        <div style="background: rgba(255,255,255,0.02); border-top: 4px solid var(--red-alert); padding: 30px; border-radius: 6px; transition: 0.4s; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-10px)'; this.style.boxShadow='0 15px 30px rgba(255,0,60,0.15)'; this.style.background='rgba(255,0,60,0.05)';">
+                            <strong style="color: var(--red-alert); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 15px;">USADOS O TEMPO TODO</strong>
+                            <p style="font-size: 1.1rem; margin: 0; color: var(--text-main);">Devem ficar bem próximos do operador. De preferência na altura da cintura ou das mãos.</p>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.02); border-top: 4px solid var(--meli-yellow); padding: 30px; border-radius: 6px; transition: 0.4s; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-10px)'; this.style.boxShadow='0 15px 30px rgba(255,230,0,0.15)'; this.style.background='rgba(255,230,0,0.05)';">
+                            <strong style="color: var(--meli-yellow); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 15px;">USADOS DIARIAMENTE</strong>
+                            <p style="font-size: 1.1rem; margin: 0; color: var(--text-main);">Podem ficar a poucos passos de distância, garantindo um acesso sem grande esforço.</p>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.02); border-top: 4px solid var(--text-muted); padding: 30px; border-radius: 6px; transition: 0.4s; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-10px)'; this.style.boxShadow='0 15px 30px rgba(255,255,255,0.1)'; this.style.background='rgba(255,255,255,0.05)';">
+                            <strong style="color: var(--white-clean); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 15px;">USADOS RARAMENTE</strong>
+                            <p style="font-size: 1.1rem; margin: 0; color: var(--text-main);">Podem ficar em armários, gavetas ou áreas mais afastadas da estação principal.</p>
+                        </div>
+                    </div>
+
+                    <h3 class="topic-header">GESTÃO VISUAL E SHADOW BOARD</h3>
+                    <p>Uma das bases do Seiton é a gestão visual. Isso significa organizar o ambiente de forma que qualquer pessoa consiga entender o espaço apenas olhando.</p>
+                    <p>Alguns exemplos usados na logística: <strong>Demarcação de chão</strong> (uso de fitas coloridas para indicar: corredores de circulação, áreas de estoque, áreas de quarentena, locais de equipamentos, estacionamento de empilhadeiras). Isso ajuda a evitar confusão e acidentes.</p>
+
+                    <div style="background: rgba(0,0,0,0.8); border-left: 5px solid var(--cyan-tech); padding: 25px; margin: 2rem 0; border-radius: 4px; box-shadow: 10px 10px 30px rgba(0,0,0,0.5);">
+                        <strong style="color: var(--cyan-tech); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 10px;">SHADOW BOARD (QUADRO DE SOMBRAS)</strong>
+                        <p style="font-size: 1.15rem; margin-bottom: 10px; color: var(--white-clean);">Muito usado em estações de trabalho. Funciona assim: as ferramentas ficam penduradas em um painel e o desenho da ferramenta é marcado no local (Ex: tesoura, estilete, leitor de código de barras).</p>
+                        <p style="font-family: var(--font-mono); font-size: 1.05rem; color: var(--text-muted); margin: 0; letter-spacing: 1px;">[ Se a ferramenta não estiver no lugar, o espaço vazio mostra imediatamente que algo está faltando. ]</p>
+                    </div>
+
+                    <h3 class="topic-header" style="margin-top: 3rem;">BENEFÍCIOS PARA O TRABALHADOR: FIM DA "CAÇA AOS MATERIAIS"</h3>
+                    <p>Um ambiente organizado reduz muito o cansaço mental. Quando o local é bagunçado, o cérebro precisa ficar o tempo todo tentando entender onde estão as coisas. Isso gera: estresse, perda de concentração e erros no trabalho. Com o Seiton, o ambiente fica previsível e fácil de entender, permitindo que o trabalhador foque apenas na tarefa principal.</p>
+                    
+                    <p>Em centros de distribuição, um problema comum é o que muitos chamam de: <strong>“caça aos materiais”</strong>. Isso acontece quando operadores ficam andando pelo setor tentando encontrar ferramentas ou produtos.</p>
+                    
+                    <p>O Seiton resolve isso criando: layout organizado, fluxo lógico de trabalho e posicionamento correto dos materiais. Quando isso acontece, o trabalho flui muito mais rápido e os operadores não precisam ficar indo e voltando pelo armazém sem necessidade. <strong style="color: var(--red-alert);">Esse tipo de movimentação desnecessária é considerado pelo Sistema Toyota de Produção como um dos maiores desperdícios dentro das operações.</strong></p>
+                </section>
+                <section class="tech-panel" id="section-seiso">
+                    <span class="senso-title">3. SEISO — SENSO DE LIMPEZA</span>
+                    
+                    <h3 class="topic-header">O QUE É E PARA QUE SERVE</h3>
+                    <p>O Seiso é o terceiro passo da metodologia 5S. Muitas pessoas pensam que ele significa apenas limpar o ambiente, mas na verdade ele vai muito além disso. <strong style="color: var(--white-clean); font-size: 1.3rem;">O Seiso significa limpar e ao mesmo tempo inspecionar o ambiente de trabalho.</strong></p>
+                    <p>Ou seja, enquanto o local é limpo, também são observados possíveis problemas nos equipamentos, nas estruturas e nos materiais.</p>
+                    <p>O objetivo do Seiso é garantir: segurança no ambiente de trabalho, bom funcionamento dos equipamentos e prevenção de problemas operacionais. Em ambientes industriais e logísticos, a sujeira pode esconder vários problemas, como: vazamentos de óleo em empilhadeiras, fios elétricos desgastados, danos em estruturas de prateleiras, peças de máquinas com desgaste.</p>
+                    <p>Se o ambiente estiver sujo, esses problemas podem passar despercebidos e causar acidentes ou falhas nos equipamentos.</p>
+
+                    <div style="background: rgba(255,255,255,0.03); padding: 30px; border-radius: 8px; text-align: center; margin: 3rem 0; border: 1px solid rgba(255,255,255,0.1);">
+                        <strong style="color: var(--meli-yellow); font-family: var(--font-display); font-size: 1.8rem; text-shadow: 0 0 15px rgba(255,230,0,0.3); display: block; margin-bottom: 15px;">“Mais importante do que limpar é não sujar.”</strong>
+                        <p style="font-size: 1.2rem; color: var(--text-muted); margin: 0;">Ou seja, o objetivo não é apenas limpar quando algo já está sujo, mas manter o ambiente sempre limpo e organizado para evitar problemas.</p>
+                    </div>
+
+                    <h3 class="topic-header">RESPONSABILIDADE DE TODOS E ROTINA DE LIMPEZA</h3>
+                    <p>No Seiso, a limpeza não é responsabilidade apenas da equipe de limpeza. Cada colaborador passa a ser responsável pelo seu próprio espaço de trabalho. Isso inclui: estação de trabalho, ferramentas, equipamentos que utiliza e área ao redor. Essa prática cria uma cultura onde todos ajudam a manter o ambiente em boas condições.</p>
+                    <p>Normalmente, as empresas criam pequenas rotinas diárias de limpeza. Um método comum é dedicar os últimos 5 a 10 minutos do turno para isso.</p>
+
+                    <div style="background: rgba(0,0,0,0.6); border: 1px solid rgba(0, 255, 102, 0.2); padding: 30px; border-radius: 8px; margin: 2rem 0; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
+                        <span style="font-family: var(--font-mono); font-size: 1.1rem; color: var(--lean-green); margin-bottom: 20px; display: block; letter-spacing: 2px;">[ ] CHECKLIST DE FIM DE TURNO (INTERATIVO):</span>
+                        
+                        <label style="display: flex; align-items: center; gap: 15px; padding: 15px; cursor: pointer; border-bottom: 1px dashed rgba(255,255,255,0.05); transition: 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.02)';">
+                            <input type="checkbox" style="width: 25px; height: 25px; accent-color: var(--lean-green); cursor: pointer;">
+                            <span style="font-size: 1.2rem; color: var(--text-main);">Limpar sua área de trabalho.</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 15px; padding: 15px; cursor: pointer; border-bottom: 1px dashed rgba(255,255,255,0.05); transition: 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.02)';">
+                            <input type="checkbox" style="width: 25px; height: 25px; accent-color: var(--lean-green); cursor: pointer;">
+                            <span style="font-size: 1.2rem; color: var(--text-main);">Organizar ferramentas.</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 15px; padding: 15px; cursor: pointer; border-bottom: 1px dashed rgba(255,255,255,0.05); transition: 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.02)';">
+                            <input type="checkbox" style="width: 25px; height: 25px; accent-color: var(--lean-green); cursor: pointer;">
+                            <span style="font-size: 1.2rem; color: var(--text-main);">Verificar equipamentos.</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 15px; padding: 15px; cursor: pointer; transition: 0.3s;" onmouseover="this.style.background='rgba(255,0,60,0.05)';">
+                            <input type="checkbox" style="width: 25px; height: 25px; accent-color: var(--red-alert); cursor: pointer;">
+                            <span style="font-size: 1.2rem; color: var(--white-clean);">Observar problemas críticos (vazamentos, barulhos estranhos, vibrações incomuns, desgaste de peças).</span>
+                        </label>
+                    </div>
+
+                    <h3 class="topic-header" style="margin-top: 3rem;">RELAÇÃO COM A MANUTENÇÃO PREVENTIVA (TPM)</h3>
+                    <p>O Seiso também está ligado a um conceito chamado <strong style="color: var(--lean-green);">Manutenção Produtiva Total (TPM)</strong>. Quando pequenos problemas são identificados cedo, a empresa consegue: evitar paradas inesperadas de máquinas, reduzir custos de manutenção e aumentar o tempo de funcionamento dos equipamentos.</p>
+                    <p>Por exemplo: Se um pequeno vazamento de óleo é identificado durante a limpeza, ele pode ser resolvido rapidamente. Caso contrário, poderia causar: quebra do equipamento, parada da operação e altos custos de manutenção.</p>
+                    <p>A aplicação correta do Seiso traz vários benefícios: aumento da segurança no trabalho, redução de acidentes (como escorregões, tropeços e quedas), melhor conservação dos equipamentos, redução de custos de manutenção e maior eficiência da operação.</p>
+                </section>
+                <section class="tech-panel" id="section-seiketsu">
+                    <span class="senso-title">4. SEIKETSU — SENSO DE PADRONIZAÇÃO</span>
+                    
+                    <h3 class="topic-header">O QUE É E O COMBATE AO "EFEITO REBOTE"</h3>
+                    <p>O Seiketsu é o quarto passo da metodologia 5S. Depois de aplicar: Seiri (eliminar), Seiton (organizar) e Seiso (limpar e inspecionar), o Seiketsu tem a função de padronizar tudo isso. Ou seja, transformar essas melhorias em regras oficiais da empresa, para que a organização seja mantida todos os dias.</p>
+                    
+                    <div style="background: rgba(255, 0, 60, 0.05); border-left: 5px solid var(--red-alert); padding: 25px; margin: 2rem 0; border-radius: 4px; position: relative;">
+                        <strong style="color: var(--red-alert); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 10px; letter-spacing: 1px;">O OBJETIVO PRINCIPAL: EVITAR O "EFEITO REBOTE"</strong>
+                        <p style="font-size: 1.15rem; color: var(--text-main); margin: 0; line-height: 1.7;">Esse efeito acontece quando: o setor faz um grande esforço de organização, tudo fica limpo e organizado por um tempo, e depois de alguns meses, tudo volta a ficar bagunçado novamente. O Seiketsu evita isso criando padrões claros de trabalho.</p>
+                    </div>
+
+                    <h3 class="topic-header" style="margin-top: 4rem;">PADRONIZAÇÃO DOS PROCESSOS E LOGÍSTICA (EXPANDIR PARA LER)</h3>
+                    <p>Para manter o padrão, as empresas criam vários tipos de documentos e ferramentas. Dentro de um centro de distribuição, o Seiketsu aplica-se a quase tudo o que é tocado ou movimentado.</p>
+
+                    <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 2rem; margin-bottom: 3rem;">
+                        
+                        <details style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 15px; cursor: pointer; transition: 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.05)';">
+                            <summary style="font-family: var(--font-display); color: var(--lean-green); font-size: 1.2rem; padding: 5px; outline: none; letter-spacing: 1px;">1. DOCUMENTAÇÃO OPERACIONAL</summary>
+                            <div style="padding: 20px 10px 10px 10px; color: var(--text-main); font-size: 1.15rem; line-height: 1.7; border-top: 1px dashed rgba(255,255,255,0.1); margin-top: 15px;">
+                                Entre os mais comuns estão: POPs (Procedimentos Operacionais Padrão), manuais de trabalho, instruções visuais, checklists de atividades, fotos mostrando o padrão correto e regras de ergonomia e segurança. Esses materiais ajudam os trabalhadores a entender como as tarefas devem ser feitas da forma correta.
+                            </div>
+                        </details>
+
+                        <details style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 15px; cursor: pointer; transition: 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.05)';">
+                            <summary style="font-family: var(--font-display); color: var(--lean-green); font-size: 1.2rem; padding: 5px; outline: none; letter-spacing: 1px;">2. REGRAS DE ARMAZÉM LOGÍSTICO</summary>
+                            <div style="padding: 20px 10px 10px 10px; color: var(--text-main); font-size: 1.15rem; line-height: 1.7; border-top: 1px dashed rgba(255,255,255,0.1); margin-top: 15px;">
+                                Dentro de um CD, o Seiketsu pode definir padrões como: padrão de etiquetas e rotulagem das caixas, forma correta de empilhar pallets, fluxo de documentos e aprovações, organização das estações de trabalho e regras de movimentação de carga.
+                            </div>
+                        </details>
+
+                        <details style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 15px; cursor: pointer; transition: 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.05)';">
+                            <summary style="font-family: var(--font-display); color: var(--lean-green); font-size: 1.2rem; padding: 5px; outline: none; letter-spacing: 1px;">3. AMBIENTE E SEGURANÇA</summary>
+                            <div style="padding: 20px 10px 10px 10px; color: var(--text-main); font-size: 1.15rem; line-height: 1.7; border-top: 1px dashed rgba(255,255,255,0.1); margin-top: 15px;">
+                                Também inclui condições adequadas do ambiente de trabalho, como: iluminação correta, ventilação, temperatura adequada, sinalização de segurança e localização dos EPIs (Equipamentos de Proteção Individual). Tudo isso ajuda a criar um ambiente mais seguro e eficiente.
+                            </div>
+                        </details>
+
+                    </div>
+
+                    <h3 class="topic-header">BENEFÍCIOS DA PADRONIZAÇÃO E O CONHECIMENTO TÁCITO</h3>
+                    <p>A padronização traz vários benefícios para a empresa. Um dos principais é facilitar o treinamento de novos funcionários. Quando tudo está padronizado: todas as estações de trabalho funcionam da mesma forma e os processos são iguais em todo o armazém. O treinamento fica muito mais rápido, o que reduz muito o tempo de adaptação de novos colaboradores.</p>
+                    
+                    <p>Outro benefício importante do Seiketsu é diminuir a dependência do chamado <strong style="color: var(--meli-yellow);">conhecimento tácito</strong>. Esse é o conhecimento que fica apenas na cabeça de funcionários experientes. Quando esse conhecimento não é documentado, surgem problemas quando alguém: tira férias, sai da empresa, ou muda de setor.</p>
+                    
+                    <p>Com a padronização, o conhecimento passa a estar registrado e acessível para todos, garantindo que o trabalho continue funcionando normalmente.</p>
+                </section>
+                <section class="tech-panel" id="section-shitsuke" style="border-color: rgba(255, 230, 0, 0.4);">
+                    <span class="senso-title" style="color: var(--meli-yellow); border-bottom-color: rgba(255,230,0,0.2);">5. SHITSUKE — SENSO DE DISCIPLINA</span>
+                    
+                    <h3 class="topic-header">O QUE É E O DESAFIO DO HÁBITO</h3>
+                    <p>O Shitsuke é o quinto e último passo da metodologia 5S. Ele também é considerado o mais difícil de alcançar.</p>
+                    <p>Esse senso está ligado à disciplina e à criação de hábitos. O objetivo é fazer com que todos sigam naturalmente os padrões criados nas etapas anteriores, sem precisar de fiscalização constante. Ou seja, as pessoas passam a manter organização, limpeza e padronização porque isso virou parte da cultura do trabalho.</p>
+                    
+                    <h3 class="topic-header">PARA QUE SERVE: A MANUTENÇÃO DO SISTEMA</h3>
+                    <p>O principal objetivo do Shitsuke é garantir que o 5S continue funcionando ao longo do tempo. Sem disciplina, o que acontece normalmente é: o setor se organiza, tudo melhora por um tempo, depois de alguns meses tudo volta a ficar desorganizado.</p>
+                    <p>O Shitsuke evita isso transformando o 5S em um hábito diário dentro da empresa. <strong style="color: var(--meli-yellow);">Assim, o 5S deixa de ser apenas um projeto ou campanha e passa a fazer parte da cultura da organização.</strong></p>
+
+                    <h3 class="topic-header" style="margin-top: 3rem;">LIDERANÇA PELO EXEMPLO E AUDITORIAS CRUZADAS</h3>
+                    <p>Para que o Shitsuke funcione, a liderança da empresa precisa dar o exemplo. Isso significa que: gerentes, supervisores, coordenadores e diretores também precisam seguir as regras de organização e disciplina. Quando a liderança demonstra esse comportamento, os colaboradores tendem a seguir o mesmo padrão.</p>
+                    
+                    <p>Outro método importante para manter o Shitsuke são as <strong>auditorias de 5S</strong>. Essas auditorias verificam se os padrões estão sendo mantidos.</p>
+
+                    <div style="background: rgba(255, 230, 0, 0.05); padding: 25px; border-left: 4px solid var(--meli-yellow); margin: 2rem 0; border-radius: 4px; box-shadow: inset 0 0 20px rgba(255,230,0,0.05);">
+                        <strong style="color: var(--white-clean); font-family: var(--font-display); font-size: 1.25rem; display: block; margin-bottom: 10px;">A PRÁTICA DA AUDITORIA CRUZADA</strong>
+                        <p style="font-size: 1.15rem; color: var(--text-main); margin-bottom: 10px;">Uma prática comum é a auditoria cruzada, onde um setor avalia outro setor. Por exemplo: <em>equipe do recebimento avalia a expedição; equipe do picking avalia o packing.</em></p>
+                        <p style="font-family: var(--font-mono); font-size: 1.05rem; color: var(--meli-yellow); margin: 0; letter-spacing: 1px;">[ BENEFÍCIOS: MAIS TRANSPARÊNCIA | TROCA DE CONHECIMENTO | IDENTIFICAÇÃO DE MELHORIAS ]</p>
+                    </div>
+
+                    <h3 class="topic-header">INDICADORES, RECONHECIMENTO E IMPACTO NA CULTURA</h3>
+                    <p>Algumas empresas também utilizam indicadores de desempenho (KPIs) ligados ao 5S. Além disso, podem existir: comitês de melhoria contínua, grupos de colaboradores voluntários e programas de reconhecimento para setores que se destacam. Essas ações ajudam a manter o engajamento da equipe.</p>
+                    
+                    <p>Quando o Shitsuke é aplicado corretamente, ele melhora muito o ambiente de trabalho. O resultado costuma ser:</p>
+                    <ul class="cyber-list" style="--lean-green: var(--meli-yellow); --lean-glow: rgba(255,230,0,0.5);">
+                        <li>maior organização</li>
+                        <li>mais respeito entre os colaboradores</li>
+                        <li>ambiente mais profissional</li>
+                        <li>maior cuidado com os equipamentos e o espaço de trabalho</li>
+                    </ul>
+                    
+                    <p>Os funcionários passam a sentir um senso de responsabilidade e pertencimento. <strong style="color: var(--white-clean);">Ou seja, deixam de se ver apenas como executores de tarefas e passam a agir como parte importante dos resultados da empresa.</strong></p>
+                </section>
+                <section class="tech-panel" id="section-logistica-moderna">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(0, 229, 255, 0.1); border-color: var(--cyan-tech); color: var(--cyan-tech); box-shadow: 0 0 20px rgba(0,229,255,0.4);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--white-clean);">SEÇÃO 9 // INTEGRAÇÃO DO 5S NA LOGÍSTICA MODERNA</h2>
+                    </div>
+
+                    <p>A aplicação do 5S em centros de distribuição (CDs) e armazéns modernos pode gerar grandes melhorias na operação logística. Quando bem aplicado, o 5S aumenta:</p>
+                    
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; margin: 2rem 0;">
+                        <span style="background: rgba(0,229,255,0.1); border: 1px solid var(--cyan-tech); color: var(--white-clean); padding: 10px 20px; border-radius: 4px; font-family: var(--font-mono); font-size: 1.1rem; flex: 1; text-align: center;">Velocidade (Throughput)</span>
+                        <span style="background: rgba(0,229,255,0.1); border: 1px solid var(--cyan-tech); color: var(--white-clean); padding: 10px 20px; border-radius: 4px; font-family: var(--font-mono); font-size: 1.1rem; flex: 1; text-align: center;">Organização do Estoque</span>
+                        <span style="background: rgba(0,229,255,0.1); border: 1px solid var(--cyan-tech); color: var(--white-clean); padding: 10px 20px; border-radius: 4px; font-family: var(--font-mono); font-size: 1.1rem; flex: 1; text-align: center;">Produtividade da Equipe</span>
+                        <span style="background: rgba(0,229,255,0.1); border: 1px solid var(--cyan-tech); color: var(--white-clean); padding: 10px 20px; border-radius: 4px; font-family: var(--font-mono); font-size: 1.1rem; flex: 1; text-align: center;">Confiabilidade dos Processos</span>
+                    </div>
+
+                    <p>Na logística atual, onde milhares de pedidos são processados diariamente, erros e desorganização geram atrasos e prejuízos financeiros. Por isso, manter o armazém organizado é essencial.</p>
+
+                    <h3 class="topic-header" style="color: var(--cyan-tech); font-size: 1.6rem; margin-top: 4rem; border-bottom: 1px solid rgba(0,229,255,0.2); padding-bottom: 15px;">APLICAÇÃO DOS 5S DENTRO DE UM ARMAZÉM LOGÍSTICO</h3>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 20px; margin-top: 2rem;">
+                        
+                        <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-left: 4px solid var(--lean-green); padding: 25px; border-radius: 6px; transition: 0.3s;" onmouseover="this.style.background='rgba(0,255,102,0.05)';">
+                            <strong style="color: var(--lean-green); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 10px;">1. SEIRI — UTILIZAÇÃO</strong>
+                            <p style="font-size: 1.15rem; margin-bottom: 10px; color: var(--text-main);"><strong>Aplicação prática:</strong> No armazém, o Seiri consiste em identificar e remover itens desnecessários, como: produtos sem giro (SKUs parados há meses), embalagens danificadas, pallets quebrados e materiais fora do padrão. Esses itens são separados ou descartados para liberar espaço.</p>
+                            <p style="font-family: var(--font-mono); font-size: 1.05rem; color: var(--white-clean); margin: 0;">[ RESULTADOS: Redução dos custos de armazenagem, liberação de espaço no estoque, aumento da capacidade de armazenamento (até cerca de 40% em alguns casos), redução do capital parado em produtos sem venda. ]</p>
+                        </div>
+
+                        <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-left: 4px solid var(--lean-green); padding: 25px; border-radius: 6px; transition: 0.3s;" onmouseover="this.style.background='rgba(0,255,102,0.05)';">
+                            <strong style="color: var(--lean-green); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 10px;">2. SEITON — ORGANIZAÇÃO E CURVA ABC</strong>
+                            <p style="font-size: 1.15rem; margin-bottom: 10px; color: var(--text-main);"><strong>Aplicação prática:</strong> No armazém moderno, o Seiton está ligado ao endereçamento inteligente dos produtos. Isso geralmente é feito com ajuda de sistemas chamados WMS (Warehouse Management System). Um método comum é o <em>slotting</em>, que posiciona os produtos de acordo com a frequência de venda.</p>
+                            <ul style="list-style-type: square; margin-left: 20px; color: var(--text-muted); font-size: 1.1rem; margin-bottom: 15px;">
+                                <li>produtos de alto giro <strong style="color: var(--meli-yellow);">(Curva A)</strong> ficam próximos das docas de expedição</li>
+                                <li>produtos de médio giro <strong style="color: var(--cyan-tech);">(Curva B)</strong> ficam em áreas intermediárias</li>
+                                <li>produtos de baixo giro <strong style="color: var(--red-alert);">(Curva C)</strong> ficam em posições mais distantes</li>
+                            </ul>
+                            <p style="font-family: var(--font-mono); font-size: 1.05rem; color: var(--white-clean); margin: 0;">[ RESULTADOS: Redução das distâncias percorridas pelos operadores, menos movimentação de empilhadeiras, aumento de até 60% na produtividade do picking. ]</p>
+                        </div>
+
+                        <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-left: 4px solid var(--lean-green); padding: 25px; border-radius: 6px; transition: 0.3s;" onmouseover="this.style.background='rgba(0,255,102,0.05)';">
+                            <strong style="color: var(--lean-green); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 10px;">3. SEISO — LIMPEZA E PREVENÇÃO</strong>
+                            <p style="font-size: 1.15rem; margin-bottom: 10px; color: var(--text-main);"><strong>Aplicação prática:</strong> No armazém, o Seiso envolve rotinas de limpeza e inspeção diária, como: limpeza de estruturas de porta-paletes, limpeza das docas de carga, desobstrução de corredores e rotas de fuga, inspeção de esteiras e equipamentos automáticos.</p>
+                            <p style="font-family: var(--font-mono); font-size: 1.05rem; color: var(--white-clean); margin: 0;">[ RESULTADOS: Redução de acidentes de trabalho, menor risco de incêndio, maior vida útil dos equipamentos, menos paradas inesperadas na operação. ]</p>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-left: 4px solid var(--lean-green); padding: 25px; border-radius: 6px; transition: 0.3s;" onmouseover="this.style.background='rgba(0,255,102,0.05)';">
+                            <strong style="color: var(--lean-green); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 10px;">4. SEIKETSU — PADRONIZAÇÃO E FLUXOS</strong>
+                            <p style="font-size: 1.15rem; margin-bottom: 10px; color: var(--text-main);"><strong>Aplicação prática:</strong> O Seiketsu cria padrões claros de operação, como: cores para identificação de corredores, sinalização de áreas de risco, uso de etiquetas RFID ou códigos de barras, procedimentos operacionais padrão (POPs).</p>
+                            <p style="font-size: 1.15rem; margin-bottom: 10px; color: var(--text-main);">Também define regras logísticas importantes, como:</p>
+                            <ul style="list-style-type: square; margin-left: 20px; color: var(--text-muted); font-size: 1.1rem; margin-bottom: 15px;">
+                                <li><strong style="color: var(--white-clean);">FIFO (First In, First Out)</strong> – primeiro que entra é o primeiro que sai</li>
+                                <li><strong style="color: var(--white-clean);">LIFO (Last In, First Out)</strong> – último que entra é o primeiro que sai</li>
+                            </ul>
+                            <p style="font-family: var(--font-mono); font-size: 1.05rem; color: var(--white-clean); margin: 0;">[ RESULTADOS: Com essa padronização é possível reduzir erros de separação de pedidos, facilitar inventários e diminuir avarias nos produtos. Em alguns casos, os erros operacionais podem cair até 99%. ]</p>
+                        </div>
+
+                        <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-left: 4px solid var(--lean-green); padding: 25px; border-radius: 6px; transition: 0.3s;" onmouseover="this.style.background='rgba(0,255,102,0.05)';">
+                            <strong style="color: var(--lean-green); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 10px;">5. SHITSUKE — DISCIPLINA E AUDITORIA</strong>
+                            <p style="font-size: 1.15rem; margin-bottom: 10px; color: var(--text-main);"><strong>Aplicação prática:</strong> O Shitsuke mantém o funcionamento do 5S através de: auditorias periódicas, treinamentos contínuos, indicadores de desempenho, painéis visuais com resultados da operação e programas de reconhecimento das equipes.</p>
+                            <p style="font-family: var(--font-mono); font-size: 1.05rem; color: var(--white-clean); margin: 0;">[ RESULTADOS: Isso gera equipes mais engajadas, maior organização da operação e cumprimento das normas de segurança (NRs). ]</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="tech-panel" id="section-wms" style="border-color: rgba(138, 43, 226, 0.4);">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(138, 43, 226, 0.1); border-color: var(--purple-wms); color: var(--purple-wms); box-shadow: 0 0 20px rgba(138, 43, 226, 0.5);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--white-clean);">SEÇÃO 10 // O 5S ENCONTRA A TECNOLOGIA WMS</h2>
+                    </div>
+
+                    <p>Nos armazéns modernos, o 5S também é combinado com tecnologia. Um exemplo são sistemas avançados de gestão de armazém, como o software <strong>Easy WMS da empresa Mecalux</strong>. Esses sistemas utilizam algoritmos e análise de dados para melhorar a organização do armazém.</p>
+
+                    <div style="background: rgba(138, 43, 226, 0.05); border: 1px solid var(--purple-wms); padding: 30px; border-radius: 8px; margin: 3rem 0; box-shadow: inset 0 0 30px rgba(138, 43, 226, 0.15);">
+                        <strong style="color: var(--purple-wms); font-family: var(--font-display); font-size: 1.4rem; display: block; margin-bottom: 15px; letter-spacing: 2px;">[ SYSTEM OVERRIDE ] CAPACIDADES DO WMS:</strong>
+                        <ul style="list-style-type: none; padding: 0;">
+                            <li style="margin-bottom: 10px; color: var(--text-main); font-size: 1.15rem; display: flex; align-items: center; gap: 10px;"><strong style="color: var(--purple-wms);">></strong> Analisar demanda futura</li>
+                            <li style="margin-bottom: 10px; color: var(--text-main); font-size: 1.15rem; display: flex; align-items: center; gap: 10px;"><strong style="color: var(--purple-wms);">></strong> Prever sazonalidade (como Black Friday)</li>
+                            <li style="margin-bottom: 10px; color: var(--text-main); font-size: 1.15rem; display: flex; align-items: center; gap: 10px;"><strong style="color: var(--purple-wms);">></strong> Calcular volume e giro dos produtos</li>
+                            <li style="margin-bottom: 0; color: var(--text-main); font-size: 1.15rem; display: flex; align-items: center; gap: 10px;"><strong style="color: var(--purple-wms);">></strong> Sugerir a melhor posição de armazenagem</li>
+                        </ul>
+                    </div>
+
+                    <p>Na prática, o software automatiza parte do Seiton (organização). Ele informa ao operador, através de terminais de radiofrequência, exatamente onde cada produto deve ser armazenado. <strong>Isso evita decisões baseadas apenas na experiência ou intuição.</strong></p>
+
+                    <h3 class="topic-header" style="color: var(--purple-wms); font-size: 1.5rem; margin-top: 3rem;">RESULTADO FINAL DA INTEGRAÇÃO</h3>
+                    <p>Quando o 5S físico do armazém é combinado com tecnologia de WMS, a operação logística alcança níveis muito maiores de eficiência. Os principais ganhos são:</p>
+                    
+                    <ul class="cyber-list" style="--lean-green: var(--purple-wms); --lean-glow: rgba(138, 43, 226, 0.6);">
+                        <li>maior velocidade de processamento de pedidos</li>
+                        <li>menor índice de erros</li>
+                        <li>melhor uso do espaço do armazém</li>
+                        <li>operações mais seguras</li>
+                        <li>suporte ao modelo <em>omnichannel</em> do e-commerce moderno</li>
+                    </ul>
+                </section>
+                <section class="tech-panel" id="section-meli-case">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(255, 230, 0, 0.1); border-color: var(--meli-yellow); color: var(--meli-yellow); box-shadow: 0 0 25px rgba(255, 230, 0, 0.3);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--white-clean);">SEÇÃO 11 // ESTUDO DE CASO: MERCADO LIVRE</h2>
+                    </div>
+
+                    <p>O Mercado Livre é a maior empresa de comércio eletrônico da América Latina. Grande parte do seu sucesso vem da decisão estratégica de controlar a própria logística, em vez de depender apenas de serviços postais tradicionais.</p>
+                    <p>Com isso, a empresa consegue cumprir a promessa de entregar produtos no mesmo dia ou em até 24 horas em muitas regiões. Para atingir esse nível de eficiência, o Mercado Livre investiu fortemente em tecnologia, centros logísticos e métodos de organização, utilizando conceitos do Lean Logistics e da metodologia 5S.</p>
+
+                    <h3 class="topic-header" style="color: var(--meli-yellow); margin-top: 3.5rem;">OS 4 PILARES DA LOGÍSTICA DO MERCADO LIVRE</h3>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-top: 2rem;">
+                        <div style="background: rgba(255,255,255,0.02); padding: 30px; border-radius: 6px; border-top: 4px solid var(--meli-yellow); transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.5);" onmouseover="this.style.transform='translateY(-5px)';">
+                            <strong style="color: var(--meli-yellow); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 15px;">1. CENTROS DE DISTRIBUIÇÃO (CDs)</strong>
+                            <p style="font-size: 1.1rem; color: var(--text-main); margin: 0;">São grandes galpões logísticos automatizados, onde os produtos são armazenados, separados e embalados. Funcionam 24 horas por dia, possuem robôs, esteiras e sistemas automáticos, processando milhares de pedidos diariamente.</p>
+                        </div>
+                        
+                        <div style="background: rgba(255,255,255,0.02); padding: 30px; border-radius: 6px; border-top: 4px solid var(--meli-yellow); transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.5);" onmouseover="this.style.transform='translateY(-5px)';">
+                            <strong style="color: var(--meli-yellow); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 15px;">2. FROTA PRÓPRIA DE TRANSPORTE</strong>
+                            <p style="font-size: 1.1rem; color: var(--text-main); margin: 0;">A empresa possui uma estrutura multimodal: aviões para transporte entre estados, caminhões para longas distâncias, vans para áreas urbanas e veículos elétricos para entregas rápidas. Acelera principalmente a última etapa da entrega (last mile).</p>
+                        </div>
+                        
+                        <div style="background: rgba(255,255,255,0.02); padding: 30px; border-radius: 6px; border-top: 4px solid var(--meli-yellow); transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.5);" onmouseover="this.style.transform='translateY(-5px)';">
+                            <strong style="color: var(--meli-yellow); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 15px;">3. PONTOS DE RETIRADA</strong>
+                            <p style="font-size: 1.1rem; color: var(--text-main); margin: 0;">Milhares de pontos em comércios parceiros. Servem para retirar produtos, devolver mercadorias ou funcionar como pequenos CDs locais. Isso aumenta a capilaridade e rapidez das entregas.</p>
+                        </div>
+                        
+                        <div style="background: rgba(255,255,255,0.02); padding: 30px; border-radius: 6px; border-top: 4px solid var(--meli-yellow); transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.5);" onmouseover="this.style.transform='translateY(-5px)';">
+                            <strong style="color: var(--meli-yellow); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 15px;">4. TECNOLOGIA INTEGRADA</strong>
+                            <p style="font-size: 1.1rem; color: var(--text-main); margin: 0;">Toda a operação é controlada por sistemas avançados (ERP, WMS) que permitem rastrear cada produto desde o estoque até a casa do cliente. Parceiros como a brasileira TOTVS apoiam esta estrutura.</p>
+                        </div>
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-meli-5s" style="border-color: rgba(255, 230, 0, 0.4);">
+                    <h3 class="topic-header">TIPOS DE ENTREGA DO MERCADO LIVRE</h3>
+                    <p>A plataforma oferece diferentes modelos de envio: <strong>Mercado Envios Flex</strong> (mesmo dia por motoboys), <strong>Mercado Envios Coleta</strong> (coleta no estoque do vendedor), <strong>Agências</strong> (vendedor leva a um ponto físico), e o poderoso <strong>Mercado Envios Full</strong>.</p>
+                    
+                    <div style="background: rgba(255,230,0,0.05); border-left: 5px solid var(--meli-yellow); padding: 30px; margin: 3rem 0; border-radius: 6px; position: relative;">
+                        <strong style="color: var(--meli-yellow); font-family: var(--font-display); font-size: 1.5rem; display: block; margin-bottom: 15px; letter-spacing: 1px;">FULFILLMENT (MERCADO ENVIOS FULL)</strong>
+                        <p style="font-size: 1.2rem; color: var(--text-main); margin-bottom: 15px; line-height: 1.7;">No modelo Full, o vendedor envia seus produtos para um Centro de Distribuição do Mercado Livre. A partir daí, a empresa passa a cuidar de tudo: armazenamento, separação do pedido, embalagem, emissão de nota fiscal, envio ao cliente e logística de devoluções.</p>
+                        <p style="font-family: var(--font-mono); font-size: 1.1rem; color: var(--white-clean); margin: 0;">[ RESULTADO: Esse sistema permite entregas muito mais rápidas. ]</p>
+                    </div>
+
+                    <h3 class="topic-header" style="color: var(--meli-yellow); margin-top: 4rem;">APLICAÇÃO DA METODOLOGIA 5S NO MERCADO LIVRE</h3>
+                    <p>Dentro dos centros logísticos, os princípios do 5S são aplicados rigorosamente para garantir eficiência:</p>
+
+                    <div style="display: flex; flex-direction: column; gap: 20px; margin-top: 2rem;">
+                        <div style="background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1); padding: 25px; border-radius: 6px;">
+                            <strong style="color: var(--lean-green); font-family: var(--font-mono); font-size: 1.2rem; display: block; margin-bottom: 10px;">> 1. SEIRI (UTILIZAÇÃO)</strong>
+                            <p style="margin: 0; font-size: 1.15rem; color: var(--text-main);">Significa manter apenas o que é necessário. O Mercado Livre cobra taxas extras para produtos que ficam muito tempo parados no estoque. Isso incentiva os vendedores a vender mais rápido, retirar produtos encalhados e evitar ocupar espaço desnecessário.</p>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1); padding: 25px; border-radius: 6px;">
+                            <strong style="color: var(--lean-green); font-family: var(--font-mono); font-size: 1.2rem; display: block; margin-bottom: 10px;">> 2. SEITON (ORGANIZAÇÃO)</strong>
+                            <p style="margin: 0; font-size: 1.15rem; color: var(--text-main);">Todos os produtos possuem endereços específicos nas prateleiras. O sistema orienta os funcionários com leitores de código de barras, tecnologia RFID e rotas otimizadas para coleta. Assim, o trabalhador percorre o menor caminho possível dentro do galpão.</p>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1); padding: 25px; border-radius: 6px;">
+                            <strong style="color: var(--lean-green); font-family: var(--font-mono); font-size: 1.2rem; display: block; margin-bottom: 10px;">> 3. SEIKETSU (PADRONIZAÇÃO)</strong>
+                            <p style="margin: 0; font-size: 1.15rem; color: var(--text-main);">A etapa de embalagem segue padrões rigorosos. O sistema identifica o produto e automaticamente indica a caixa correta, imprime a etiqueta de envio e registra a nota fiscal. Isso evita erros e mantém o padrão da marca até a entrega.</p>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 3rem; padding: 25px; background: rgba(255,255,255,0.02); border-top: 1px dashed rgba(255,230,0,0.3); border-bottom: 1px dashed rgba(255,230,0,0.3);">
+                        <p style="font-size: 1.2rem; color: var(--white-clean); margin: 0; text-align: center;"><strong>Conclusão:</strong> O sucesso logístico do Mercado Livre acontece porque a empresa combina: infraestrutura gigante, tecnologia avançada, controle de processos e metodologias como o 5S. Esse modelo permite entregas rápidas, redução de erros e uma melhor experiência para o cliente.</p>
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-belts">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(0, 255, 102, 0.1); border-color: var(--lean-green); color: var(--lean-green); box-shadow: 0 0 25px rgba(0,255,102,0.4);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
+                        </div>
+                        <h2 class="panel-title">SEÇÃO 13 // LEAN SIX SIGMA E O SISTEMA DE BELTS</h2>
+                    </div>
+
+                    <p>Segundo executivos da área de logística do Mercado Livre, como o diretor de operações Luiz Augusto Vergueiro, a empresa percebeu cedo que a logística tradicional não conseguiria acompanhar o crescimento do e-commerce.</p>
+                    <p>Por volta de 2018, a empresa tomou uma decisão estratégica: <strong>trazer profissionais da indústria automobilística</strong>, um setor conhecido por usar sistemas extremamente eficientes de produção. Eles trouxeram o modelo Lean Manufacturing, base da gestão enxuta criada no Japão.</p>
+
+                    <h3 class="topic-header">USO DE LEAN E SIX SIGMA</h3>
+                    <p>Para organizar e melhorar seus processos logísticos, o Mercado Livre passou a utilizar metodologias como <strong style="color: var(--lean-green);">Lean</strong> (eliminar desperdícios e tornar processos mais rápidos) e <strong style="color: var(--cyan-tech);">Six Sigma</strong> (reduzir erros usando análise estatística).</p>
+
+                    <h3 class="topic-header" style="margin-top: 3rem;">SISTEMA DE CERTIFICAÇÕES (AS FAIXAS / BELTS)</h3>
+                    <p>Os funcionários participam de programas de capacitação com diferentes níveis de certificação:</p>
+
+                    <div style="display: flex; flex-direction: column; gap: 20px; margin: 2rem 0;">
+                        <div style="background: rgba(255,255,255,0.05); padding: 25px; border-left: 8px solid var(--white-clean); border-radius: 6px; transition: 0.3s;" onmouseover="this.style.transform='translateX(10px)';">
+                            <strong style="color: var(--white-clean); font-family: var(--font-display); font-size: 1.3rem;">WHITE BELT E YELLOW BELT</strong>
+                            <p style="margin: 10px 0 0 0; font-size: 1.15rem; color: var(--text-main);">São os níveis iniciais. Trabalham no chão de operação ajudando a resolver problemas do dia a dia: melhorar a organização do espaço (5S), corrigir erros de embalagem, reduzir pequenos desperdícios e melhorar a ergonomia. Estas melhorias tornam o processo rápido e eficiente.</p>
+                        </div>
+                        
+                        <div style="background: rgba(0,0,0,0.8); padding: 25px; border-left: 8px solid var(--lean-green); border-radius: 6px; box-shadow: 10px 10px 30px rgba(0,0,0,0.6); transition: 0.3s;" onmouseover="this.style.transform='translateX(10px)';">
+                            <strong style="color: var(--lean-green); font-family: var(--font-display); font-size: 1.3rem;">GREEN BELT E BLACK BELT</strong>
+                            <p style="margin: 10px 0 0 0; font-size: 1.15rem; color: var(--text-main);">Níveis mais avançados e estratégicos. Estes profissionais lideram grandes projetos de melhoria: reorganização de CDs, otimização de rotas, análise de gargalos logísticos e implementação de novas tecnologias, usando estatística e simulações para tomar decisões.</p>
+                        </div>
+                    </div>
+
+                    <div style="background: linear-gradient(135deg, rgba(255,230,0,0.08), transparent); border: 1px solid var(--meli-yellow); padding: 40px; border-radius: 8px; margin-top: 4rem; box-shadow: 0 15px 40px rgba(0,0,0,0.5);">
+                        <h3 style="font-family: var(--font-display); color: var(--meli-yellow); font-size: 1.8rem; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 15px;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 35px; height: 35px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                            Por que dominar o 5S é vital para a Liderança?
+                        </h3>
+                        <p style="font-size: 1.25rem; color: var(--white-clean); margin-bottom: 20px;">Se ambiciona cargos de gestão, coordenação ou atuar como <strong>Problem Solver (PS)</strong>, dominar a base operacional é inegociável. Gestores não promovem quem apenas trabalha duro; promovem quem entende a mecânica do sistema.</p>
+                        
+                        <ul class="cyber-list" style="--lean-green: var(--meli-yellow); --lean-glow: rgba(255,230,0,0.4); margin-bottom: 0;">
+                            <li><strong>Visão Sistêmica:</strong> O 5S treina os seus olhos para ver o desperdício que os outros ignoram (movimentos desnecessários, esperas, defeitos ocultos).</li>
+                            <li><strong>Liderança pelo Exemplo:</strong> Um líder que não mantém o seu próprio posto organizado (Shitsuke) não tem autoridade moral para cobrar a equipa de alto desempenho.</li>
+                            <li><strong>Resolução de Problemas Reais:</strong> Grandes inovações nascem da resolução de pequenos atritos diários. A base do Lean é garantir o "básico bem-feito" antes de tentar automatizar o caos.</li>
+                            <li><strong>Passaporte para o Six Sigma:</strong> Entender o 5S é o pré-requisito absoluto para iniciar a sua jornada nos <em>Belts</em> e liderar projetos de alto impacto financeiro na companhia.</li>
+                        </ul>
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-tech-future" style="border-color: rgba(0, 229, 255, 0.3);">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(0, 229, 255, 0.1); border-color: var(--cyan-tech); color: var(--cyan-tech);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                        </div>
+                        <h2 class="panel-title">SEÇÃO 14 // BIG DATA & INTELIGÊNCIA ARTIFICIAL</h2>
+                    </div>
+
+                    <p>A logística do Mercado Livre gera milhares de milhões de dados diariamente. Estes dados não são apenas números; são analisados através de <strong>Big Data</strong> e <strong>Inteligência Artificial</strong> para otimizar a operação.</p>
+                    
+                    <ul class="cyber-list" style="--lean-green: var(--cyan-tech); --lean-glow: rgba(0,229,255,0.5);">
+                        <li>Prever a demanda com altíssima precisão.</li>
+                        <li>Otimizar rotas de entrega urbanas e de longas distâncias.</li>
+                        <li>Identificar problemas e gargalos na operação em tempo real.</li>
+                        <li>Reorganizar prioridades logísticas instantaneamente.</li>
+                    </ul>
+
+                    <p>Por exemplo, o sistema consegue reagir a problemas críticos externos, como: <strong>greves, bloqueios de estradas, atrasos no transporte e falhas operacionais</strong>, sem colapsar a promessa de entrega ao cliente.</p>
+
+                    <h3 class="topic-header">A IMPORTÂNCIA DO 5S NA ERA DOS DADOS</h3>
+                    <p>Apesar de toda essa tecnologia, o método 5S continua sendo a fundação vital nos centros logísticos. Sem ele, ocorrem problemas graves que a IA não consegue resolver fisicamente: produtos perdidos no estoque, etiquetas mal colocadas, falhas na leitura de códigos, desorganização nas prateleiras e perda de tempo procurando mercadorias.</p>
+                    <p>Esses erros humanos básicos geram dados corrompidos para o sistema, causando atrasos nas entregas e clientes insatisfeitos.</p>
+
+                    <div style="text-align: center; margin-top: 4rem; padding: 4rem 2rem; background: linear-gradient(180deg, rgba(0,255,102,0.1), transparent); border: 1px solid var(--border-lean); border-radius: 8px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+                        <h3 style="font-family: var(--font-mono); color: var(--text-muted); letter-spacing: 5px; margin-bottom: 15px;">[ O OBJETIVO SUPREMO ]</h3>
+                        <h2 style="font-family: var(--font-display); font-size: 2.8rem; color: var(--lean-green); text-shadow: 0 0 25px var(--lean-glow); margin-bottom: 25px; line-height: 1.2;">
+                            ENTREGAR O PRODUTO AO CLIENTE<br>O MAIS RÁPIDO POSSÍVEL E SEM ERROS
+                        </h2>
+                        <p style="font-size: 1.3rem; color: var(--text-main); max-width: 900px; margin: 0 auto; line-height: 1.8;">
+                            Quando a logística funciona corretamente: os produtos se movimentam rapidamente pelo armazém, passam pelas esteiras sem interrupção e chegam aos caminhões de transporte sem atrasos. É essa sinergia entre o 5S e a Tecnologia que permite realizar milhões de entregas com eficiência absurda.
+                        </p>
+                    </div>
+                </section>
+
+                <section class="tech-panel" id="section-quiz" style="border-color: var(--meli-yellow); background: rgba(255,230,0,0.02);">
+                    <div class="panel-header" style="border-bottom-color: rgba(255,230,0,0.2);">
+                        <div class="panel-icon" style="background: rgba(255, 230, 0, 0.1); border-color: var(--meli-yellow); color: var(--meli-yellow); box-shadow: 0 0 20px rgba(255,230,0,0.3);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--meli-yellow); text-shadow: 0 0 10px rgba(255,230,0,0.3);">FERRAMENTA DE DIAGNÓSTICO // QUIZ MATURIDADE 5S</h2>
+                    </div>
+
+                    <p style="font-size: 1.2rem; margin-bottom: 10px;">Como futuro <strong>Problem Solver</strong>, você precisa saber avaliar a saúde de uma operação. Responda às 10 perguntas abaixo com total sinceridade sobre o seu atual ambiente de trabalho.</p>
+                    <p style="font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 0;">O sistema irá gerar um Gráfico de Radar em tempo real, mapeando as forças e as falhas críticas do seu armazém.</p>
+
+                    <div class="quiz-wrapper">
+                        <div class="quiz-questions" id="quiz-container">
+                            <div style="text-align: center; padding: 3rem 0;" id="quiz-intro">
+                                <h3 style="font-family: var(--font-display); color: var(--white-clean); font-size: 1.8rem; margin-bottom: 20px;">INICIAR DIAGNÓSTICO DO SETOR</h3>
+                                <button class="cyber-btn-large" onclick="startQuiz()" style="border-color: var(--meli-yellow); color: var(--meli-yellow); background: rgba(255,230,0,0.1);">ATIVAR SCANNER 5S</button>
+                            </div>
+                            </div>
+
+                        <div class="quiz-radar">
+                            <h4 style="font-family: var(--font-mono); color: var(--white-clean); margin-bottom: 5px; text-align: center;">Mapeamento Lean</h4>
+                            <span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--lean-green); margin-bottom: 20px; display: block; text-align: center;" id="radar-status">AGUARDANDO DADOS...</span>
+                            <div class="radar-canvas-container">
+                                <canvas id="radarChart"></canvas>
+                            </div>
+                            <div id="radar-feedback" style="margin-top: 20px; font-family: var(--font-body); font-size: 1.1rem; color: var(--text-main); text-align: center; display: none;"></div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+                        <footer style="margin-top: auto; padding: 2rem 5rem; background: var(--bg-panel-deep); border-top: 1px solid var(--border-lean); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; box-shadow: 0 -15px 40px rgba(0,0,0,0.8);">
+                
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                    <span style="font-family: var(--font-display); font-size: 1.4rem; color: var(--white-clean); letter-spacing: 2px;">
+                        MELI <span style="color: var(--lean-green); text-shadow: 0 0 15px var(--lean-glow);">PDI</span>
+                    </span>
+                    <span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); letter-spacing: 3px;">
+                        LOGISTICS DOCUMENTATION // 5S_MASTER_V2.0
+                    </span>
+                </div>
+
+                <div style="display: flex; gap: 40px; font-family: var(--font-code); font-size: 0.85rem;">
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <span style="color: var(--meli-yellow); text-shadow: 0 0 10px rgba(255,230,0,0.5);">DIAGNOSTIC MODULE</span>
+                        <span style="color: var(--text-main);">ONLINE</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <span style="color: var(--cyan-tech); text-shadow: 0 0 10px rgba(0,229,255,0.5);">DATA SOURCE</span>
+                        <span style="color: var(--text-main);">LEAN_SIX_SIGMA</span>
+                    </div>
+                </div>
+
+                <div style="text-align: right; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); letter-spacing: 2px;">
+                    <span style="color: var(--lean-green);">[ PROBLEM SOLVER SECURE CONNECTION ]</span><br>
+                    TERMINAL_ID: OSASCO_CD // 2026
+                </div>
+
+            </footer>
+
+        </main> </div> <script>
+        // 1. ANIMAÇÕES DE ENTRADA (SCROLL REVEAL)
+        document.addEventListener('DOMContentLoaded', () => {
+            const panels = document.querySelectorAll('.tech-panel, .hero-section');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if(entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0) scale(1)';
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            panels.forEach(panel => {
+                panel.style.opacity = '0';
+                panel.style.transform = 'translateY(40px) scale(0.98)';
+                panel.style.transition = 'all 0.7s cubic-bezier(0.2, 0.8, 0.2, 1)';
+                observer.observe(panel);
+            });
+            
+            // Renderiza um Radar vazio no início
+            initEmptyRadar();
+        });
+
+        // 2. BANCO DE DADOS DO QUIZ DE MATURIDADE 5S
+        const quizData = [
+            {
+                senso: 'Seiri',
+                question: '1. Existem materiais, caixas ou equipamentos parados e sem utilidade ocupando espaço na sua área operacional?',
+                options: [
+                    { text: 'Sim, há muito material acumulado que ninguém usa.', value: 1 },
+                    { text: 'Às vezes encontramos alguns itens sem utilidade imediata.', value: 3 },
+                    { text: 'Não. Apenas o que é estritamente necessário está no piso.', value: 5 }
+                ]
+            },
+            {
+                senso: 'Seiri',
+                question: '2. A operação utiliza alguma área de "Quarentena" ou "Etiquetas Vermelhas" para avaliar o descarte de itens?',
+                options: [
+                    { text: 'Não. O descarte é feito de forma aleatória.', value: 1 },
+                    { text: 'Existe uma área, mas nem todos respeitam ou utilizam bem.', value: 3 },
+                    { text: 'Sim. O processo é padronizado e limpa o armazém com eficácia.', value: 5 }
+                ]
+            },
+            {
+                senso: 'Seiton',
+                question: '3. Se ocorrer um problema e precisar de uma ferramenta ou documento específico, quanto tempo demora a encontrá-lo?',
+                options: [
+                    { text: 'Demoro bastante tempo, costumo ter que procurar em vários lugares.', value: 1 },
+                    { text: 'Encontro num tempo razoável, mas o local não é fixo.', value: 3 },
+                    { text: 'Em segundos. "Um lugar para cada coisa, cada coisa no seu lugar".', value: 5 }
+                ]
+            },
+            {
+                senso: 'Seiton',
+                question: '4. O setor utiliza gestão visual como marcações no chão, quadros de sombras e endereçamento correto das prateleiras?',
+                options: [
+                    { text: 'Não há marcações ou não são respeitadas.', value: 1 },
+                    { text: 'Existem algumas fitas e placas, mas podiam ser melhores.', value: 3 },
+                    { text: 'Sim, a gestão visual é impecável. Qualquer pessoa entende o fluxo.', value: 5 }
+                ]
+            },
+            {
+                senso: 'Seiso',
+                question: '5. Como é tratada a limpeza do ambiente e das estações de trabalho ao longo do turno?',
+                options: [
+                    { text: 'Dependemos 100% da equipe de limpeza.', value: 1 },
+                    { text: 'Alguns colaboradores limpam a sua área, mas não é uma regra geral.', value: 3 },
+                    { text: 'Cada operador é responsável pelo seu posto. A limpeza é preventiva.', value: 5 }
+                ]
+            },
+            {
+                senso: 'Seiso',
+                question: '6. Durante as rotinas, a equipe inspeciona as máquinas (ex: leitores, empilhadeiras, esteiras) à procura de anomalias precoces?',
+                options: [
+                    { text: 'Não, só reportamos quando a máquina quebra de vez.', value: 1 },
+                    { text: 'De vez em quando reparamos num barulho ou avaria.', value: 3 },
+                    { text: 'Sim, inspeção preventiva faz parte do processo para evitar paradas.', value: 5 }
+                ]
+            },
+            {
+                senso: 'Seiketsu',
+                question: '7. O seu armazém sofre do "Efeito Rebote" (organizam tudo num dia, mas na semana seguinte está tudo desorganizado de novo)?',
+                options: [
+                    { text: 'Sim, é um ciclo constante de arrumar e bagunçar.', value: 1 },
+                    { text: 'Acontece em épocas de picos de volume de vendas.', value: 3 },
+                    { text: 'Não. Os padrões são mantidos consistentemente.', value: 5 }
+                ]
+            },
+            {
+                senso: 'Seiketsu',
+                question: '8. O conhecimento operacional (o que fazer e como fazer) está documentado ou existe apenas na cabeça dos mais experientes?',
+                options: [
+                    { text: 'Dependemos totalmente de 1 ou 2 funcionários antigos.', value: 1 },
+                    { text: 'Existem alguns manuais, mas estão desatualizados.', value: 3 },
+                    { text: 'Temos POPs claros, visuais e de fácil acesso para todos.', value: 5 }
+                ]
+            },
+            {
+                senso: 'Shitsuke',
+                question: '9. A liderança direta (supervisores, coordenadores) dá o exemplo na manutenção da organização e dos processos?',
+                options: [
+                    { text: 'Eles cobram a equipe, mas as suas próprias rotinas são caóticas.', value: 1 },
+                    { text: 'Fazem um esforço, mas perdem o foco durante a correria do dia a dia.', value: 3 },
+                    { text: 'Sim. A liderança é a primeira a cumprir e inspirar a disciplina 5S.', value: 5 }
+                ]
+            },
+            {
+                senso: 'Shitsuke',
+                question: '10. Existem auditorias ou avaliações de desempenho que meçam ativamente o sucesso e a manutenção da cultura Lean no setor?',
+                options: [
+                    { text: 'Não existe qualquer auditoria ou cobrança oficial.', value: 1 },
+                    { text: 'Fazem inspeções ocasionais e informais sem grandes métricas.', value: 3 },
+                    { text: 'Sim, com auditorias regulares cruzadas e indicadores (KPIs) de 5S.', value: 5 }
+                ]
+            }
+        ];
+
+        // 3. VARIÁVEIS DE ESTADO DO QUIZ
+        let currentQIndex = 0;
+        let scores = {
+            'Seiri': { total: 0, count: 0 },
+            'Seiton': { total: 0, count: 0 },
+            'Seiso': { total: 0, count: 0 },
+            'Seiketsu': { total: 0, count: 0 },
+            'Shitsuke': { total: 0, count: 0 }
+        };
+        let radarChartInstance = null;
+
+        // 4. LÓGICA DO QUIZ
+        function startQuiz() {
+            document.getElementById('quiz-intro').style.display = 'none';
+            document.getElementById('radar-status').innerText = 'ANALISANDO RESPOSTAS...';
+            document.getElementById('radar-status').style.color = 'var(--meli-yellow)';
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const container = document.getElementById('quiz-container');
+            const q = quizData[currentQIndex];
+            
+            let html = `
+                <div class="question-card active">
+                    <span style="font-family: var(--font-mono); color: var(--lean-green); margin-bottom: 10px; display: block;">PERGUNTA ${currentQIndex + 1} DE 10 [ Foco: ${q.senso} ]</span>
+                    <div class="question-text">${q.question}</div>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+            `;
+            
+            q.options.forEach((opt, index) => {
+                html += `<button class="quiz-option" onclick="handleAnswer('${q.senso}', ${opt.value})">${opt.text}</button>`;
+            });
+            
+            html += `</div></div>`;
+            container.innerHTML = html;
+        }
+
+        function handleAnswer(senso, value) {
+            scores[senso].total += value;
+            scores[senso].count += 1;
+            
+            currentQIndex++;
+            
+            if(currentQIndex < quizData.length) {
+                renderQuestion();
+            } else {
+                finishQuiz();
+            }
+        }
+
+        function finishQuiz() {
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = `
+                <div style="text-align: center; padding: 2rem 0;">
+                    <h3 style="font-family: var(--font-display); color: var(--lean-green); font-size: 2rem; margin-bottom: 15px;">DIAGNÓSTICO CONCLUÍDO</h3>
+                    <p style="font-size: 1.2rem; color: var(--text-main);">Os dados foram compilados. Observe o Gráfico de Radar à direita para entender a maturidade Lean da sua operação atual.</p>
+                    <button class="cyber-btn-large" onclick="location.reload()" style="margin-top: 20px; font-size: 1rem; padding: 15px 30px;">REALIZAR NOVA AUDITORIA</button>
+                </div>
+            `;
+            
+            document.getElementById('radar-status').innerText = 'MAPA DE MATURIDADE COMPILADO';
+            document.getElementById('radar-status').style.color = 'var(--lean-green)';
+            
+            generateRadarChart();
+            generateFeedback();
+        }
+
+        // 5. CHART.JS: GRÁFICO DE RADAR
+        function initEmptyRadar() {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            
+            // Configuração global para o Chart ficar com o aspecto "Hacker/Dashboard"
+            Chart.defaults.color = '#8AA6A6';
+            Chart.defaults.font.family = "'Share Tech Mono', monospace";
+            
+            const data = {
+                labels: ['1. Seiri (Utilização)', '2. Seiton (Organização)', '3. Seiso (Limpeza)', '4. Seiketsu (Padronização)', '5. Shitsuke (Disciplina)'],
+                datasets: [{
+                    label: 'Nível de Maturidade',
+                    data: [0, 0, 0, 0, 0],
+                    backgroundColor: 'rgba(0, 255, 102, 0.2)',
+                    borderColor: '#00FF66',
+                    pointBackgroundColor: '#FFE600',
+                    pointBorderColor: '#000',
+                    pointHoverBackgroundColor: '#FFF',
+                    pointHoverBorderColor: '#00FF66',
+                    borderWidth: 2,
+                    pointRadius: 4
+                }]
+            };
+
+            const config = {
+                type: 'radar',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            pointLabels: { color: '#FFFFFF', font: { size: 12, family: "'Orbitron', sans-serif" } },
+                            ticks: { display: false, min: 0, max: 5, stepSize: 1 },
+                            suggestedMin: 0,
+                            suggestedMax: 5
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            };
+            
+            radarChartInstance = new Chart(ctx, config);
+        }
+
+        function generateRadarChart() {
+            // Calcula a média de cada senso (de 1 a 5)
+            const calc = (senso) => (scores[senso].total / scores[senso].count);
+            
+            const finalData = [
+                calc('Seiri'),
+                calc('Seiton'),
+                calc('Seiso'),
+                calc('Seiketsu'),
+                calc('Shitsuke')
+            ];
+
+            // Atualiza o gráfico instanciado com os novos dados
+            radarChartInstance.data.datasets[0].data = finalData;
+            
+            // Muda a cor consoante a média geral
+            const totalScore = finalData.reduce((a, b) => a + b, 0) / 5;
+            if(totalScore < 3) {
+                radarChartInstance.data.datasets[0].backgroundColor = 'rgba(255, 0, 60, 0.2)';
+                radarChartInstance.data.datasets[0].borderColor = '#FF003C';
+            } else if (totalScore < 4.5) {
+                radarChartInstance.data.datasets[0].backgroundColor = 'rgba(255, 230, 0, 0.2)';
+                radarChartInstance.data.datasets[0].borderColor = '#FFE600';
+            }
+            
+            radarChartInstance.update();
+        }
+
+        // Gera a mensagem abaixo do gráfico para orientar o Problem Solver
+        function generateFeedback() {
+            const feedbackDiv = document.getElementById('radar-feedback');
+            feedbackDiv.style.display = 'block';
+            
+            const finalData = [
+                (scores['Seiri'].total / 2),
+                (scores['Seiton'].total / 2),
+                (scores['Seiso'].total / 2),
+                (scores['Seiketsu'].total / 2),
+                (scores['Shitsuke'].total / 2)
+            ];
+            
+            const totalScore = finalData.reduce((a, b) => a + b, 0) / 5;
+            
+            if (totalScore >= 4.5) {
+                feedbackDiv.innerHTML = '<span style="color: var(--lean-green); font-weight: bold;">OPERAÇÃO DE CLASSE MUNDIAL:</span> O seu CD atua em alto nível de maturidade Lean. Cuidado apenas para não flexibilizar a disciplina.';
+            } else if (totalScore >= 3.0) {
+                feedbackDiv.innerHTML = '<span style="color: var(--meli-yellow); font-weight: bold;">OPERAÇÃO EM DESENVOLVIMENTO:</span> A base existe, mas há falhas. Observe qual eixo no gráfico está mais recuado e inicie o seu projeto de Problem Solving por aí.';
+            } else {
+                feedbackDiv.innerHTML = '<span style="color: var(--red-alert); font-weight: bold;">OPERAÇÃO EM RISCO CRÍTICO:</span> Faltam bases elementares. O Efeito Rebote é real. Foco urgente em Seiri (Descarte) e Seiton (Organização visual).';
+            }
+        }
+    </script>
+</body>
+</html>

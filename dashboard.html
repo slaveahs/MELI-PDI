@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboards & Gestão à Vista | MeLi PDI Terminal</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ==========================================================================
+           01. ROOT VARIABLES (CONTROL TOWER / DASHBOARD THEME)
+           ========================================================================== */
+        :root {
+            /* Palette Base: Deep Command Center */
+            --bg-absolute: #020610; 
+            --bg-panel-deep: rgba(5, 12, 30, 0.85);
+            --bg-card-glass: rgba(10, 25, 50, 0.65);
+            --bg-card-hover: rgba(15, 35, 70, 0.85);
+
+            /* Tema de Cores Dashboard (Visibilidade e Radar) */
+            --blue-holo: #00A3FF;
+            --blue-glow: rgba(0, 163, 255, 0.5);
+            --blue-dim: rgba(0, 163, 255, 0.1);
+
+            --orange-radar: #FF6B00;
+            --orange-glow: rgba(255, 107, 0, 0.5);
+            --orange-dim: rgba(255, 107, 0, 0.1);
+
+            /* Cores Andon (Visual Management) */
+            --andon-green: #00FF66;
+            --andon-yellow: #FFE600;
+            --andon-red: #FF003C;
+
+            /* Tipografia */
+            --font-display: 'Orbitron', sans-serif;
+            --font-body: 'Rajdhani', sans-serif;
+            --font-mono: 'Share Tech Mono', monospace;
+            --font-code: 'Fira Code', monospace;
+
+            /* Cores de Texto */
+            --text-title: #FFFFFF;
+            --text-main: #E2E8F0;
+            --text-muted: #7A8CA6;
+
+            /* Bordas e Sombras (Glassmorphism) */
+            --border-dash: rgba(0, 163, 255, 0.3);
+            --border-active: rgba(255, 107, 0, 0.6);
+            --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.9);
+            --shadow-neon-blue: 0 0 15px var(--blue-glow), inset 0 0 10px var(--blue-dim);
+            --shadow-neon-orange: 0 0 15px var(--orange-glow), inset 0 0 10px var(--orange-dim);
+            
+            /* Medidas Estruturais (TRAVADAS PARA DESKTOP) */
+            --sidebar-width: 280px;
+            --topbar-height: 80px;
+            --radius-card: 8px;
+            --transition-hud: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        /* ==========================================================================
+           02. CSS RESET & GLOBAL SETUP (FORCED DESKTOP)
+           ========================================================================== */
+        *, *::before, *::after {
+            margin: 0; padding: 0; box-sizing: border-box;
+        }
+
+        html { font-size: 16px; scroll-behavior: smooth; }
+
+        body {
+            background-color: var(--bg-absolute);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            min-height: 100vh;
+            min-width: 1200px; /* <--- TRAVA ABSOLUTA DE DESKTOP */
+            overflow-x: auto;  
+            display: flex;
+            position: relative;
+        }
+
+        /* Custom Scrollbar - Holo Blue Style */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg-absolute); border-left: 1px solid var(--border-dash); }
+        ::-webkit-scrollbar-thumb { background: var(--blue-dim); border: 1px solid var(--blue-holo); border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--blue-holo); box-shadow: 0 0 15px var(--blue-holo); }
+
+        /* Tipografia Global */
+        h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--text-title); }
+        p { font-size: 1.2rem; line-height: 1.7; margin-bottom: 1.2rem; }
+        strong { color: var(--blue-holo); font-weight: 600; text-shadow: 0 0 8px var(--blue-dim); }
+
+        /* ==========================================================================
+           03. BACKGROUND EFFECTS (RADIAL GRID)
+           ========================================================================== */
+        body::before {
+            content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -3;
+            /* Malha tática de monitoramento */
+            background-image: 
+                linear-gradient(rgba(0, 163, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 163, 255, 0.04) 1px, transparent 1px);
+            background-size: 50px 50px; pointer-events: none;
+        }
+
+        body::after {
+            content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2;
+            background: radial-gradient(circle at 10% 10%, rgba(0, 163, 255, 0.05) 0%, transparent 40%),
+                        radial-gradient(circle at 90% 90%, rgba(255, 107, 0, 0.04) 0%, transparent 40%);
+            pointer-events: none;
+        }
+
+        /* ==========================================================================
+           04. GLOBAL KEYFRAMES (MONITORING ANIMATIONS)
+           ========================================================================== */
+        @keyframes scanline-v { 0% { transform: translateY(-100%); } 100% { transform: translateY(100vh); } }
+        
+        @keyframes pulse-radar {
+            0% { box-shadow: 0 0 10px var(--orange-dim); border-color: rgba(255, 107, 0, 0.3); }
+            50% { box-shadow: 0 0 25px var(--orange-glow); border-color: var(--orange-radar); }
+            100% { box-shadow: 0 0 10px var(--orange-dim); border-color: rgba(255, 107, 0, 0.3); }
+        }
+
+        @keyframes data-blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(30px); } 100% { opacity: 1; transform: translateY(0); } }
+
+        .hud-scanner {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 2px;
+            background: linear-gradient(to right, transparent, var(--blue-holo), transparent);
+            opacity: 0.3; z-index: 9999; pointer-events: none; animation: scanline-v 8s linear infinite;
+        }
+        /* ==========================================================================
+           05. GLOBAL LAYOUT (GRID E WRAPPERS)
+           ========================================================================== */
+        .app-wrapper {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+            position: relative;
+            z-index: 10;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background: radial-gradient(circle at top right, rgba(0, 163, 255, 0.02), transparent 60%);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 4rem 4rem 4rem;
+        }
+
+        /* ==========================================================================
+           06. SIDEBAR (TERMINAL NAVIGATION) - ACOMPANHA A PÁGINA (DESKTOP)
+           ========================================================================== */
+        .sys-sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-panel-deep);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border-dash);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0; 
+            z-index: 100;
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.9);
+        }
+
+        /* Feixe de luz vertical azul holográfico */
+        .sys-sidebar::after {
+            content: '';
+            position: absolute;
+            top: 0; right: -1px;
+            width: 2px; height: 100%;
+            background: linear-gradient(to bottom, transparent, var(--blue-holo), transparent);
+            opacity: 0.6;
+        }
+
+        .sidebar-brand {
+            height: var(--topbar-height);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 1px dashed var(--border-dash);
+            background: radial-gradient(circle at top, var(--blue-dim), transparent);
+            position: relative;
+        }
+
+        .sidebar-brand::before {
+            content: '';
+            position: absolute;
+            bottom: -1px; left: 0; width: 40%; height: 2px;
+            background: var(--blue-holo);
+            box-shadow: 0 0 10px var(--blue-holo);
+        }
+
+        .brand-logo {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: var(--text-title);
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+
+        .brand-logo span {
+            color: var(--orange-radar);
+            text-shadow: 0 0 15px rgba(255, 107, 0, 0.5);
+        }
+
+        .brand-sub {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--blue-holo);
+            letter-spacing: 4px;
+            margin-top: 5px;
+            text-transform: uppercase;
+        }
+
+        /* Menu de Navegação */
+        .nav-menu {
+            flex-grow: 1;
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 20px;
+            color: var(--text-muted);
+            font-family: var(--font-body);
+            font-size: 1.05rem;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-decoration: none;
+            position: relative;
+            transition: var(--transition-hud);
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid transparent;
+            border-radius: var(--radius-card);
+            clip-path: polygon(0 0, 100% 0, 100% 70%, 92% 100%, 0 100%);
+        }
+
+        /* Linha de seleção do menu (Laranja no Hover) */
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0;
+            height: 100%; width: 3px;
+            background: var(--orange-radar);
+            transform: scaleY(0);
+            transition: 0.3s;
+        }
+
+        .nav-link:hover {
+            color: var(--text-pure);
+            background: rgba(255, 107, 0, 0.05);
+            border-color: rgba(255, 107, 0, 0.2);
+            padding-left: 25px;
+        }
+
+        .nav-link:hover::before {
+            transform: scaleY(1);
+            box-shadow: 0 0 15px var(--orange-glow);
+        }
+
+        /* Estado ATIVO (Página Atual: Dashboard) */
+        .nav-link.active {
+            color: var(--blue-holo);
+            background: var(--blue-dim);
+            border-color: var(--border-dash);
+        }
+
+        .nav-link.active::before {
+            background: var(--blue-holo);
+            transform: scaleY(1);
+            box-shadow: 0 0 15px var(--blue-glow);
+        }
+
+        .nav-icon {
+            width: 20px; height: 20px;
+            fill: none; stroke: currentColor; stroke-width: 2;
+            transition: 0.3s;
+        }
+
+        .nav-link:hover .nav-icon {
+            transform: scale(1.1);
+            color: var(--orange-radar);
+        }
+
+        .nav-link.active .nav-icon {
+            color: var(--blue-holo);
+        }
+
+        /* ==========================================================================
+           07. TOPBAR (SYSTEM HEADER)
+           ========================================================================== */
+        .sys-topbar {
+            height: var(--topbar-height);
+            width: 100%;
+            background: var(--bg-panel-deep);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--border-dash);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 4rem;
+            position: sticky;
+            top: 0;
+            z-index: 90;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+        }
+
+        .topbar-path {
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .topbar-path span {
+            color: var(--orange-radar);
+            text-shadow: 0 0 8px var(--orange-dim);
+        }
+
+        /* Status em Modo "Visibility" / Azul Holo */
+        .topbar-status {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-family: var(--font-code);
+            font-size: 0.8rem;
+            color: var(--blue-holo);
+            letter-spacing: 1px;
+            border: 1px solid rgba(0, 163, 255, 0.4);
+            padding: 8px 15px;
+            border-radius: 4px;
+            background: rgba(0, 163, 255, 0.05);
+            box-shadow: 0 0 10px var(--blue-dim);
+        }
+
+        .status-dot-radar {
+            width: 8px; height: 8px;
+            background: var(--orange-radar);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--orange-glow);
+            animation: pulse-radar 1.5s infinite alternate;
+        }
+        /* ==========================================================================
+           08. HERO SECTION
+           ========================================================================== */
+        .hero-section {
+            margin-bottom: 3rem;
+            position: relative;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-dash);
+        }
+
+        .hero-section::after {
+            content: '';
+            position: absolute;
+            bottom: -1px; left: 0;
+            width: 250px; height: 3px;
+            background: var(--blue-holo);
+            box-shadow: 0 0 15px var(--blue-glow);
+        }
+
+        .hero-title-wrapper {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .hero-title {
+            font-size: 4.5rem;
+            font-weight: 900;
+            color: var(--text-title);
+            letter-spacing: 5px;
+            line-height: 1.1;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+        }
+
+        .hero-title span {
+            color: var(--orange-radar);
+            text-shadow: 0 0 20px var(--orange-glow);
+        }
+
+        .hero-subtitle {
+            font-family: var(--font-mono);
+            font-size: 1.5rem;
+            color: var(--text-main);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .hero-subtitle::before {
+            content: '[VISUAL_MANAGEMENT]';
+            font-size: 1rem;
+            color: var(--blue-holo);
+            background: var(--blue-dim);
+            padding: 4px 10px;
+            border: 1px solid rgba(0, 163, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        .hero-quote {
+            margin-top: 1.5rem;
+            font-family: var(--font-body);
+            font-size: 1.3rem;
+            color: var(--orange-radar);
+            font-style: italic;
+            border-left: 4px solid var(--orange-radar);
+            padding-left: 15px;
+            background: linear-gradient(90deg, var(--orange-dim), transparent);
+            padding: 10px 15px;
+            border-radius: 0 4px 4px 0;
+        }
+
+        /* ==========================================================================
+           09. CONTENT PANELS & GLASSMORPHISM
+           ========================================================================== */
+        .tech-panel {
+            background: var(--bg-card-glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 163, 255, 0.2);
+            border-radius: var(--radius-card);
+            padding: 3rem; margin-bottom: 3rem; position: relative;
+            box-shadow: var(--shadow-glass); transition: var(--transition-hud);
+        }
+        
+        .tech-panel:hover {
+            border-color: var(--blue-holo); background: var(--bg-card-hover);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.9), inset 0 0 20px var(--blue-dim);
+        }
+        
+        /* Cantoneiras HUD Holo Blue */
+        .tech-panel::before, .tech-panel::after {
+            content: ''; position: absolute; width: 30px; height: 30px;
+            border: 2px solid var(--blue-holo); opacity: 0.5; transition: 0.3s;
+        }
+        .tech-panel::before { top: 15px; left: 15px; border-right: none; border-bottom: none; }
+        .tech-panel::after { bottom: 15px; right: 15px; border-left: none; border-top: none; }
+        
+        .panel-header { display: flex; align-items: center; gap: 20px; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 1.5rem; }
+        .panel-title { font-size: 2rem; color: var(--text-title); letter-spacing: 2px; }
+        
+        .panel-icon {
+            width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
+            background: var(--blue-dim); border: 1px solid var(--border-dash); border-radius: var(--radius-card);
+            color: var(--blue-holo); font-size: 1.8rem; box-shadow: var(--shadow-neon-blue);
+        }
+        
+        .highlight-box {
+            background: rgba(0, 163, 255, 0.05); border-left: 4px solid var(--blue-holo);
+            padding: 1.5rem; margin: 1.5rem 0; font-family: var(--font-mono); font-size: 1.1rem; color: var(--text-pure);
+        }
+        
+        .cyber-list { list-style: none; margin-top: 1.5rem; }
+        .cyber-list li { position: relative; padding-left: 35px; margin-bottom: 1.5rem; font-size: 1.15rem; line-height: 1.6; }
+        .cyber-list li::before { content: '>'; position: absolute; left: 0; top: 0; font-family: var(--font-mono); color: var(--orange-radar); font-size: 1.4rem; font-weight: 900; text-shadow: 0 0 10px var(--orange-glow); }
+        .list-title { display: block; color: var(--text-pure); font-family: var(--font-display); font-size: 1.2rem; margin-bottom: 5px; }
+
+        /* ==========================================================================
+           10. MOCK DASHBOARD CSS (INTERATIVO)
+           ========================================================================== */
+        .mock-dashboard {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 2rem;
+        }
+        .dash-card {
+            background: rgba(0,0,0,0.8); border: 1px solid var(--text-muted);
+            border-radius: 6px; padding: 20px; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+            transition: all 0.4s ease;
+        }
+        .dash-label { font-family: var(--font-display); font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px; letter-spacing: 1px; }
+        .dash-value { font-family: var(--font-mono); font-size: 2.5rem; font-weight: bold; color: var(--text-pure); }
+        .dash-sub { font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); margin-top: 5px; }
+        
+        /* Classes utilitárias do Andon via JS */
+        .andon-green { border-color: var(--andon-green); box-shadow: inset 0 0 20px rgba(0,255,102,0.1); }
+        .andon-green .dash-value { color: var(--andon-green); text-shadow: 0 0 10px var(--andon-green); }
+        
+        .andon-yellow { border-color: var(--andon-yellow); box-shadow: inset 0 0 20px rgba(255,230,0,0.1); }
+        .andon-yellow .dash-value { color: var(--andon-yellow); text-shadow: 0 0 10px var(--andon-yellow); }
+        
+        .andon-red { border-color: var(--andon-red); box-shadow: inset 0 0 20px rgba(255,0,60,0.2); animation: pulse-radar 1s infinite alternate; }
+        .andon-red .dash-value { color: var(--andon-red); text-shadow: 0 0 10px var(--andon-red); }
+        /* EFEITOS ADICIONAIS DASHBOARD */
+        .dash-text {
+            color: var(--blue-holo);
+            font-family: var(--font-mono);
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(0, 163, 255, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hud-scanner"></div>
+
+    <div class="app-wrapper">
+        
+        <aside class="sys-sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">MELI<span>PDI</span></div>
+                <div class="brand-sub">SYS.MODULE // ACTIVE</div>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    <span>Home Dashboard</span>
+                </a>
+                
+                <a href="hub.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                    <span>Hub de Setores</span>
+                </a>
+                
+                <a href="glossario.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                    <span>Glossário Técnico</span>
+                </a>
+                
+                <a href="sla-detalhado.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <span>Deep Dive: SLA</span>
+                </a>
+
+                <a href="backlog-detalhado.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                    <span>Monitor: Backlog</span>
+                </a>
+
+                <a href="kpi-detalhado.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    <span>Analytics: KPIs</span>
+                </a>
+
+                <a href="throughput-detalhado.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="13 19 22 12 13 5 13 19"></polygon><polygon points="2 19 11 12 2 5 2 19"></polygon></svg>
+                    <span>Throughput & Vazão</span>
+                </a>
+
+                <a href="takttime-detalhado.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <span>Takt Time & Ritmo</span>
+                </a>
+
+                <a href="gargalo.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                    <span>Gargalo & Restrições</span>
+                </a>
+
+                <div style="height: 1px; background: var(--border-dash); margin: 15px 0; opacity: 0.5;"></div>
+
+                <a href="#" class="nav-link active">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                    <span>Dashboards & Gestão</span>
+                </a>
+            </nav>
+
+            <div style="padding: 20px; border-top: 1px dashed var(--border-dash); text-align: center;">
+                <div style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--blue-holo); opacity: 0.5; letter-spacing: 1.5px;">
+                    SECURE CONNECTION<br>OSASCO_CD // 2026
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            
+            <header class="sys-topbar">
+                <div class="topbar-path">
+                    MELI PDI <span>/</span> VISUAL_MGMT <span>/</span> DASHBOARD_TOWER.exe
+                </div>
+                <div class="topbar-status">
+                    STATUS: TOWER ONLINE
+                    <div class="status-dot-radar"></div>
+                </div>
+            </header>
+
+            <div class="container">
+                
+                <section class="hero-section">
+                    <div class="hero-title-wrapper">
+                        <h1 class="hero-title">DASHBOARDS <span>_</span></h1>
+                    </div>
+                    <div class="hero-subtitle">A Torre de Controle Visual</div>
+                    
+                    <div class="hero-quote">
+                        "Se você precisa extrair um relatório para saber se a operação está saudável, você já está atrasado."
+                    </div>
+                </section>
+
+                <section class="tech-panel" id="section-definition">
+                    <div class="panel-header">
+                        <div class="panel-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                        </div>
+                        <h2 class="panel-title">SEÇÃO 1 // O QUE É E PARA QUE SERVE</h2>
+                    </div>
+
+                    <p>
+                        Um Dashboard logístico é uma interface visual que centraliza, organiza e exibe os principais Indicadores de Desempenho (KPIs) de um centro de distribuição. Ele traduz os dados brutos e massivos gerados pelo WMS (<em>Warehouse Management System</em>) em gráficos, tabelas e alertas coloridos de fácil interpretação. É a espinha dorsal da <strong>Gestão à Vista</strong>.
+                    </p>
+
+                    <h3 style="font-family: var(--font-display); font-size: 1.5rem; color: var(--orange-radar); margin-top: 3rem; margin-bottom: 1.5rem;">PARA QUE SERVE?</h3>
+                    
+                    <ul class="cyber-list">
+                        <li><strong class="list-title" style="color: var(--orange-radar);">Visibilidade em Tempo Real:</strong> Permitir que líderes e solucionadores de problemas (Problem Solvers) saibam exatamente o que está acontecendo na operação naquele exato minuto, sem precisar rodar relatórios complexos.</li>
+                        <li><strong class="list-title" style="color: var(--orange-radar);">Detecção Imediata de Anomalias:</strong> Sinalizar visualmente quando uma área está formando um gargalo (ex: quando o <em>Cycle Time</em> ultrapassa o <em>Takt Time</em>).</li>
+                        <li><strong class="list-title" style="color: var(--orange-radar);">Direcionamento de Esforços:</strong> Mostrar onde a equipe de suporte precisa focar sua atenção nas próximas horas para não romper os prazos (cut-offs).</li>
+                        <li><strong class="list-title" style="color: var(--orange-radar);">Transparência e Engajamento:</strong> Quando instalados em telões gigantes pelo armazém, mantêm os operadores informados sobre a meta do turno e o ritmo atual da equipe.</li>
+                    </ul>
+                </section>
+
+                <section class="tech-panel" id="section-blocks" style="border-color: rgba(255, 107, 0, 0.4);">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(255, 107, 0, 0.1); border-color: var(--orange-radar); color: var(--orange-radar); box-shadow: 0 0 15px var(--orange-glow);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--text-pure);">SEÇÃO 2 // A ANATOMIA DE UM PAINEL</h2>
+                    </div>
+
+                    <p>
+                        Os painéis são alimentados continuamente. Cada vez que um operador "bipa" um item no recebimento ou escaneia uma etiqueta na expedição, o WMS dispara um pacote de dados que atualiza o telão. Um bom Dashboard divide a tela em quatro blocos operacionais lógicos:
+                    </p>
+                    
+                    
+
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 2rem;">
+                        
+                        <div style="background: rgba(0,0,0,0.5); border-left: 3px solid var(--blue-holo); padding: 20px; border-radius: 4px;">
+                            <h4 style="color: var(--blue-holo); font-size: 1.1rem; margin-bottom: 10px; font-family: var(--font-display);">1. REALIZADO VS META</h4>
+                            <p style="margin: 0; font-size: 1rem; color: var(--text-main);">A métrica de progresso básica. <br><em>Ex: "Processamos 5.000 pacotes de uma meta total de 12.000 para este turno."</em></p>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.5); border-left: 3px solid var(--blue-holo); padding: 20px; border-radius: 4px;">
+                            <h4 style="color: var(--blue-holo); font-size: 1.1rem; margin-bottom: 10px; font-family: var(--font-display);">2. RITMO (UPH)</h4>
+                            <p style="margin: 0; font-size: 1rem; color: var(--text-main);">A velocidade da esteira (Units Per Hour). <br><em>Ex: "A área está rodando cravada a 300 unidades por hora."</em></p>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.5); border-left: 3px solid var(--orange-radar); padding: 20px; border-radius: 4px;">
+                            <h4 style="color: var(--orange-radar); font-size: 1.1rem; margin-bottom: 10px; font-family: var(--font-display);">3. BACKLOG / WIP</h4>
+                            <p style="margin: 0; font-size: 1rem; color: var(--text-main);">O volume acumulado (a fila). <br><em>Ex: "Temos 2.500 itens parados aguardando na fila do Packing."</em></p>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.5); border-left: 3px solid var(--text-muted); padding: 20px; border-radius: 4px;">
+                            <h4 style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 10px; font-family: var(--font-display);">4. HEADCOUNT ATIVO</h4>
+                            <p style="margin: 0; font-size: 1rem; color: var(--text-main);">A força de trabalho logada. <br><em>Ex: "Temos exatos 45 operadores logados e bipando nesta área agora."</em></p>
+                        </div>
+
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-examples" style="border-color: rgba(0, 163, 255, 0.4);">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(0, 163, 255, 0.1); border-color: var(--blue-holo); color: var(--blue-holo); box-shadow: 0 0 15px var(--blue-glow);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--text-pure);">SEÇÃO 3 // EXEMPLOS DE PAINÉIS</h2>
+                    </div>
+
+                    <p>Cada área do Centro de Distribuição possui uma "fome" diferente por dados. O que importa para a doca de recebimento é inútil para a doca de expedição. Veja os focos principais:</p>
+
+                    <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 2rem;">
+                        
+                        <div style="background: rgba(0,0,0,0.5); border-left: 4px solid var(--blue-holo); padding: 20px; border-radius: 4px;">
+                            <h4 style="color: var(--blue-holo); font-size: 1.2rem; margin-bottom: 5px; font-family: var(--font-display);">[1] DASHBOARD DE INBOUND (RECEBIMENTO)</h4>
+                            <p style="margin: 0; font-size: 1rem; color: var(--text-main);">Focado na entrada. Mede quantas docas estão ocupadas, o tempo médio de descarregamento das carretas (SLA de Doca), e quantas unidades foram guardadas nas prateleiras (Putaway) na última hora.</p>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.5); border-left: 4px solid var(--orange-radar); padding: 20px; border-radius: 4px;">
+                            <h4 style="color: var(--orange-radar); font-size: 1.2rem; margin-bottom: 5px; font-family: var(--font-display);">[2] DASHBOARD DE OUTBOUND (EXPEDIÇÃO)</h4>
+                            <p style="margin: 0; font-size: 1rem; color: var(--text-main);">Focado no relógio. Mostra o volume de pedidos que precisam ser separados (Picking) e embalados (Packing) <strong>categorizados pelas janelas de horário</strong> das transportadoras. <em>(Ex: "Caminhão das 14h: 90% concluído")</em>.</p>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.5); border-left: 4px solid var(--text-muted); padding: 20px; border-radius: 4px;">
+                            <h4 style="color: var(--text-muted); font-size: 1.2rem; margin-bottom: 5px; font-family: var(--font-display);">[3] CONTROLE DE PÁTIO (YARD MANAGEMENT)</h4>
+                            <p style="margin: 0; font-size: 1rem; color: var(--text-main);">O radar externo. Mostra a fila de caminhões aguardando do lado de fora do CD, tempo de espera no pátio e o status em tempo real de todas as docas (Livre, Carregando, Bloqueada para Manutenção).</p>
+                        </div>
+
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-golden-rules" style="border-color: rgba(255, 107, 0, 0.4);">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(255, 107, 0, 0.1); border-color: var(--orange-radar); color: var(--orange-radar); box-shadow: 0 0 15px var(--orange-glow);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--text-pure);">SEÇÃO 4 // REGRAS DE OURO DA VISUALIZAÇÃO</h2>
+                    </div>
+
+                    <div class="highlight-box" style="border-left-color: var(--orange-radar); background: rgba(255, 107, 0, 0.05);">
+                        <span style="color: var(--orange-radar); font-weight: bold; font-family: var(--font-display); font-size: 1.2rem;">A REGRA DOS 3 SEGUNDOS</span><br>
+                        Um Problem Solver deve olhar para o monitor e entender se a operação está saudável ou em crise em, no máximo, 3 segundos. A poluição visual (excesso de gráficos de pizza ou dezenas de tabelas inúteis) destrói a utilidade operacional de um painel. Menos é mais.
+                    </div>
+
+                    <h3 style="font-family: var(--font-display); font-size: 1.3rem; color: var(--blue-holo); margin-top: 2.5rem; margin-bottom: 1.5rem;">CODIFICAÇÃO POR CORES (ANDON VISUAL)</h3>
+                    <p>O cérebro processa cores mais rápido do que números. Um Dashboard letal usa a lógica do semáforo (Andon) de forma automatizada:</p>
+
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 2rem;">
+                        <div style="background: rgba(0,255,102,0.05); border: 1px solid var(--andon-green); padding: 15px; border-radius: 4px; text-align: center;">
+                            <strong style="color: var(--andon-green); font-family: var(--font-display); font-size: 1.2rem; display: block; margin-bottom: 5px; text-shadow: 0 0 10px rgba(0,255,102,0.5);">VERDE (ESTÁVEL)</strong>
+                            <span style="font-size: 0.9rem; color: var(--text-main);">Ritmo dentro da meta (Cycle Time &le; Takt Time).</span>
+                        </div>
+                        <div style="background: rgba(255,230,0,0.05); border: 1px solid var(--andon-yellow); padding: 15px; border-radius: 4px; text-align: center;">
+                            <strong style="color: var(--andon-yellow); font-family: var(--font-display); font-size: 1.2rem; display: block; margin-bottom: 5px; text-shadow: 0 0 10px rgba(255,230,0,0.5);">AMARELO (ATENÇÃO)</strong>
+                            <span style="font-size: 0.9rem; color: var(--text-main);">Risco de atraso ou pequeno acúmulo de WIP.</span>
+                        </div>
+                        <div style="background: rgba(255,0,60,0.05); border: 1px solid var(--andon-red); padding: 15px; border-radius: 4px; text-align: center; animation: pulse-radar 2s infinite alternate;">
+                            <strong style="color: var(--andon-red); font-family: var(--font-display); font-size: 1.2rem; display: block; margin-bottom: 5px; text-shadow: 0 0 10px rgba(255,0,60,0.5);">VERMELHO (CRÍTICO)</strong>
+                            <span style="font-size: 0.9rem; color: var(--text-main);">Gargalo ativo, meta comprometida. Ação imediata exigida.</span>
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 1rem;">
+                        <div style="background: rgba(0,0,0,0.4); padding: 20px; border-radius: 4px; border-top: 2px solid var(--blue-holo);">
+                            <strong style="color: var(--blue-holo); font-family: var(--font-display); font-size: 1.1rem; display: block; margin-bottom: 5px;">MÉTRICAS ACIONÁVEIS</strong>
+                            <p style="font-size: 0.95rem; color: var(--text-main); margin: 0;">Se um número no painel fica vermelho e ninguém sabe qual atitude tomar para consertá-lo, <strong>essa métrica não deveria estar no telão</strong>. Todo indicador no piso de fábrica deve provocar uma ação clara de correção.</p>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.4); padding: 20px; border-radius: 4px; border-top: 2px solid var(--orange-radar);">
+                            <strong style="color: var(--orange-radar); font-family: var(--font-display); font-size: 1.1rem; display: block; margin-bottom: 5px;">TEMPO REAL VS. HISTÓRICO</strong>
+                            <p style="font-size: 0.95rem; color: var(--text-main); margin: 0;">Dashboards operacionais de telão devem mostrar <strong>o "agora"</strong> (o turno atual, a hora atual). Análises de D-1 (o que aconteceu ontem) ou da semana passada pertencem a relatórios gerenciais na sala de reunião, não ao telão da operação.</p>
+                        </div>
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-problem-solving" style="border-color: rgba(0, 163, 255, 0.4);">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(0, 163, 255, 0.1); border-color: var(--blue-holo); color: var(--blue-holo); box-shadow: 0 0 15px var(--blue-glow);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--text-pure);">SEÇÃO 5 // A VISÃO DO PROBLEM SOLVER</h2>
+                    </div>
+
+                    <p>
+                        Para um profissional de elite focado na resolução de problemas operacionais, <strong>o Dashboard não é a resposta; ele é a bússola</strong> que aponta onde o problema está escondido. A mágica acontece na correlação dos dados.
+                    </p>
+
+                    <div style="margin: 2rem 0; border: 1px dashed var(--blue-holo); padding: 2rem; border-radius: 8px; background: rgba(0,0,0,0.6);">
+                        <h3 style="color: var(--blue-holo); font-family: var(--font-display); font-size: 1.3rem; margin-bottom: 15px;">A ARTE DO CRUZAMENTO DE DADOS</h3>
+                        <p style="font-size: 1rem; color: var(--text-main);">Imagine que o painel mostre que o <strong>volume processado no Packing caiu drasticamente</strong> na última hora (a linha ficou vermelha). O analista júnior entra em pânico. O Problem Solver sênior olha imediatamente para outro indicador no painel: <strong>o Headcount (Número de Operadores)</strong>.</p>
+                        
+                        <div style="display: flex; gap: 20px; margin-top: 1.5rem;">
+                            <div style="flex: 1; background: rgba(255,255,255,0.05); padding: 15px; border-left: 3px solid var(--text-muted);">
+                                <strong style="color: var(--text-muted); font-family: var(--font-mono); font-size: 0.9rem;">HIPÓTESE 1: HEADCOUNT CAIU</strong>
+                                <p style="font-size: 0.9rem; color: var(--text-main); margin-top: 5px;">Se o número de operadores despencou, o problema é simples: as pessoas foram para o intervalo de refeição simultaneamente ou houve uma evacuação/reunião. A queda era esperada.</p>
+                            </div>
+                            <div style="flex: 1; background: rgba(255,107,0,0.1); padding: 15px; border-left: 3px solid var(--orange-radar);">
+                                <strong style="color: var(--orange-radar); font-family: var(--font-mono); font-size: 0.9rem;">HIPÓTESE 2: HEADCOUNT MANTEVE</strong>
+                                <p style="font-size: 0.9rem; color: var(--text-main); margin-top: 5px;">Se as 45 pessoas continuam logadas e a produção caiu para zero, o problema é grave (físico ou sistêmico). Pode ser falta de caixas, esteira quebrada, falta de energia ou sistema (WMS) inoperante.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 style="font-family: var(--font-display); font-size: 1.5rem; color: var(--orange-radar); margin-top: 3rem; margin-bottom: 1rem;">DO DASHBOARD PARA O "GEMBA"</h3>
+                    <div style="background: rgba(255, 107, 0, 0.05); padding: 20px; border-radius: 4px; border: 1px solid rgba(255, 107, 0, 0.3);">
+                        <p style="font-size: 1.05rem; color: var(--text-main); margin: 0;">O painel indica apenas a anomalia geométrica ou matemática. O próximo passo obrigatório do analista é levantar da cadeira e <strong>ir até o local físico onde o trabalho acontece</strong> (o <em>Gemba</em>, termo Lean para "o lugar real"). É impossível consertar uma operação complexa apenas olhando para telas; é preciso observar o processo com os próprios olhos, falar com os operadores e aplicar as ferramentas de causa raiz no chão do armazém.</p>
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-live-dash" style="border-color: var(--border-dash);">
+                    <div class="panel-header">
+                        <div class="panel-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                        </div>
+                        <h2 class="panel-title">SEÇÃO 6 // GESTÃO À VISTA EM TEMPO REAL</h2>
+                    </div>
+
+                    <p>Veja a aplicação prática da Regra dos 3 Segundos e do <em>Andon</em> Visual. Os dados abaixo simulam uma injeção de dados contínua via WMS. Observe como as cores mudam dependendo da saúde da métrica.</p>
+                    
+                    
+
+                    <div class="mock-dashboard">
+                        
+                        <div class="dash-card andon-green" id="card-progress">
+                            <span class="dash-label">REALIZADO VS META</span>
+                            <span class="dash-value" id="val-progress">5.240</span>
+                            <span class="dash-sub">Meta Turno: 12.000 (43%)</span>
+                        </div>
+
+                        <div class="dash-card andon-green" id="card-uph">
+                            <span class="dash-label">RITMO (UPH)</span>
+                            <span class="dash-value" id="val-uph">310</span>
+                            <span class="dash-sub">Takt Exigido: 300 un/h</span>
+                        </div>
+
+                        <div class="dash-card andon-yellow" id="card-wip">
+                            <span class="dash-label">WIP (PACKING)</span>
+                            <span class="dash-value" id="val-wip">850</span>
+                            <span class="dash-sub">Limite Saudável: 1000</span>
+                        </div>
+
+                        <div class="dash-card" style="border-color: var(--blue-holo); box-shadow: inset 0 0 20px rgba(0, 163, 255, 0.1);">
+                            <span class="dash-label">HEADCOUNT</span>
+                            <span class="dash-value" style="color: var(--blue-holo); text-shadow: 0 0 10px var(--blue-glow);">45</span>
+                            <span class="dash-sub">Operadores Ativos</span>
+                        </div>
+
+                    </div>
+                </section>
+
+                <div style="margin-top: 4rem; text-align: center; border-top: 1px solid rgba(0, 163, 255, 0.3); border-bottom: 1px solid rgba(0, 163, 255, 0.3); padding: 3rem 0; background: radial-gradient(circle at center, rgba(0, 163, 255, 0.05), transparent 70%);">
+                    <h2 style="font-family: var(--font-display); font-size: 2.2rem; color: var(--text-title); line-height: 1.4; text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);">
+                        O dado bruto é apenas barulho.<br>
+                        Um Dashboard transforma o barulho em <span style="color: var(--blue-holo); text-shadow: 0 0 20px var(--blue-glow);">visão de raio-x</span>.<br>
+                        Mas lembre-se: a tela aponta o erro, <span style="color: var(--orange-radar); border-bottom: 2px solid var(--orange-radar);">é você quem o resolve no chão de fábrica.</span>
+                    </h2>
+                </div>
+
+            </div> <footer style="margin-top: auto; padding: 2rem 4rem; background: var(--bg-panel-deep); border-top: 1px solid var(--border-dash); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; box-shadow: 0 -10px 30px rgba(0,0,0,0.5);">
+                
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                    <span style="font-family: var(--font-display); font-size: 1.2rem; color: var(--text-pure); letter-spacing: 2px;">
+                        MELI <span style="color: var(--orange-radar); text-shadow: 0 0 10px rgba(255,107,0,0.5);">PDI</span>
+                    </span>
+                    <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); letter-spacing: 2px;">
+                        LOGISTICS DOCUMENTATION // DASHBOARD_MODULE_V8.0
+                    </span>
+                </div>
+
+                <div style="display: flex; gap: 30px; font-family: var(--font-code); font-size: 0.8rem;">
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <span style="color: var(--blue-holo); text-shadow: 0 0 8px var(--blue-dim);">DATA STREAM</span>
+                        <span style="color: var(--text-main);">SYNCED</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <span style="color: var(--orange-radar); text-shadow: 0 0 8px rgba(255,107,0,0.4);">ANDON STATUS</span>
+                        <span style="color: var(--text-main);">ACTIVE</span>
+                    </div>
+                </div>
+
+                <div style="text-align: right; font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); letter-spacing: 1px;">
+                    <span style="color: var(--blue-holo);">[ TOWER ENGINE ONLINE ]</span><br>
+                    TERMINAL_ID: OSASCO_CD // 2026
+                </div>
+
+            </footer>
+
+        </main> </div> ```
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // 1. SYSTEM BOOT LOG
+            console.log("%c[SYS_BOOT]%c Inicializando Torre de Controle Visual...", "color: #00A3FF; font-weight: bold;", "color: #E2E8F0;");
+            console.log("%c[MODULE]%c Sincronizando dados WMS e ativando gatilhos do Andon...", "color: #FF6B00; font-weight: bold;", "color: #E2E8F0;");
+            
+            // 2. INTERSECTION OBSERVER (ANIMAÇÃO DOS PAINÉIS DE VIDRO)
+            const animatedElements = document.querySelectorAll('.tech-panel');
+            
+            animatedElements.forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(30px)';
+                el.style.transition = 'opacity 0.7s ease-out, transform 0.7s cubic-bezier(0.25, 1, 0.5, 1)';
+            });
+
+            const elementObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                        
+                        const originalBorder = getComputedStyle(entry.target).borderColor;
+                        entry.target.style.borderColor = 'var(--text-pure)';
+                        
+                        setTimeout(() => {
+                            entry.target.style.borderColor = originalBorder;
+                        }, 250);
+
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+
+            animatedElements.forEach(el => {
+                elementObserver.observe(el);
+            });
+
+            // 3. SIMULADOR DE DASHBOARD WMS (DATA STREAMING & ANDON)
+            const valProgress = document.getElementById('val-progress');
+            const valUph = document.getElementById('val-uph');
+            const valWip = document.getElementById('val-wip');
+            
+            const cardUph = document.getElementById('card-uph');
+            const cardWip = document.getElementById('card-wip');
+
+            let currentProgress = 5240;
+            let currentUph = 310;
+            let currentWip = 850;
+
+            // Função para atualizar classes Andon
+            function updateAndon(cardElement, status) {
+                cardElement.classList.remove('andon-green', 'andon-yellow', 'andon-red');
+                cardElement.classList.add(`andon-${status}`);
+            }
+
+            // Loop de injeção de dados simulada (a cada 2.5 segundos)
+            setInterval(() => {
+                // 1. Atualiza Progresso (sempre sobe um pouco)
+                currentProgress += Math.floor(Math.random() * 5) + 1;
+                // Formata com ponto milhar
+                valProgress.innerText = currentProgress.toLocaleString('pt-BR');
+
+                // 2. Flutuação de Ritmo (UPH)
+                // UPH alvo é 300. Vamos oscilar entre 270 e 340.
+                let uphChange = Math.floor(Math.random() * 21) - 10; // -10 a +10
+                currentUph += uphChange;
+                
+                // Limites para a simulação não quebrar
+                if(currentUph > 350) currentUph = 340;
+                if(currentUph < 260) currentUph = 270;
+                
+                valUph.innerText = currentUph;
+
+                // Regra Andon para UPH (Takt = 300)
+                if(currentUph >= 300) {
+                    updateAndon(cardUph, 'green');
+                } else if (currentUph >= 280 && currentUph < 300) {
+                    updateAndon(cardUph, 'yellow');
+                } else {
+                    updateAndon(cardUph, 'red'); // UPH Crítico
+                }
+
+                // 3. Flutuação de WIP (Acúmulo)
+                // Se o UPH cai, o WIP sobe rapidamente. Se o UPH está bom, o WIP desce.
+                if (currentUph < 290) {
+                    currentWip += Math.floor(Math.random() * 50) + 20; // Sobe muito
+                } else if (currentUph >= 310) {
+                    currentWip -= Math.floor(Math.random() * 40) + 10; // Desce bem
+                } else {
+                    currentWip += Math.floor(Math.random() * 21) - 10; // Fica estável
+                }
+
+                if(currentWip < 200) currentWip = 200; // Limite mínimo de fila
+                valWip.innerText = currentWip;
+
+                // Regra Andon para WIP (Limite Saudável = 1000)
+                if(currentWip <= 800) {
+                    updateAndon(cardWip, 'green');
+                } else if (currentWip > 800 && currentWip <= 1100) {
+                    updateAndon(cardWip, 'yellow');
+                } else {
+                    updateAndon(cardWip, 'red'); // WIP Estourou
+                }
+
+            }, 2500); // 2.5s update rate
+
+        });
+    </script>
+</body>
+</html>

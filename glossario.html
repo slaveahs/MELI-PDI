@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GLOSSÁRIO LOGÍSTICO - MELI PDI</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ==========================================================================
+           01. CORE SYSTEM VARIABLES (NOVA IDENTIDADE DO GLOSSÁRIO)
+           ========================================================================== */
+        :root {
+            /* Fundo (Abismo Cibernético) */
+            --bg-base: #030407;
+            --bg-panel: rgba(8, 12, 20, 0.85);
+            --bg-card: rgba(12, 18, 30, 0.6);
+            --bg-card-hover: rgba(18, 25, 40, 0.9);
+            
+            /* Cores de Sistema (Base) */
+            --meli-yellow: #FFE600;
+            --meli-yellow-glow: rgba(255, 230, 0, 0.6);
+            --cyan-neon: #00F3FF;
+            --cyan-glow: rgba(0, 243, 255, 0.6);
+            --alert-red: #FF0055;
+            
+            /* =========================================================
+               NOVA COR EXCLUSIVA DO GLOSSÁRIO (MAGENTA / ROXO NEON)
+               ========================================================= */
+            --glossary-neon: #D100FF;
+            --glossary-glow: rgba(209, 0, 255, 0.6);
+            --glossary-dim: rgba(209, 0, 255, 0.1);
+
+            /* Tipografia */
+            --font-display: 'Orbitron', sans-serif;
+            --font-body: 'Rajdhani', sans-serif;
+            --font-hud: 'Share Tech Mono', monospace;
+
+            /* Cores de Texto */
+            --text-title: #FFFFFF;
+            --text-main: #E2E8F0;
+            --text-muted: #64748B;
+
+            /* Sombras e Bordas */
+            --border-subtle: rgba(209, 0, 255, 0.2);
+            --shadow-glass: 0 10px 40px 0 rgba(0, 0, 0, 0.9);
+            --shadow-glossary: 0 0 15px var(--glossary-glow), inset 0 0 10px var(--glossary-dim);
+            
+            /* Medidas */
+            --sidebar-width: 280px;
+            --radius-card: 12px;
+        }
+
+        /* ==========================================================================
+           02. RESET & BASE
+           ========================================================================== */
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; scroll-behavior: smooth; }
+
+        body {
+            background-color: var(--bg-base); color: var(--text-main); font-family: var(--font-body);
+            min-height: 100vh; overflow-x: hidden; display: flex; position: relative;
+        }
+
+        /* Custom Scrollbar com a nova cor */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-base); border-left: 1px solid var(--border-subtle); }
+        ::-webkit-scrollbar-thumb { background: var(--glossary-dim); border: 1px solid var(--glossary-neon); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--glossary-neon); box-shadow: 0 0 15px var(--glossary-neon); }
+
+        h1, h2, h3 { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--text-title); }
+        p { font-size: 1.15rem; line-height: 1.6; margin-bottom: 1rem; }
+
+        /* ==========================================================================
+           03. BACKGROUND EFFECTS
+           ========================================================================== */
+        body::before {
+            content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -3;
+            background-image: 
+                linear-gradient(rgba(209, 0, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(209, 0, 255, 0.04) 1px, transparent 1px);
+            background-size: 40px 40px; pointer-events: none;
+        }
+
+        body::after {
+            content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2;
+            background: radial-gradient(circle at center, transparent 30%, #000000 100%); pointer-events: none;
+        }
+
+        @keyframes scanline { 0% { transform: translateY(-100%); } 100% { transform: translateY(100vh); } }
+        
+        .hud-scanline {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 10px;
+            background: linear-gradient(to bottom, transparent, var(--glossary-glow), transparent);
+            opacity: 0.3; z-index: 9999; pointer-events: none; animation: scanline 6s linear infinite;
+        }
+        /* ==========================================================================
+           04. APP LAYOUT & SIDEBAR (TECH PANEL)
+           ========================================================================== */
+        .app-wrapper {
+            display: flex; width: 100%; min-height: 100vh; position: relative; z-index: 10;
+        }
+
+        .sys-sidebar {
+            width: var(--sidebar-width); background: var(--bg-panel);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border-subtle); display: flex; flex-direction: column;
+            flex-shrink: 0; box-shadow: 10px 0 30px rgba(0,0,0,0.8); position: fixed;
+            height: 100vh; top: 0; left: 0; z-index: 100;
+        }
+
+        /* Linha de energia na borda da sidebar (Nova Cor) */
+        .sys-sidebar::after {
+            content: ''; position: absolute; top: 0; right: -1px; width: 2px; height: 100%;
+            background: linear-gradient(to bottom, transparent, var(--glossary-neon), transparent); opacity: 0.6;
+        }
+
+        .sidebar-logo {
+            padding: 2rem 0; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            border-bottom: 1px dashed var(--border-subtle); background: radial-gradient(circle at top, var(--glossary-dim), transparent);
+        }
+
+        .logo-text-side {
+            font-family: var(--font-display); font-size: 1.8rem; font-weight: 900;
+            color: var(--text-title); letter-spacing: 3px; text-shadow: 0 0 10px rgba(255,255,255,0.2);
+        }
+        .logo-text-side span { color: var(--meli-yellow); text-shadow: 0 0 15px var(--meli-yellow-glow); }
+        .logo-sub-side { font-family: var(--font-hud); font-size: 0.75rem; color: var(--glossary-neon); letter-spacing: 4px; margin-top: 5px; opacity: 0.8; }
+
+        .nav-menu { flex-grow: 1; padding: 2rem 1.5rem; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
+
+        .nav-link {
+            display: flex; align-items: center; gap: 15px; padding: 12px 20px;
+            color: var(--text-muted); font-family: var(--font-display); font-size: 0.95rem; font-weight: 600; letter-spacing: 1.5px;
+            text-decoration: none; position: relative; transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.01); border: 1px solid transparent; border-radius: 4px;
+            clip-path: polygon(0 0, 100% 0, 100% 70%, 95% 100%, 0 100%);
+        }
+
+        .nav-link::before {
+            content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 3px;
+            background: var(--cyan-neon); transform: scaleY(0); transition: 0.3s;
+        }
+
+        .nav-link:hover { color: var(--text-title); background: rgba(0, 243, 255, 0.05); border-color: rgba(0, 243, 255, 0.15); padding-left: 25px; }
+        .nav-link:hover::before { transform: scaleY(1); box-shadow: 0 0 15px var(--cyan-glow); }
+
+        /* Item ativo usa a nova cor Roxo Neon */
+        .nav-link.active { color: var(--glossary-neon); background: var(--glossary-dim); border-color: var(--border-subtle); }
+        .nav-link.active::before { background: var(--glossary-neon); transform: scaleY(1); box-shadow: 0 0 15px var(--glossary-glow); }
+
+        .nav-icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; transition: 0.3s; }
+        .nav-link:hover .nav-icon { transform: scale(1.1); color: var(--cyan-neon); }
+        .nav-link.active .nav-icon { color: var(--glossary-neon); }
+        /* ==========================================================================
+           05. MAIN WORKSPACE & CENTERED HEADER (LOGO + BUSCA)
+           ========================================================================== */
+        .sys-main {
+            flex-grow: 1; margin-left: var(--sidebar-width); display: flex; flex-direction: column; min-height: 100vh;
+        }
+
+        .sys-header-centered {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 2.5rem 4rem; background: var(--bg-panel); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--border-subtle); position: sticky; top: 0; z-index: 90;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.8); gap: 1.5rem;
+        }
+
+        .header-title-centered { text-align: center; }
+        .header-title-centered h1 {
+            margin: 0; font-size: 2.5rem; color: var(--text-title); letter-spacing: 5px; text-shadow: 0 0 20px rgba(255,255,255,0.1);
+        }
+        .header-title-centered span { font-family: var(--font-hud); font-size: 0.9rem; color: var(--glossary-neon); letter-spacing: 3px; text-transform: uppercase; }
+
+        /* Barra de Busca Larga e Imponente */
+        .search-box-large { position: relative; width: 100%; max-width: 700px; }
+        .search-box-large::before {
+            content: '[ QUERY ]'; position: absolute; top: -10px; left: 30px; background: var(--bg-base);
+            padding: 0 8px; font-family: var(--font-hud); font-size: 0.8rem; color: var(--glossary-neon); z-index: 2;
+        }
+
+        .search-input-large {
+            width: 100%; padding: 18px 25px 18px 60px; background: rgba(0,0,0,0.6); border: 1px solid var(--border-subtle);
+            color: var(--glossary-neon); font-family: var(--font-hud); font-size: 1.1rem; letter-spacing: 1px;
+            transition: 0.3s; clip-path: polygon(0 0, 98% 0, 100% 20%, 100% 100%, 2% 100%, 0 80%);
+        }
+
+        .search-input-large::placeholder { color: rgba(209, 0, 255, 0.3); letter-spacing: 2px; }
+        .search-input-large:focus {
+            outline: none; border-color: var(--glossary-neon); background: rgba(209, 0, 255, 0.05); box-shadow: var(--shadow-glossary);
+        }
+
+        .search-icon-large {
+            position: absolute; left: 20px; top: 50%; transform: translateY(-50%); width: 24px; height: 24px;
+            stroke: var(--text-muted); fill: none; stroke-width: 2; transition: 0.3s; pointer-events: none; z-index: 2;
+        }
+        .search-input-large:focus ~ .search-icon-large { stroke: var(--glossary-neon); filter: drop-shadow(0 0 5px var(--glossary-glow)); }
+
+        /* ==========================================================================
+           06. FILTERS & 3D GLOSSARY CARDS
+           ========================================================================== */
+        .sys-content { padding: 3rem 4rem; width: 100%; max-width: 1600px; margin: 0 auto; }
+
+        /* Tech Filters */
+        .filter-container {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-bottom: 3rem; padding: 25px;
+            background: rgba(0,0,0,0.4); border: 1px dashed var(--border-subtle); border-radius: var(--radius-card);
+        }
+
+        .filter-btn {
+            background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255,255,255,0.1); padding: 12px 24px;
+            color: var(--text-muted); font-family: var(--font-hud); font-size: 0.9rem; letter-spacing: 1px; text-transform: uppercase;
+            cursor: pointer; transition: 0.3s; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+        }
+        .filter-btn:hover { color: var(--cyan-neon); border-color: var(--cyan-neon); background: rgba(0, 243, 255, 0.05); box-shadow: 0 0 15px rgba(0, 243, 255, 0.3); }
+        .filter-btn.active { background: var(--glossary-dim); border-color: var(--glossary-neon); color: var(--glossary-neon); text-shadow: 0 0 10px var(--glossary-glow); box-shadow: 0 0 20px var(--glossary-dim); }
+
+        .category-header { font-family: var(--font-display); font-size: 1.8rem; color: var(--text-title); margin-bottom: 2rem; display: flex; align-items: center; gap: 20px; text-transform: uppercase; }
+        .category-header::before { content: '>'; color: var(--glossary-neon); text-shadow: 0 0 10px var(--glossary-glow); font-size: 2rem; }
+        .category-header::after { content: ''; flex-grow: 1; height: 1px; background: linear-gradient(90deg, var(--border-subtle), transparent); }
+
+        .glossary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 2.5rem; margin-bottom: 5rem; perspective: 1000px; }
+
+        /* Card 3D Base */
+        .term-card {
+            background: var(--bg-card); border: 1px solid rgba(209, 0, 255, 0.15); padding: 2.5rem;
+            position: relative; transition: transform 0.1s, background 0.4s, border 0.4s;
+            cursor: pointer; display: flex; flex-direction: column;
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 25px), calc(100% - 25px) 100%, 0 100%);
+            /* Preparação para o Tilt 3D via JS */
+            transform-style: preserve-3d;
+            will-change: transform;
+        }
+
+        .term-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--text-muted); transition: 0.3s; transform: translateZ(20px); }
+        .term-card::after { content: '+'; position: absolute; bottom: 15px; right: 20px; font-family: var(--font-hud); color: rgba(209, 0, 255, 0.3); font-size: 1.8rem; transition: 0.3s; transform: translateZ(30px); }
+
+        .term-card:hover { border-color: var(--glossary-neon); background: var(--bg-card-hover); z-index: 5; }
+        .term-card:hover::before { background: var(--cyan-neon); box-shadow: 0 0 15px var(--cyan-glow); }
+        .term-card:hover::after { color: var(--cyan-neon); transform: translateZ(30px) rotate(90deg); }
+
+        .term-title { font-family: var(--font-display); font-size: 1.6rem; color: var(--text-title); margin-bottom: 1rem; transition: 0.3s; letter-spacing: 1px; transform: translateZ(40px); }
+        .term-card:hover .term-title { color: var(--glossary-neon); text-shadow: 0 0 15px var(--glossary-dim); }
+
+        .term-body { font-size: 1.15rem; color: var(--text-muted); line-height: 1.7; transition: 0.3s; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; transform: translateZ(25px); }
+
+        /* Estado Expandido */
+        .term-card.expanded { grid-column: 1 / -1; border-color: var(--meli-yellow); background: rgba(25, 20, 10, 0.9); box-shadow: 0 15px 50px rgba(0,0,0,0.8), inset 0 0 30px rgba(255, 230, 0, 0.05); transform: none !important; }
+        .term-card.expanded::before { background: var(--meli-yellow); box-shadow: 0 0 15px var(--meli-yellow-glow); }
+        .term-card.expanded::after { content: '-'; color: var(--meli-yellow); transform: translateZ(30px) rotate(0); }
+        .term-card.expanded .term-title { color: var(--meli-yellow); text-shadow: 0 0 15px var(--meli-yellow-dim); font-size: 2.2rem; }
+        .term-card.expanded .term-body { -webkit-line-clamp: unset; color: var(--text-main); font-size: 1.25rem; }
+
+        /* Novo Botão de Copiar (Aparece ao Expandir) */
+        .copy-btn { display: none; align-items: center; justify-content: center; gap: 10px; margin-top: 25px; padding: 12px 20px; background: rgba(255, 230, 0, 0.1); border: 1px solid var(--meli-yellow); color: var(--meli-yellow); font-family: var(--font-hud); font-size: 1rem; letter-spacing: 2px; cursor: pointer; transition: 0.3s; transform: translateZ(50px); clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); }
+        .copy-btn:hover { background: var(--meli-yellow); color: #000; box-shadow: 0 0 20px var(--meli-yellow-glow); }
+        .term-card.expanded .copy-btn { display: inline-flex; width: fit-content; }
+
+    </style>
+</head>
+<body>
+    <div class="hud-scanline"></div>
+
+    <div class="app-wrapper">
+        
+        <aside class="sys-sidebar">
+            <div class="sidebar-logo">
+                <div class="logo-text-side">MELI<span>PDI</span></div>
+                <div class="logo-sub-side">SYS.TERM // v4.0</div>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="#" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    <span>Dashboard</span>
+                </a>
+                
+                <a href="hub.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                    <span>Hub de Setores</span>
+                </a>
+                
+                <a href="#" class="nav-link active">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                    <span>Glossário Logístico</span>
+                </a>
+                
+                <a href="#" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                    <span>Projetos</span>
+                </a>
+
+                <a href="#" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    <span>Gestão de Pessoas</span>
+                </a>
+
+                <a href="#" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                    <span>Melhoria Contínua</span>
+                </a>
+
+                <a href="#" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    <span>Indicadores Logísticos</span>
+                </a>
+            </nav>
+        </aside>
+        <main class="sys-main">
+            
+            <header class="sys-header-centered">
+                <div class="header-title-centered">
+                    <h1>GLOSSÁRIO LOGÍSTICO</h1>
+                    <span>MELI PDI - Documentação Operacional</span>
+                </div>
+
+                <div class="search-box-large">
+                    <svg class="search-icon-large" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" id="hudSearch" class="search-input-large" placeholder="BUSCAR TERMO, SIGLA OU PROCESSO LOGÍSTICO..." autocomplete="off">
+                </div>
+            </header>
+
+            <div class="sys-content">
+                
+                <div class="intro-panel">
+                    <h2>
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg> 
+                        INTRODUÇÃO AO SISTEMA
+                    </h2>
+                    <p>
+                        Este glossário reúne os principais termos utilizados na operação logística, especialmente dentro de centros de distribuição e operações de e-commerce. A logística moderna é baseada em processos altamente organizados, sistemas digitais e indicadores de desempenho. Por isso, grande parte da comunicação dentro da operação utiliza termos técnicos, siglas e conceitos específicos.
+                    </p>
+                    <p style="margin-bottom: 0;">
+                        Compreender esse vocabulário facilita a leitura dos processos, melhora a comunicação entre equipes e ajuda a enxergar a operação de forma mais estratégica. Este glossário foi criado como parte do meu desenvolvimento profissional na área logística, com foco em entender não apenas as tarefas operacionais, mas também a lógica completa da cadeia de suprimentos.
+                    </p>
+                </div>
+
+                <div id="alertMsg" class="sys-alert">
+                    [!] ERRO: TERMO NÃO ENCONTRADO NO BANCO DE DADOS DA OPERAÇÃO [!]
+                </div>
+
+                <div class="filter-container" id="filterContainer">
+                    <button class="filter-btn active" data-filter="all">TODOS OS TERMOS</button>
+                    <button class="filter-btn" data-filter="fluxo">Fluxo Logístico</button>
+                    <button class="filter-btn" data-filter="doc">Documentação</button>
+                    <button class="filter-btn" data-filter="inbound">Recebimento</button>
+                    <button class="filter-btn" data-filter="armazenagem">Armazenagem</button>
+                    <button class="filter-btn" data-filter="estoque">Controle de Estoque</button>
+                    <button class="filter-btn" data-filter="picking">Picking</button>
+                    <button class="filter-btn" data-filter="sortation">Sortation</button>
+                    <button class="filter-btn" data-filter="packing">Packing</button>
+                    <button class="filter-btn" data-filter="expedicao">Expedição</button>
+                    <button class="filter-btn" data-filter="sistemas">Sistemas</button>
+                    <button class="filter-btn" data-filter="kpi">Indicadores</button>
+                    <button class="filter-btn" data-filter="melhoria">Melhoria Contínua</button>
+                </div>
+                <section class="category-block" data-category="fluxo">
+                    <h2 class="category-header">FLUXO LOGÍSTICO</h2>
+                    <div class="glossary-grid">
+                        
+                        <div class="term-card">
+                            <h3 class="term-title">Logística</h3>
+                            <div class="term-body">Área responsável por planejar, executar e controlar o fluxo de produtos, informações e recursos desde a origem até o cliente final.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Supply Chain (Cadeia de Suprimentos)</h3>
+                            <div class="term-body">Conjunto de processos que envolve fornecedores, produção, armazenamento, transporte e entrega ao cliente.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Inbound</h3>
+                            <div class="term-body">Termo global que define todo o fluxo de entrada de mercadorias dentro de um centro de distribuição.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Outbound</h3>
+                            <div class="term-body">Termo utilizado para descrever todo o fluxo de saída de mercadorias do armazém até o transporte final.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Lead Time</h3>
+                            <div class="term-body">Tempo total entre a realização de um pedido e a entrega do produto ao cliente final.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Throughput</h3>
+                            <div class="term-body">Quantidade total de unidades processadas dentro de um determinado período de tempo.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Backlog</h3>
+                            <div class="term-body">Acúmulo de pedidos, tarefas ou processos que ainda não foram concluídos dentro da operação.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                    </div>
+                </section>
+
+                <section class="category-block" data-category="doc">
+                    <h2 class="category-header">DOCUMENTAÇÃO E CONTROLE</h2>
+                    <div class="glossary-grid">
+                        
+                        <div class="term-card">
+                            <h3 class="term-title">NF-e (Nota Fiscal Eletrônica)</h3>
+                            <div class="term-body">Documento fiscal digital que registra oficialmente a venda e transporte de mercadorias.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">CT-e (Conhecimento de Transporte Eletrônico)</h3>
+                            <div class="term-body">Documento fiscal que formaliza a prestação de serviço de transporte de cargas.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">ASN (Advanced Shipping Notice)</h3>
+                            <div class="term-body">Aviso antecipado de envio que informa ao armazém quais produtos estão a caminho.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Manifesto de Carga</h3>
+                            <div class="term-body">Documento que reúne todas as mercadorias transportadas em um mesmo veículo.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                    </div>
+                </section>
+                <section class="category-block" data-category="inbound">
+                    <h2 class="category-header">RECEBIMENTO</h2>
+                    <div class="glossary-grid">
+                        
+                        <div class="term-card">
+                            <h3 class="term-title">Recebimento</h3>
+                            <div class="term-body">Processo inicial da operação logística, responsável por receber mercadorias que chegam ao centro de distribuição.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Check-in</h3>
+                            <div class="term-body">Registro da entrada da mercadoria no sistema do armazém.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Doca (Dock)</h3>
+                            <div class="term-body">Local físico onde caminhões encostam para realizar carga ou descarga de mercadorias.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Agendamento / Janela de Recebimento (Time Slot)</h3>
+                            <div class="term-body">Horário previamente definido para chegada de cargas ao armazém.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Descarga</h3>
+                            <div class="term-body">Processo de retirada das mercadorias do caminhão.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Conferência</h3>
+                            <div class="term-body">Verificação de quantidade, qualidade e identificação dos produtos recebidos.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Paletização</h3>
+                            <div class="term-body">Processo de organizar caixas em paletes para facilitar movimentação e transporte.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Avaria</h3>
+                            <div class="term-body">Qualquer dano identificado no produto ou embalagem durante o processo logístico.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Divergência (Sobra ou Falta)</h3>
+                            <div class="term-body">Diferença entre a quantidade informada na nota fiscal e a quantidade física recebida.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                    </div>
+                </section>
+
+                <section class="category-block" data-category="armazenagem">
+                    <h2 class="category-header">ARMAZENAGEM</h2>
+                    <div class="glossary-grid">
+                        
+                        <div class="term-card">
+                            <h3 class="term-title">Armazenagem</h3>
+                            <div class="term-body">Processo de organização e guarda dos produtos dentro do estoque.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Putaway</h3>
+                            <div class="term-body">Movimentação do produto recebido até sua posição definitiva dentro do armazém.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Endereçamento (Location)</h3>
+                            <div class="term-body">Sistema que identifica a localização exata de cada produto dentro do armazém.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Bin</h3>
+                            <div class="term-body">Compartimento ou espaço específico onde os produtos são armazenados.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Slotting</h3>
+                            <div class="term-body">Estratégia de posicionamento dos produtos dentro do estoque para melhorar eficiência operacional.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Estoque Pulmão</h3>
+                            <div class="term-body">Área de armazenamento reserva usada para reposição das áreas de picking.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Replenishment (Reabastecimento)</h3>
+                            <div class="term-body">Movimento de reposição de produtos do estoque pulmão para as posições de picking.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">FIFO (First In, First Out)</h3>
+                            <div class="term-body">Método onde o primeiro produto que entra no estoque é o primeiro a sair.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">LIFO (Last In, First Out)</h3>
+                            <div class="term-body">Método onde o último produto que entra no estoque é o primeiro a sair.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                    </div>
+                </section>
+                <section class="category-block" data-category="estoque">
+                    <h2 class="category-header">CONTROLE DE ESTOQUE</h2>
+                    <div class="glossary-grid">
+                        
+                        <div class="term-card">
+                            <h3 class="term-title">Inventário</h3>
+                            <div class="term-body">Processo de contagem e controle dos produtos armazenados.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Inventário Cíclico (Cycle Count)</h3>
+                            <div class="term-body">Contagem contínua de pequenas partes do estoque para garantir precisão dos registros.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Acuracidade de Estoque</h3>
+                            <div class="term-body">Indicador que mede a precisão entre o estoque físico e o registrado no sistema.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Ruptura de Estoque (Stockout)</h3>
+                            <div class="term-body">Situação em que o sistema indica disponibilidade, mas o produto não está fisicamente no estoque.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Ajuste de Estoque</h3>
+                            <div class="term-body">Correção realizada no sistema para alinhar estoque físico e virtual.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                    </div>
+                </section>
+
+                <section class="category-block" data-category="picking">
+                    <h2 class="category-header">PICKING</h2>
+                    <div class="glossary-grid">
+                        
+                        <div class="term-card">
+                            <h3 class="term-title">Picking</h3>
+                            <div class="term-body">Processo de separação dos produtos vendidos dentro do armazém.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Batch Picking</h3>
+                            <div class="term-body">Separação de vários pedidos ao mesmo tempo em uma única rota.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Zone Picking</h3>
+                            <div class="term-body">Separação de pedidos dividida por zonas do armazém.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Wave Picking</h3>
+                            <div class="term-body">Separação organizada em ondas de pedidos programadas.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Picking List</h3>
+                            <div class="term-body">Lista de itens que precisam ser coletados para um pedido.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Rota de Picking (Pick Path)</h3>
+                            <div class="term-body">Caminho calculado pelo sistema para otimizar a coleta de produtos.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Shortage</h3>
+                            <div class="term-body">Situação em que o operador não encontra o produto no endereço indicado.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                    </div>
+                </section>
+
+                <section class="category-block" data-category="sortation">
+                    <h2 class="category-header">SORTATION E CONSOLIDAÇÃO</h2>
+                    <div class="glossary-grid">
+                        
+                        <div class="term-card">
+                            <h3 class="term-title">Sortation</h3>
+                            <div class="term-body">Processo de classificação de pedidos ou produtos dentro da operação.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Sorter</h3>
+                            <div class="term-body">Sistema automatizado de esteiras que direciona pacotes para destinos específicos.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Chute (Rampa)</h3>
+                            <div class="term-body">Saída do sorter onde os pacotes são direcionados para separação.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Putwall</h3>
+                            <div class="term-body">Estrutura com compartimentos usada para organizar itens de diferentes pedidos.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Rebin</h3>
+                            <div class="term-body">Processo de redistribuição de itens dentro do putwall.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                    </div>
+                </section>
+
+                <section class="category-block" data-category="packing">
+                    <h2 class="category-header">PACKING</h2>
+                    <div class="glossary-grid">
+                        
+                        <div class="term-card">
+                            <h3 class="term-title">Packing</h3>
+                            <div class="term-body">Processo de embalar os produtos antes do envio.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Packing Station</h3>
+                            <div class="term-body">Estação de trabalho onde os pedidos são embalados.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Etiquetagem</h3>
+                            <div class="term-body">Aplicação da etiqueta de envio no pacote.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Dimensionalização</h3>
+                            <div class="term-body">Medição do peso e dimensões da embalagem.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Dunnage</h3>
+                            <div class="term-body">Material de proteção colocado dentro da caixa para evitar danos durante o transporte.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Polybag / Flyer</h3>
+                            <div class="term-body">Envelope plástico utilizado para envio de produtos que não exigem caixa rígida.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                    </div>
+                </section>
+                <section class="category-block" data-category="expedicao">
+                    <h2 class="category-header">EXPEDIÇÃO</h2>
+                    <div class="glossary-grid">
+                        
+                        <div class="term-card">
+                            <h3 class="term-title">Expedição</h3>
+                            <div class="term-body">Área responsável por organizar e enviar os pedidos para transporte.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Gaiola (Roll Cage)</h3>
+                            <div class="term-body">Estrutura metálica com rodas utilizada para transportar pacotes dentro do armazém.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Gaylord</h3>
+                            <div class="term-body">Caixa de grande volume utilizada para transporte de múltiplos pacotes menores.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Linehaul</h3>
+                            <div class="term-body">Transporte de cargas entre grandes centros logísticos.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Last Mile</h3>
+                            <div class="term-body">Última etapa da entrega, do centro de distribuição até o cliente.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Cut-off</h3>
+                            <div class="term-body">Horário limite para que um pedido entre no transporte do dia.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">CPT (Critical Pull Time)</h3>
+                            <div class="term-body">Momento crítico em que o sistema encerra o carregamento de determinada rota.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                    </div>
+                </section>
+
+                <section class="category-block" data-category="sistemas">
+                    <h2 class="category-header">SISTEMAS LOGÍSTICOS</h2>
+                    <div class="glossary-grid">
+                        
+                        <div class="term-card">
+                            <h3 class="term-title">WMS (Warehouse Management System)</h3>
+                            <div class="term-body">Sistema responsável pela gestão completa do armazém.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">TMS (Transportation Management System)</h3>
+                            <div class="term-body">Sistema responsável pela gestão das operações de transporte.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">ERP (Enterprise Resource Planning)</h3>
+                            <div class="term-body">Sistema integrado que gerencia processos administrativos e operacionais da empresa.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">RF (Radio Frequency)</h3>
+                            <div class="term-body">Tecnologia utilizada em coletores de dados para comunicação com o sistema.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                    </div>
+                </section>
+
+                <section class="category-block" data-category="kpi">
+                    <h2 class="category-header">INDICADORES E PERFORMANCE</h2>
+                    <div class="glossary-grid">
+                        
+                        <div class="term-card">
+                            <h3 class="term-title">KPI (Key Performance Indicator)</h3>
+                            <div class="term-body">Indicadores usados para medir o desempenho da operação.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">UPH (Units Per Hour)</h3>
+                            <div class="term-body">Quantidade de unidades processadas por hora.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">TPH (Throughput Per Hour)</h3>
+                            <div class="term-body">Volume total processado por hora em determinada área.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Takt Time</h3>
+                            <div class="term-body">Tempo necessário para produzir ou processar uma unidade.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Gargalo (Bottleneck)</h3>
+                            <div class="term-body">Etapa que limita a capacidade total da operação.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Capacidade Operacional</h3>
+                            <div class="term-body">Volume máximo que a operação consegue processar.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">DPMO</h3>
+                            <div class="term-body">Indicador que mede erros operacionais a cada milhão de processos.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                    </div>
+                </section>
+
+                <section class="category-block" data-category="melhoria">
+                    <h2 class="category-header">MELHORIA CONTÍNUA</h2>
+                    <div class="glossary-grid">
+                        
+                        <div class="term-card">
+                            <h3 class="term-title">Kaizen</h3>
+                            <div class="term-body">Filosofia japonesa focada em melhoria contínua de processos.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Lean</h3>
+                            <div class="term-body">Sistema de gestão que busca eliminar desperdícios e aumentar eficiência.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">5S</h3>
+                            <div class="term-body">Método de organização e padronização do ambiente de trabalho.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">PDCA</h3>
+                            <div class="term-body">Ciclo de melhoria contínua baseado em quatro etapas: Planejar, Executar, Verificar e Agir.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">Diagrama de Ishikawa</h3>
+                            <div class="term-body">Ferramenta utilizada para identificar causas de problemas.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                        <div class="term-card">
+                            <h3 class="term-title">5 Porquês</h3>
+                            <div class="term-body">Método de análise que busca identificar a causa raiz de um problema.</div>
+                            <button class="copy-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> COPIAR SIGNIFICADO</button>
+                        </div>
+
+                    </div>
+                </section>
+
+            </div> <footer style="padding: 2rem; text-align: center; border-top: 1px dashed var(--border-subtle); background: var(--bg-base); font-family: var(--font-hud); color: var(--text-muted); letter-spacing: 2px;">
+                <span style="color: var(--glossary-neon);">MELI PDI SYSTEM INTERFACE</span> &copy; DOCUMENTAÇÃO LOGÍSTICA
+            </footer>
+
+        </main>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            const searchInput = document.getElementById('hudSearch');
+            const alertMsg = document.getElementById('alertMsg');
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            const categoryBlocks = document.querySelectorAll('.category-block');
+            const allCards = document.querySelectorAll('.term-card');
+
+            // ==========================================
+            // 1. EFEITO TILT 3D NO MOUSE (HOVER INTERATIVO)
+            // ==========================================
+            allCards.forEach(card => {
+                card.addEventListener('mousemove', (e) => {
+                    // Desabilita o Tilt se o card estiver expandido
+                    if (card.classList.contains('expanded')) {
+                        card.style.transform = 'none';
+                        return;
+                    }
+                    
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left; // x position within the element.
+                    const y = e.clientY - rect.top;  // y position within the element.
+                    
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    
+                    // Ajuste a intensidade do tilt mexendo no divisor (ex: / 20)
+                    const rotateX = ((y - centerY) / 20) * -1;
+                    const rotateY = (x - centerX) / 20;
+
+                    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+                });
+
+                card.addEventListener('mouseleave', () => {
+                    if (!card.classList.contains('expanded')) {
+                        card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+                    }
+                });
+
+                // Lógica de Expansão ao Clicar
+                card.addEventListener('click', function(e) {
+                    // Evita fechar/abrir o card se o clique for no botão de copiar
+                    if (e.target.closest('.copy-btn')) return;
+
+                    if (this.classList.contains('expanded')) {
+                        this.classList.remove('expanded');
+                        this.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+                        return;
+                    }
+                    
+                    // Fecha outros
+                    allCards.forEach(c => {
+                        c.classList.remove('expanded');
+                        c.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+                    });
+                    
+                    this.classList.add('expanded');
+                    this.style.transform = 'none'; // Remove o Tilt 3D quando aberto
+                    
+                    setTimeout(() => {
+                        this.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 150);
+                });
+            });
+
+            // ==========================================
+            // 2. BOTÃO DE COPIAR SIGNIFICADO (CLIPBOARD)
+            // ==========================================
+            const copyBtns = document.querySelectorAll('.copy-btn');
+            
+            copyBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Impede que o clique feche o card
+                    
+                    const card = btn.closest('.term-card');
+                    const title = card.querySelector('.term-title').innerText;
+                    const body = card.querySelector('.term-body').innerText;
+                    
+                    const formatText = `*${title}*\n${body}`;
+
+                    // Copia para a área de transferência
+                    navigator.clipboard.writeText(formatText).then(() => {
+                        const originalText = btn.innerHTML;
+                        btn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg> COPIADO!`;
+                        btn.style.background = 'var(--matrix-green)';
+                        btn.style.color = '#000';
+                        btn.style.borderColor = 'var(--matrix-green)';
+                        
+                        // Retorna o botão ao normal após 2.5 segundos
+                        setTimeout(() => {
+                            btn.innerHTML = originalText;
+                            btn.style.background = '';
+                            btn.style.color = '';
+                            btn.style.borderColor = '';
+                        }, 2500);
+                    }).catch(err => {
+                        console.error('Falha ao copiar:', err);
+                    });
+                });
+            });
+
+            // ==========================================
+            // 3. FILTRO DE BOTÕES E BARRA DE PESQUISA
+            // ==========================================
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+
+                    const filterValue = btn.getAttribute('data-filter');
+                    searchInput.value = '';
+                    alertMsg.style.display = 'none';
+
+                    categoryBlocks.forEach(block => {
+                        const blockCards = block.querySelectorAll('.term-card');
+                        blockCards.forEach(c => {
+                            c.style.display = 'flex';
+                            c.classList.remove('expanded');
+                        });
+
+                        if (filterValue === 'all' || block.getAttribute('data-category') === filterValue) {
+                            block.style.display = 'block';
+                        } else {
+                            block.style.display = 'none';
+                        }
+                    });
+                });
+            });
+
+            searchInput.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase().trim();
+                let hasGlobalMatches = false;
+
+                filterBtns.forEach(b => b.classList.remove('active'));
+                document.querySelector('[data-filter="all"]').classList.add('active');
+
+                categoryBlocks.forEach(block => {
+                    const blockCards = block.querySelectorAll('.term-card');
+                    let hasBlockMatches = false;
+
+                    blockCards.forEach(card => {
+                        const title = card.querySelector('.term-title').textContent.toLowerCase();
+                        const desc = card.querySelector('.term-body').textContent.toLowerCase();
+
+                        if (title.includes(term) || desc.includes(term)) {
+                            card.style.display = 'flex';
+                            hasBlockMatches = true;
+                            hasGlobalMatches = true;
+                        } else {
+                            card.style.display = 'none';
+                            card.classList.remove('expanded');
+                        }
+                    });
+
+                    block.style.display = hasBlockMatches ? 'block' : 'none';
+                });
+
+                if (!hasGlobalMatches && term !== '') {
+                    alertMsg.style.display = 'block';
+                } else {
+                    alertMsg.style.display = 'none';
+                }
+            });
+
+        });
+    </script>
+</body>
+</html>

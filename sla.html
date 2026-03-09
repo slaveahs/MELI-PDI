@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SLA & Nível de Serviço | MeLi PDI Terminal</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ==========================================================================
+           01. ROOT VARIABLES (SLA / CONTRACT THEME)
+           ========================================================================== */
+        :root {
+            /* Palette Base: Deep Contract Dark */
+            --bg-absolute: #02060D; 
+            --bg-panel-deep: rgba(6, 12, 25, 0.85);
+            --bg-card-glass: rgba(15, 25, 45, 0.65);
+            --bg-card-hover: rgba(25, 40, 70, 0.85);
+
+            /* Tema de Cores SLA (Confiança e Prazo) */
+            --cyan-tech: #00E5FF;
+            --cyan-glow: rgba(0, 229, 255, 0.5);
+            --cyan-dim: rgba(0, 229, 255, 0.1);
+
+            --purple-contract: #8A2BE2;
+            --purple-glow: rgba(138, 43, 226, 0.5);
+            --purple-dim: rgba(138, 43, 226, 0.1);
+
+            /* Cores de Suporte / Alertas */
+            --red-critical: #FF003C;
+            --yellow-alert: #FFE600;
+            --white-core: #FFFFFF;
+
+            /* Tipografia */
+            --font-display: 'Orbitron', sans-serif;
+            --font-body: 'Rajdhani', sans-serif;
+            --font-mono: 'Share Tech Mono', monospace;
+            --font-code: 'Fira Code', monospace;
+
+            /* Cores de Texto */
+            --text-title: #FFFFFF;
+            --text-main: #E2E8F0;
+            --text-muted: #7A8DAB;
+
+            /* Bordas e Sombras (Glassmorphism) */
+            --border-sla: rgba(0, 229, 255, 0.3);
+            --border-active: rgba(138, 43, 226, 0.6);
+            --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.9);
+            --shadow-neon-cyan: 0 0 15px var(--cyan-glow), inset 0 0 10px var(--cyan-dim);
+            --shadow-neon-purple: 0 0 15px var(--purple-glow), inset 0 0 10px var(--purple-dim);
+            
+            /* Medidas Estruturais (TRAVADAS PARA DESKTOP) */
+            --sidebar-width: 280px;
+            --topbar-height: 80px;
+            --radius-card: 8px;
+            --transition-hud: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        /* ==========================================================================
+           02. CSS RESET & GLOBAL SETUP (FORCED DESKTOP)
+           ========================================================================== */
+        *, *::before, *::after {
+            margin: 0; padding: 0; box-sizing: border-box;
+        }
+
+        html { font-size: 16px; scroll-behavior: smooth; }
+
+        body {
+            background-color: var(--bg-absolute);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            min-height: 100vh;
+            min-width: 1200px; /* <--- TRAVA ABSOLUTA DE DESKTOP */
+            overflow-x: auto;  
+            display: flex;
+            position: relative;
+        }
+
+        /* Custom Scrollbar - Cyan Tech Style */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg-absolute); border-left: 1px solid var(--border-sla); }
+        ::-webkit-scrollbar-thumb { background: var(--cyan-dim); border: 1px solid var(--cyan-tech); border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--cyan-tech); box-shadow: 0 0 15px var(--cyan-tech); }
+
+        /* Tipografia Global */
+        h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--text-title); }
+        p { font-size: 1.2rem; line-height: 1.7; margin-bottom: 1.2rem; }
+        strong { color: var(--cyan-tech); font-weight: 600; text-shadow: 0 0 8px var(--cyan-dim); }
+
+        /* ==========================================================================
+           03. BACKGROUND EFFECTS (GRID & RADIALS)
+           ========================================================================== */
+        body::before {
+            content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -3;
+            background-image: 
+                linear-gradient(rgba(0, 229, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(138, 43, 226, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px; pointer-events: none;
+        }
+
+        body::after {
+            content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2;
+            background: radial-gradient(circle at 10% 20%, rgba(0, 229, 255, 0.04) 0%, transparent 40%),
+                        radial-gradient(circle at 90% 80%, rgba(138, 43, 226, 0.04) 0%, transparent 40%);
+            pointer-events: none;
+        }
+
+        /* ==========================================================================
+           04. GLOBAL KEYFRAMES (SLA ANIMATIONS)
+           ========================================================================== */
+        @keyframes scanline-v { 0% { transform: translateY(-100%); } 100% { transform: translateY(100vh); } }
+        
+        @keyframes pulse-clock {
+            0% { box-shadow: 0 0 10px var(--cyan-dim); border-color: rgba(0, 229, 255, 0.3); }
+            50% { box-shadow: 0 0 25px var(--cyan-glow); border-color: var(--cyan-tech); }
+            100% { box-shadow: 0 0 10px var(--cyan-dim); border-color: rgba(0, 229, 255, 0.3); }
+        }
+
+        @keyframes countdown-alert {
+            0% { color: var(--text-pure); text-shadow: none; }
+            50% { color: var(--red-critical); text-shadow: 0 0 15px var(--red-critical); }
+            100% { color: var(--text-pure); text-shadow: none; }
+        }
+
+        @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(30px); } 100% { opacity: 1; transform: translateY(0); } }
+
+        .hud-scanner {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 2px;
+            background: linear-gradient(to right, transparent, var(--cyan-tech), transparent);
+            opacity: 0.4; z-index: 9999; pointer-events: none; animation: scanline-v 7s linear infinite;
+        }
+        /* ==========================================================================
+           05. GLOBAL LAYOUT (GRID E WRAPPERS)
+           ========================================================================== */
+        .app-wrapper {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+            position: relative;
+            z-index: 10;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background: radial-gradient(circle at top right, rgba(0, 229, 255, 0.02), transparent 60%);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 4rem 4rem 4rem;
+        }
+
+        /* ==========================================================================
+           06. SIDEBAR (TERMINAL NAVIGATION) - ACOMPANHA A PÁGINA (DESKTOP)
+           ========================================================================== */
+        .sys-sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-panel-deep);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border-sla);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0; 
+            z-index: 100;
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.9);
+        }
+
+        /* Feixe de luz vertical ciano simbolizando o contrato (SLA) */
+        .sys-sidebar::after {
+            content: '';
+            position: absolute;
+            top: 0; right: -1px;
+            width: 2px; height: 100%;
+            background: linear-gradient(to bottom, transparent, var(--cyan-tech), transparent);
+            opacity: 0.6;
+        }
+
+        .sidebar-brand {
+            height: var(--topbar-height);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 1px dashed var(--border-sla);
+            background: radial-gradient(circle at top, var(--cyan-dim), transparent);
+            position: relative;
+        }
+
+        .sidebar-brand::before {
+            content: '';
+            position: absolute;
+            bottom: -1px; left: 0; width: 40%; height: 2px;
+            background: var(--cyan-tech);
+            box-shadow: 0 0 10px var(--cyan-tech);
+        }
+
+        .brand-logo {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: var(--text-title);
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+
+        .brand-logo span {
+            color: var(--purple-contract);
+            text-shadow: 0 0 15px rgba(138, 43, 226, 0.5);
+        }
+
+        .brand-sub {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--cyan-tech);
+            letter-spacing: 4px;
+            margin-top: 5px;
+            text-transform: uppercase;
+        }
+
+        /* Menu de Navegação */
+        .nav-menu {
+            flex-grow: 1;
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 20px;
+            color: var(--text-muted);
+            font-family: var(--font-body);
+            font-size: 1.05rem;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-decoration: none;
+            position: relative;
+            transition: var(--transition-hud);
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid transparent;
+            border-radius: var(--radius-card);
+            clip-path: polygon(0 0, 100% 0, 100% 70%, 92% 100%, 0 100%);
+        }
+
+        /* Linha de seleção do menu (Roxo no Hover) */
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0;
+            height: 100%; width: 3px;
+            background: var(--purple-contract);
+            transform: scaleY(0);
+            transition: 0.3s;
+        }
+
+        .nav-link:hover {
+            color: var(--text-pure);
+            background: rgba(138, 43, 226, 0.05);
+            border-color: rgba(138, 43, 226, 0.2);
+            padding-left: 25px;
+        }
+
+        .nav-link:hover::before {
+            transform: scaleY(1);
+            box-shadow: 0 0 15px var(--purple-glow);
+        }
+
+        /* Estado ATIVO (Página Atual: SLA) */
+        .nav-link.active {
+            color: var(--cyan-tech);
+            background: var(--cyan-dim);
+            border-color: var(--border-sla);
+        }
+
+        .nav-link.active::before {
+            background: var(--cyan-tech);
+            transform: scaleY(1);
+            box-shadow: 0 0 15px var(--cyan-glow);
+        }
+
+        .nav-icon {
+            width: 20px; height: 20px;
+            fill: none; stroke: currentColor; stroke-width: 2;
+            transition: 0.3s;
+        }
+
+        .nav-link:hover .nav-icon {
+            transform: scale(1.1);
+            color: var(--purple-contract);
+        }
+
+        .nav-link.active .nav-icon {
+            color: var(--cyan-tech);
+        }
+
+        /* ==========================================================================
+           07. TOPBAR (SYSTEM HEADER)
+           ========================================================================== */
+        .sys-topbar {
+            height: var(--topbar-height);
+            width: 100%;
+            background: var(--bg-panel-deep);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--border-sla);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 4rem;
+            position: sticky;
+            top: 0;
+            z-index: 90;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+        }
+
+        .topbar-path {
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .topbar-path span {
+            color: var(--purple-contract);
+            text-shadow: 0 0 8px var(--purple-dim);
+        }
+
+        /* Status em Modo "Contract" / Ciano Tech */
+        .topbar-status {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-family: var(--font-code);
+            font-size: 0.8rem;
+            color: var(--cyan-tech);
+            letter-spacing: 1px;
+            border: 1px solid rgba(0, 229, 255, 0.4);
+            padding: 8px 15px;
+            border-radius: 4px;
+            background: rgba(0, 229, 255, 0.05);
+            box-shadow: 0 0 10px var(--cyan-dim);
+        }
+
+        .status-dot-clock {
+            width: 8px; height: 8px;
+            background: var(--cyan-tech);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--cyan-glow);
+            animation: pulse-clock 1.5s infinite alternate;
+        }
+        /* ==========================================================================
+           08. HERO SECTION
+           ========================================================================== */
+        .hero-section {
+            margin-bottom: 3rem;
+            position: relative;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-sla);
+        }
+
+        .hero-section::after {
+            content: '';
+            position: absolute;
+            bottom: -1px; left: 0;
+            width: 250px; height: 3px;
+            background: var(--cyan-tech);
+            box-shadow: 0 0 15px var(--cyan-glow);
+        }
+
+        .hero-title-wrapper {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .hero-title {
+            font-size: 4.5rem;
+            font-weight: 900;
+            color: var(--text-title);
+            letter-spacing: 5px;
+            line-height: 1.1;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+        }
+
+        .hero-title span {
+            color: var(--purple-contract);
+            text-shadow: 0 0 20px var(--purple-glow);
+        }
+
+        .hero-subtitle {
+            font-family: var(--font-mono);
+            font-size: 1.5rem;
+            color: var(--text-main);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .hero-subtitle::before {
+            content: '[SERVICE_LEVEL_AGREEMENT]';
+            font-size: 1rem;
+            color: var(--cyan-tech);
+            background: var(--cyan-dim);
+            padding: 4px 10px;
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        .hero-quote {
+            margin-top: 1.5rem;
+            font-family: var(--font-body);
+            font-size: 1.3rem;
+            color: var(--purple-contract);
+            font-style: italic;
+            border-left: 4px solid var(--purple-contract);
+            padding-left: 15px;
+            background: linear-gradient(90deg, var(--purple-dim), transparent);
+            padding: 10px 15px;
+            border-radius: 0 4px 4px 0;
+        }
+
+        /* ==========================================================================
+           09. CONTENT PANELS & GLASSMORPHISM
+           ========================================================================== */
+        .tech-panel {
+            background: var(--bg-card-glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(138, 43, 226, 0.2);
+            border-radius: var(--radius-card);
+            padding: 3rem; margin-bottom: 3rem; position: relative;
+            box-shadow: var(--shadow-glass); transition: var(--transition-hud);
+        }
+        
+        .tech-panel:hover {
+            border-color: var(--purple-contract); background: var(--bg-card-hover);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.9), inset 0 0 20px var(--purple-dim);
+        }
+        
+        /* Cantoneiras HUD Purple */
+        .tech-panel::before, .tech-panel::after {
+            content: ''; position: absolute; width: 30px; height: 30px;
+            border: 2px solid var(--purple-contract); opacity: 0.5; transition: 0.3s;
+        }
+        .tech-panel::before { top: 15px; left: 15px; border-right: none; border-bottom: none; }
+        .tech-panel::after { bottom: 15px; right: 15px; border-left: none; border-top: none; }
+        
+        .panel-header { display: flex; align-items: center; gap: 20px; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 1.5rem; }
+        .panel-title { font-size: 2rem; color: var(--text-title); letter-spacing: 2px; }
+        
+        .panel-icon {
+            width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
+            background: var(--cyan-dim); border: 1px solid var(--border-sla); border-radius: var(--radius-card);
+            color: var(--cyan-tech); font-size: 1.8rem; box-shadow: var(--shadow-neon-cyan);
+        }
+        
+        .highlight-box {
+            background: rgba(0, 229, 255, 0.05); border-left: 4px solid var(--cyan-tech);
+            padding: 1.5rem; margin: 1.5rem 0; font-family: var(--font-mono); font-size: 1.1rem; color: var(--text-pure);
+        }
+        
+        .cyber-list { list-style: none; margin-top: 1.5rem; }
+        .cyber-list li { position: relative; padding-left: 35px; margin-bottom: 1.5rem; font-size: 1.15rem; line-height: 1.6; }
+        .cyber-list li::before { content: '>'; position: absolute; left: 0; top: 0; font-family: var(--font-mono); color: var(--purple-contract); font-size: 1.4rem; font-weight: 900; text-shadow: 0 0 10px var(--purple-glow); }
+        .list-title { display: block; color: var(--text-pure); font-family: var(--font-display); font-size: 1.2rem; margin-bottom: 5px; }
+
+        /* Estilos para o Simulador de SLA (Cronômetro) */
+        .sla-timer-box {
+            background: rgba(0,0,0,0.8); border: 1px solid var(--border-sla);
+            padding: 2rem; border-radius: 8px; text-align: center; margin: 2rem 0;
+            box-shadow: inset 0 0 20px rgba(0, 229, 255, 0.1);
+        }
+
+        .sla-clock {
+            font-family: var(--font-mono); font-size: 4rem; font-weight: 700;
+            color: var(--cyan-tech); text-shadow: 0 0 20px var(--cyan-glow);
+            letter-spacing: 5px; margin: 10px 0;
+        }
+
+        .cyber-btn {
+            background: var(--purple-dim); border: 1px solid var(--purple-contract);
+            color: var(--purple-contract); padding: 12px 25px; font-family: var(--font-display);
+            font-size: 1rem; cursor: pointer; border-radius: 4px; transition: 0.3s;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .cyber-btn:hover { background: var(--purple-contract); color: var(--bg-absolute); box-shadow: 0 0 15px var(--purple-glow); }
+        /* EFEITOS ADICIONAIS SLA */
+        .sla-text {
+            color: var(--cyan-tech);
+            font-family: var(--font-mono);
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hud-scanner"></div>
+
+    <div class="app-wrapper">
+        
+        <aside class="sys-sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">MELI<span>PDI</span></div>
+                <div class="brand-sub">SYS.MODULE // ACTIVE</div>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    <span>Home Dashboard</span>
+                </a>
+                
+                <a href="hub.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                    <span>Hub de Setores</span>
+                </a>
+                
+                <a href="glossario.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                    <span>Glossário Técnico</span>
+                </a>
+
+                <div style="height: 1px; background: var(--border-sla); margin: 15px 0; opacity: 0.5;"></div>
+
+                <a href="#" class="nav-link active">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <span>Deep Dive: SLA</span>
+                </a>
+
+                <a href="backlog-detalhado.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                    <span>Monitor: Backlog</span>
+                </a>
+
+                <a href="kpi-detalhado.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    <span>Analytics: KPIs</span>
+                </a>
+
+                <a href="throughput-detalhado.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="13 19 22 12 13 5 13 19"></polygon><polygon points="2 19 11 12 2 5 2 19"></polygon></svg>
+                    <span>Throughput & Vazão</span>
+                </a>
+
+                <a href="takttime-detalhado.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <span>Takt Time & Ritmo</span>
+                </a>
+            </nav>
+
+            <div style="padding: 20px; border-top: 1px dashed var(--border-sla); text-align: center;">
+                <div style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--cyan-tech); opacity: 0.5; letter-spacing: 1.5px;">
+                    SECURE CONNECTION<br>OSASCO_CD // 2026
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            
+            <header class="sys-topbar">
+                <div class="topbar-path">
+                    MELI PDI <span>/</span> CONTRACT_MGMT <span>/</span> SLA_MONITOR.exe
+                </div>
+                <div class="topbar-status">
+                    STATUS: CONTRACT ACTIVE
+                    <div class="status-dot-clock"></div>
+                </div>
+            </header>
+
+            <div class="container">
+                
+                <section class="hero-section">
+                    <div class="hero-title-wrapper">
+                        <h1 class="hero-title">SLA <span>_</span></h1>
+                    </div>
+                    <div class="hero-subtitle">Service Level Agreement</div>
+                    
+                    <div class="hero-quote">
+                        "O contrato inquebrável entre a capacidade da operação e a expectativa do cliente."
+                    </div>
+                </section>
+
+                <section class="tech-panel" id="section-definition">
+                    <div class="panel-header">
+                        <div class="panel-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        </div>
+                        <h2 class="panel-title">SEÇÃO 1 // O QUE É O SLA?</h2>
+                    </div>
+
+                    <p>
+                        No e-commerce, o <strong>SLA (Service Level Agreement - Acordo de Nível de Serviço)</strong> é o relógio supremo. Ele define o tempo máximo aceitável que a sua operação logística tem para realizar uma tarefa (ex: separar, embalar e faturar um pedido) antes de falhar com a promessa feita ao cliente. Quando um SLA é rompido, o impacto é duplo: gera multa financeira para a empresa e frustração para o comprador.
+                    </p>
+
+                    <h3 style="font-family: var(--font-display); font-size: 1.5rem; color: var(--purple-contract); margin-top: 3rem; margin-bottom: 1.5rem;">SLA VS CUT-OFF (A CONFUSÃO CLÁSSICA)</h3>
+                    
+                    <p>Um erro primário de gestão é tratar SLA e Cut-off como a mesma coisa. Eles são entidades distintas, embora trabalhem juntas:</p>
+
+                    <div style="display: flex; gap: 30px; margin-top: 1.5rem; align-items: stretch;">
+                        
+                        <div style="flex: 1; background: rgba(0,0,0,0.4); border-left: 4px solid var(--cyan-tech); padding: 20px; border-radius: 4px;">
+                            <h4 style="color: var(--cyan-tech); font-size: 1.2rem; margin-bottom: 10px; font-family: var(--font-display);">O SLA (A DURAÇÃO)</h4>
+                            <p style="font-size: 0.95rem; color: var(--text-main); margin-bottom: 10px;">É um "cronômetro contínuo" (duração). Por exemplo, um SLA de <em>4 horas</em> para processar um pedido desde o pagamento até a expedição.</p>
+                            <p style="font-size: 0.95rem; color: var(--text-muted); font-family: var(--font-mono);">Se o pedido cai às 10h, o SLA vence às 14h. Se cai às 11h, vence às 15h.</p>
+                        </div>
+
+                        <div style="flex: 1; background: rgba(0,0,0,0.4); border-left: 4px solid var(--purple-contract); padding: 20px; border-radius: 4px;">
+                            <h4 style="color: var(--purple-contract); font-size: 1.2rem; margin-bottom: 10px; font-family: var(--font-display);">O CUT-OFF (A GUILHOTINA)</h4>
+                            <p style="font-size: 0.95rem; color: var(--text-main); margin-bottom: 10px;">É a "hora de corte" fixa (horário limite). É o exato momento em que o caminhão da transportadora fecha as portas e vai embora.</p>
+                            <p style="font-size: 0.95rem; color: var(--text-muted); font-family: var(--font-mono);">O Cut-off pode ser às 16h em ponto. Tudo que tiver o SLA vencendo antes disso, precisa estar dentro do caminhão.</p>
+                        </div>
+
+                    </div>
+                    
+                    <div style="margin-top: 2rem; text-align: center;">
+                        
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-aging" style="border-color: rgba(138, 43, 226, 0.4);">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(138, 43, 226, 0.1); border-color: var(--purple-contract); color: var(--purple-contract); box-shadow: 0 0 15px var(--purple-glow);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--text-pure);">SEÇÃO 2 // O ENVELHECIMENTO (AGING)</h2>
+                    </div>
+
+                    <p>
+                        O tempo não perdoa na operação. O SLA não é apenas um prazo final, ele é um ciclo de vida que "envelhece" segundo a segundo. Acompanhar a idade dos pedidos (<em>Aging</em>) é o que permite à equipe tática agir de forma preventiva antes do rompimento.
+                    </p>
+
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 2.5rem; text-align: left;">
+                        
+                        <div style="background: rgba(0,255,102,0.05); border-top: 4px solid #00FF66; padding: 20px; border-radius: 4px;">
+                            <strong style="color: #00FF66; font-family: var(--font-display); font-size: 1.1rem; display: block; margin-bottom: 10px;">ZONA VERDE (SAUDÁVEL)</strong>
+                            <p style="font-size: 0.95rem; color: var(--text-main); margin: 0;">O pedido acabou de entrar no sistema (ex: consumiu apenas 20% do SLA). Segue o fluxo padrão (FIFO - <em>First In, First Out</em>) através das esteiras de Picking e Packing sem necessidade de intervenção.</p>
+                        </div>
+
+                        <div style="background: rgba(255,230,0,0.05); border-top: 4px solid var(--yellow-alert); padding: 20px; border-radius: 4px;">
+                            <strong style="color: var(--yellow-alert); font-family: var(--font-display); font-size: 1.1rem; display: block; margin-bottom: 10px;">ZONA AMARELA (ATENÇÃO)</strong>
+                            <p style="font-size: 0.95rem; color: var(--text-main); margin: 0;">O pedido atingiu a meia-vida do contrato (ex: 60% a 75% do SLA consumido). Os sistemas de WMS começam a priorizar esta carga para que ela pule na frente dos pedidos "Verdes".</p>
+                        </div>
+
+                        <div style="background: rgba(255,0,60,0.05); border-top: 4px solid var(--red-critical); padding: 20px; border-radius: 4px; animation: pulse-alert 2s infinite alternate;">
+                            <strong style="color: var(--red-critical); font-family: var(--font-display); font-size: 1.1rem; display: block; margin-bottom: 10px;">ZONA VERMELHA (CRÍTICO)</strong>
+                            <p style="font-size: 0.95rem; color: var(--text-main); margin: 0;">Alarme disparado. O SLA está a poucos minutos de romper (ex: +90% consumido). O <em>Problem Solver</em> precisa atuar fisicamente no piso, fazer buscas ativas e acelerar a caixa na marra para o Cut-off.</p>
+                        </div>
+
+                    </div>
+                    
+                    <div style="margin-top: 2rem; text-align: center;">
+                        
+                    </div>
+
+                </section>
+                <section class="tech-panel" id="section-consequences" style="border-color: rgba(255, 0, 60, 0.4);">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(255, 0, 60, 0.1); border-color: var(--red-critical); color: var(--red-critical); box-shadow: 0 0 15px rgba(255, 0, 60, 0.3);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--text-pure);">SEÇÃO 3 // O CUSTO DO ROMPIMENTO</h2>
+                    </div>
+
+                    <p>
+                        Na logística de alta performance, romper o SLA não é apenas um número feio no relatório. É um evento destrutivo que gera uma reação em cadeia em toda a malha da empresa:
+                    </p>
+
+                    <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 2rem;">
+                        
+                        <div style="background: rgba(0,0,0,0.5); border: 1px dashed var(--red-critical); padding: 20px; border-radius: 8px; display: flex; align-items: center; gap: 20px;">
+                            <div style="font-family: var(--font-display); font-size: 2rem; color: var(--red-critical); padding-right: 20px; border-right: 1px solid rgba(255,0,60,0.3);">01</div>
+                            <div>
+                                <h4 style="color: var(--red-critical); font-size: 1.2rem; margin-bottom: 5px;">MULTAS FINANCEIRAS E CHARGEBACKS</h4>
+                                <p style="margin: 0; font-size: 1rem; color: var(--text-main);">Operadores logísticos e vendedores perdem o custo do frete ou são multados pelo marketplace quando o pacote não sobe no caminhão no horário acordado. O lucro daquela venda evapora instantaneamente.</p>
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.5); border: 1px dashed var(--red-critical); padding: 20px; border-radius: 8px; display: flex; align-items: center; gap: 20px;">
+                            <div style="font-family: var(--font-display); font-size: 2rem; color: var(--red-critical); padding-right: 20px; border-right: 1px solid rgba(255,0,60,0.3);">02</div>
+                            <div>
+                                <h4 style="color: var(--red-critical); font-size: 1.2rem; margin-bottom: 5px;">QUEDA DE REPUTAÇÃO E ALGORITMO</h4>
+                                <p style="margin: 0; font-size: 1rem; color: var(--text-main);">Plataformas como o Mercado Livre monitoram a saúde logística (ex: Termômetro do Vendedor). Uma quebra de SLA derruba o algoritmo de exibição, fazendo o anúncio desaparecer das primeiras páginas de busca.</p>
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.5); border: 1px dashed var(--red-critical); padding: 20px; border-radius: 8px; display: flex; align-items: center; gap: 20px;">
+                            <div style="font-family: var(--font-display); font-size: 2rem; color: var(--red-critical); padding-right: 20px; border-right: 1px solid rgba(255,0,60,0.3);">03</div>
+                            <div>
+                                <h4 style="color: var(--red-critical); font-size: 1.2rem; margin-bottom: 5px;">WISMO (WHERE IS MY ORDER?)</h4>
+                                <p style="margin: 0; font-size: 1rem; color: var(--text-main);">Pacote atrasado gera contato do cliente no SAC. O custo operacional de atender um cliente irado perguntando "Onde está meu pedido?" é altíssimo, além do risco óbvio de cancelamento (Churn).</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-simulator" style="border-color: rgba(0, 229, 255, 0.4);">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(0, 229, 255, 0.1); border-color: var(--cyan-tech); color: var(--cyan-tech); box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--text-pure);">SEÇÃO 4 // SIMULADOR DE ENVELHECIMENTO (SLA)</h2>
+                    </div>
+
+                    <p>
+                        Insira um prazo em minutos e inicie o cronômetro para observar o comportamento matemático do envelhecimento de um pedido. Veja o sistema escalar do status <span style="color: #00FF66;">Saudável</span> para o <span style="color: var(--red-critical);">Crítico</span> automaticamente.
+                    </p>
+
+                    <div style="display: flex; gap: 30px; margin-top: 2rem; align-items: center;">
+                        
+                        <div style="flex: 1; background: rgba(0,0,0,0.4); padding: 2rem; border-radius: 8px; border: 1px solid var(--cyan-tech);">
+                            <label style="font-family: var(--font-mono); color: var(--text-muted); font-size: 0.9rem; margin-bottom: 10px; display: block;">DEFINIR SLA TOTAL (MINUTOS):</label>
+                            
+                            <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                                <input type="number" id="sla-input-minutes" value="1" min="1" max="60" style="flex: 1; padding: 12px; background: rgba(0,0,0,0.8); border: 1px solid var(--border-sla); border-radius: 4px; color: var(--cyan-tech); font-family: var(--font-mono); font-size: 1.5rem; outline: none; text-align: center;">
+                            </div>
+
+                            <button id="btn-start-sla" class="cyber-btn" style="width: 100%; border-color: var(--cyan-tech); color: var(--cyan-tech); background: rgba(0, 229, 255, 0.1);">
+                                INICIAR CRONÔMETRO
+                            </button>
+                            <button id="btn-reset-sla" class="cyber-btn" style="width: 100%; margin-top: 10px; border-color: var(--text-muted); color: var(--text-muted); background: transparent; display: none;">
+                                RESETAR SISTEMA
+                            </button>
+                        </div>
+
+                        <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                            
+                            <div class="sla-timer-box" id="sla-timer-container" style="width: 100%;">
+                                <span style="font-family: var(--font-display); color: var(--text-muted); font-size: 0.9rem; letter-spacing: 2px; text-transform: uppercase;">TEMPO RESTANTE</span>
+                                
+                                <div class="sla-clock" id="sla-clock-display">
+                                    00:00
+                                </div>
+                                
+                                <span id="sla-status-badge" style="display: inline-block; background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 20px; font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-muted); margin-top: 10px; border: 1px solid rgba(255,255,255,0.2);">
+                                    AGUARDANDO START
+                                </span>
+                            </div>
+
+                            <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-top: 15px;">
+                                <div id="sla-progress-bar" style="height: 100%; width: 0%; background: #00FF66; box-shadow: 0 0 10px #00FF66; transition: width 1s linear, background-color 0.5s;"></div>
+                            </div>
+                            <div style="width: 100%; display: flex; justify-content: space-between; margin-top: 5px; font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted);">
+                                <span>0% Consumido</span>
+                                <span id="sla-percent-text">0%</span>
+                                <span>100% (Vencido)</span>
+                            </div>
+
+                        </div>
+                    </div>
+                </section>
+                <div style="margin-top: 5rem; text-align: center; border-top: 1px solid rgba(0, 229, 255, 0.3); border-bottom: 1px solid rgba(0, 229, 255, 0.3); padding: 4rem 0; background: radial-gradient(circle at center, rgba(0, 229, 255, 0.05), transparent 70%);">
+                    <h2 style="font-family: var(--font-display); font-size: 2.2rem; color: var(--text-title); line-height: 1.5; text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);">
+                        O SLA não é uma sugestão de tempo.<br>
+                        Ele é a <span style="color: var(--cyan-tech); text-shadow: 0 0 20px var(--cyan-glow);">promessa matemática</span> que você faz ao cliente.<br>
+                        Quebrar essa promessa é <span style="color: var(--purple-contract); border-bottom: 2px solid var(--purple-contract);">quebrar a confiança na marca.</span>
+                    </h2>
+                </div>
+
+            </div> ```
+
+---
+
+            <footer style="margin-top: auto; padding: 2rem 4rem; background: var(--bg-panel-deep); border-top: 1px solid var(--border-sla); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; box-shadow: 0 -10px 30px rgba(0,0,0,0.5);">
+                
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                    <span style="font-family: var(--font-display); font-size: 1.2rem; color: var(--text-pure); letter-spacing: 2px;">
+                        MELI <span style="color: var(--purple-contract); text-shadow: 0 0 10px rgba(138,43,226,0.5);">PDI</span>
+                    </span>
+                    <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); letter-spacing: 2px;">
+                        LOGISTICS DOCUMENTATION // SLA_MODULE_V6.0
+                    </span>
+                </div>
+
+                <div style="display: flex; gap: 30px; font-family: var(--font-code); font-size: 0.8rem;">
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <span style="color: var(--cyan-tech); text-shadow: 0 0 8px var(--cyan-dim);">CONTRACT DB</span>
+                        <span style="color: var(--text-main);">SYNCED</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <span style="color: var(--purple-contract); text-shadow: 0 0 8px rgba(138,43,226,0.4);">AGING MONITOR</span>
+                        <span style="color: var(--text-main);">ACTIVE</span>
+                    </div>
+                </div>
+
+                <div style="text-align: right; font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); letter-spacing: 1px;">
+                    <span style="color: var(--cyan-tech);">[ SLA ENGINE SECURE ]</span><br>
+                    TERMINAL_ID: OSASCO_CD // 2026
+                </div>
+
+            </footer>
+
+        </main> </div> ```
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // 1. SYSTEM BOOT LOG
+            console.log("%c[SYS_BOOT]%c Inicializando Engine de SLA...", "color: #00E5FF; font-weight: bold;", "color: #E2E8F0;");
+            console.log("%c[MODULE]%c Monitoramento de Aging Ativado. Contratos sincronizados.", "color: #8A2BE2; font-weight: bold;", "color: #E2E8F0;");
+            
+            // 2. INTERSECTION OBSERVER (ANIMAÇÃO DOS PAINÉIS DE VIDRO)
+            const animatedElements = document.querySelectorAll('.tech-panel');
+            
+            animatedElements.forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(30px)';
+                el.style.transition = 'opacity 0.7s ease-out, transform 0.7s cubic-bezier(0.25, 1, 0.5, 1)';
+            });
+
+            const elementObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                        
+                        // Efeito de Flash na borda
+                        const originalBorder = getComputedStyle(entry.target).borderColor;
+                        entry.target.style.borderColor = 'var(--text-pure)';
+                        
+                        setTimeout(() => {
+                            entry.target.style.borderColor = originalBorder;
+                        }, 250);
+
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+
+            animatedElements.forEach(el => {
+                elementObserver.observe(el);
+            });
+
+            // 3. LÓGICA DO SIMULADOR DE SLA (CRONÔMETRO DE ENVELHECIMENTO)
+            let slaTimerInterval;
+            const btnStart = document.getElementById('btn-start-sla');
+            const btnReset = document.getElementById('btn-reset-sla');
+            const inputMinutes = document.getElementById('sla-input-minutes');
+            const clockDisplay = document.getElementById('sla-clock-display');
+            const progressBar = document.getElementById('sla-progress-bar');
+            const percentText = document.getElementById('sla-percent-text');
+            const statusBadge = document.getElementById('sla-status-badge');
+
+            // Função para formatar o tempo em MM:SS
+            function formatTime(totalSeconds) {
+                const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+                const seconds = (totalSeconds % 60).toString().padStart(2, '0');
+                return `${minutes}:${seconds}`;
+            }
+
+            // Iniciar o Simulador
+            btnStart.addEventListener('click', () => {
+                let minutes = parseInt(inputMinutes.value);
+                
+                // Validação de segurança
+                if (isNaN(minutes) || minutes < 1) {
+                    minutes = 1;
+                    inputMinutes.value = 1;
+                }
+
+                const totalSeconds = minutes * 60;
+                let currentSeconds = totalSeconds;
+
+                // Troca de Botões e Bloqueio de Input
+                btnStart.style.display = 'none';
+                btnReset.style.display = 'block';
+                inputMinutes.disabled = true;
+
+                // Reset inicial do relógio para garantir limpeza
+                clearInterval(slaTimerInterval);
+                clockDisplay.style.animation = 'none';
+
+                // Motor do Relógio
+                slaTimerInterval = setInterval(() => {
+                    currentSeconds--;
+                    
+                    const consumedSeconds = totalSeconds - currentSeconds;
+                    const percentConsumed = (consumedSeconds / totalSeconds) * 100;
+
+                    // Atualiza a UI Visual
+                    clockDisplay.innerText = formatTime(currentSeconds);
+                    progressBar.style.width = `${percentConsumed}%`;
+                    percentText.innerText = `${Math.floor(percentConsumed)}%`;
+
+                    // LÓGICA DE CORES (AGING)
+                    if (percentConsumed < 60) {
+                        // ZONA VERDE
+                        progressBar.style.backgroundColor = '#00FF66';
+                        progressBar.style.boxShadow = '0 0 10px #00FF66';
+                        statusBadge.innerText = 'ZONA VERDE (SAUDÁVEL)';
+                        statusBadge.style.color = '#00FF66';
+                        statusBadge.style.borderColor = 'rgba(0, 255, 102, 0.4)';
+                        clockDisplay.style.color = 'var(--cyan-tech)';
+                        clockDisplay.style.textShadow = '0 0 20px var(--cyan-glow)';
+                        
+                    } else if (percentConsumed >= 60 && percentConsumed < 90) {
+                        // ZONA AMARELA
+                        progressBar.style.backgroundColor = 'var(--yellow-alert)';
+                        progressBar.style.boxShadow = '0 0 15px var(--yellow-alert)';
+                        statusBadge.innerText = 'ZONA AMARELA (ATENÇÃO)';
+                        statusBadge.style.color = 'var(--yellow-alert)';
+                        statusBadge.style.borderColor = 'rgba(255, 230, 0, 0.4)';
+                        clockDisplay.style.color = 'var(--yellow-alert)';
+                        clockDisplay.style.textShadow = '0 0 20px rgba(255, 230, 0, 0.5)';
+                        
+                    } else if (percentConsumed >= 90 && percentConsumed < 100) {
+                        // ZONA VERMELHA
+                        progressBar.style.backgroundColor = 'var(--red-critical)';
+                        progressBar.style.boxShadow = '0 0 15px var(--red-critical)';
+                        statusBadge.innerText = 'ZONA VERMELHA (CRÍTICO)';
+                        statusBadge.style.color = 'var(--red-critical)';
+                        statusBadge.style.borderColor = 'rgba(255, 0, 60, 0.4)';
+                        clockDisplay.style.color = 'var(--red-critical)';
+                        clockDisplay.style.textShadow = '0 0 20px rgba(255, 0, 60, 0.5)';
+                        clockDisplay.style.animation = 'countdown-alert 1s infinite alternate';
+                    }
+
+                    // FIM DO TEMPO (ROMPIMENTO)
+                    if (currentSeconds <= 0) {
+                        clearInterval(slaTimerInterval);
+                        clockDisplay.innerText = "00:00";
+                        progressBar.style.width = '100%';
+                        percentText.innerText = '100%';
+                        statusBadge.innerText = 'SLA ROMPIDO!';
+                        statusBadge.style.backgroundColor = 'rgba(255, 0, 60, 0.2)';
+                        statusBadge.style.color = 'var(--red-critical)';
+                        statusBadge.style.borderColor = 'var(--red-critical)';
+                        clockDisplay.style.animation = 'countdown-alert 0.5s infinite alternate'; // Pisca mais rápido
+                    }
+                }, 1000); // 1000ms = 1 segundo real
+            });
+
+            // Resetar o Simulador
+            btnReset.addEventListener('click', () => {
+                clearInterval(slaTimerInterval);
+                
+                // Restaura Botões e Input
+                btnStart.style.display = 'block';
+                btnReset.style.display = 'none';
+                inputMinutes.disabled = false;
+                
+                // Restaura UI para estado Zero
+                clockDisplay.innerText = "00:00";
+                clockDisplay.style.color = 'var(--cyan-tech)';
+                clockDisplay.style.textShadow = '0 0 20px var(--cyan-glow)';
+                clockDisplay.style.animation = 'none';
+                
+                progressBar.style.width = '0%';
+                progressBar.style.backgroundColor = '#00FF66';
+                progressBar.style.boxShadow = '0 0 10px #00FF66';
+                percentText.innerText = '0%';
+                
+                statusBadge.innerText = 'AGUARDANDO START';
+                statusBadge.style.color = 'var(--text-muted)';
+                statusBadge.style.borderColor = 'rgba(255,255,255,0.2)';
+                statusBadge.style.backgroundColor = 'transparent';
+            });
+
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1635 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meli PDI - Check-in Inbound Interface</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <style>
+        /* 
+           SISTEMA DE DESIGN - CHECK-IN INBOUND v1.0
+           PROJETO: Meli PDI – System Interface
+           ESTILO: Cyberpunk / Industrial Dashboard
+        */
+
+        :root {
+            /* --- PALETA NEON & CORE --- */
+            --neon-blue: #00E5FF;
+            --neon-blue-glow: rgba(0, 229, 255, 0.6);
+            --neon-blue-dim: rgba(0, 229, 255, 0.15);
+            --neon-blue-dark: rgba(0, 229, 255, 0.05);
+            
+            --neon-yellow: #FFD600;
+            --neon-yellow-glow: rgba(255, 214, 0, 0.6);
+            --neon-yellow-dim: rgba(255, 214, 0, 0.15);
+            --neon-yellow-dark: rgba(255, 214, 0, 0.05);
+
+            --status-green: #00FF66;
+            --status-green-glow: rgba(0, 255, 102, 0.5);
+            --status-red: #FF003C;
+            --status-red-glow: rgba(255, 0, 60, 0.5);
+            --status-orange: #FF8C00;
+
+            /* --- BACKGROUNDS & LAYERS --- */
+            --bg-deep: #020308;        /* Fundo absoluto */
+            --bg-surface: #060913;     /* Superfície de cards */
+            --bg-layer-2: #0c1222;     /* Camada de hover */
+            
+            /* --- GLASSMORPHISM --- */
+            --glass-bg: rgba(6, 9, 19, 0.7);
+            --glass-border: rgba(0, 229, 255, 0.2);
+            --glass-border-strong: rgba(0, 229, 255, 0.4);
+            --glass-border-yellow: rgba(255, 214, 0, 0.25);
+            
+            /* --- TIPOGRAFIA --- */
+            --font-display: 'Orbitron', sans-serif;  /* Títulos e Logos */
+            --font-main: 'Rajdhani', sans-serif;    /* Leitura e Dados */
+            --font-mono: 'Share Tech Mono', monospace; /* Labels Técnicos */
+
+            /* --- MEDIDAS ESTÁTICAS (DESKTOP) --- */
+            --sidebar-width: 300px;
+            --topbar-height: 80px;
+            --container-max: 1400px;
+            --radius-lg: 12px;
+            --radius-md: 8px;
+            --radius-sm: 4px;
+            
+            /* --- TRANSIÇÕES --- */
+            --trans-smooth: 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            --trans-fast: 0.2s ease;
+        }
+
+        /* RESET & BASE SETUP */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            background-color: var(--bg-deep);
+            /* Esconde scrollbar global para usar a customizada */
+            scrollbar-width: thin;
+            scrollbar-color: var(--neon-blue) var(--bg-deep);
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            min-height: 100vh;
+            /* Garantia de Desktop-Only Viewport */
+            min-width: 1280px;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* CUSTOM SCROLLBAR */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-deep);
+            border-left: 1px solid rgba(0, 229, 255, 0.05);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--neon-blue-dim);
+            border-radius: 10px;
+            border: 1px solid var(--bg-deep);
+            transition: var(--trans-fast);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--neon-blue);
+            box-shadow: 0 0 10px var(--neon-blue);
+        }
+
+        /* TEXT UTILITIES */
+        .text-neon-blue { color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue-glow); }
+        .text-neon-yellow { color: var(--neon-yellow); text-shadow: 0 0 10px var(--neon-yellow-glow); }
+        .text-mono { font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 1px; }
+        .text-muted { color: rgba(255, 255, 255, 0.5); }
+        
+        /* LAYOUT PRIMÁRIO */
+        #app-wrapper {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 40px;
+            padding-top: calc(var(--topbar-height) + 40px);
+            z-index: 1;
+        }
+
+        /* BACKGROUND DECORATIONS (CYBER-GRID) */
+        #system-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        #system-bg::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            top: -50%;
+            left: -50%;
+            background-image: 
+                linear-gradient(rgba(0, 229, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 229, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            transform: perspective(500px) rotateX(60deg);
+            animation: gridMove 20s linear infinite;
+        }
+        /* CONTINUAÇÃO: BACKGROUND DECORATIONS */
+        #system-bg::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle at center, transparent 15%, #010204 100%);
+            pointer-events: none;
+        }
+
+        .scanline-global {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 10px;
+            background: linear-gradient(to bottom, transparent, var(--neon-blue), transparent);
+            opacity: 0.15;
+            z-index: 9999;
+            pointer-events: none;
+            animation: scanlineSweep 6s linear infinite;
+        }
+
+        /* --- KEYFRAMES & ANIMAÇÕES INDUSTRIAIS --- */
+        @keyframes gridMove {
+            0% { transform: perspective(800px) rotateX(60deg) translateY(-100px) translateZ(-200px); }
+            100% { transform: perspective(800px) rotateX(60deg) translateY(50px) translateZ(-200px); }
+        }
+
+        @keyframes scanlineSweep {
+            0% { top: -10vh; opacity: 0; }
+            10% { opacity: 0.2; }
+            90% { opacity: 0.2; }
+            100% { top: 110vh; opacity: 0; }
+        }
+
+        @keyframes systemBoot {
+            0% { opacity: 0; filter: contrast(2) brightness(0.5); transform: translateY(20px); }
+            100% { opacity: 1; filter: contrast(1) brightness(1); transform: translateY(0); }
+        }
+
+        @keyframes neonPulseBlue {
+            0%, 100% { text-shadow: 0 0 10px var(--neon-blue), 0 0 20px var(--neon-blue-glow), 0 0 40px var(--neon-blue-dim); opacity: 1; }
+            50% { text-shadow: 0 0 5px var(--neon-blue), 0 0 10px var(--neon-blue-dim); opacity: 0.8; }
+        }
+
+        @keyframes neonPulseYellow {
+            0%, 100% { text-shadow: 0 0 10px var(--neon-yellow), 0 0 20px var(--neon-yellow-glow), 0 0 40px var(--neon-yellow-dim); box-shadow: 0 0 15px var(--neon-yellow-dim); }
+            50% { text-shadow: 0 0 5px var(--neon-yellow), 0 0 10px var(--neon-yellow-dim); box-shadow: 0 0 5px var(--neon-yellow-dark); }
+        }
+
+        /* --- TIPOGRAFIA GLOBAL --- */
+        h1, h2, h3, h4, h5, h6 {
+            font-family: var(--font-display);
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        p {
+            font-family: var(--font-main);
+            font-size: 1.15rem;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 1.2rem;
+        }
+
+        a { text-decoration: none; color: inherit; }
+        ul, ol { list-style: none; }
+        button { border: none; outline: none; background: transparent; cursor: pointer; font-family: inherit; }
+
+        /* --- SIDEBAR: MENU DO CHECK-IN INBOUND --- */
+        .sys-sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-right: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 5px 0 30px rgba(0,0,0,0.9), inset -1px 0 15px var(--neon-blue-dark);
+            z-index: var(--z-sidebar);
+        }
+
+        .sidebar-header {
+            height: var(--topbar-height);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            background: linear-gradient(to bottom, rgba(0, 229, 255, 0.05), transparent);
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 10%;
+            width: 80%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--neon-blue), transparent);
+        }
+
+        .brand-logo-mini {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            display: flex;
+            gap: 8px;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        .brand-logo-mini .m {
+            color: transparent;
+            -webkit-text-stroke: 1.5px var(--neon-blue);
+            text-shadow: 0 0 10px var(--neon-blue-dim);
+        }
+
+        .brand-logo-mini .p {
+            color: var(--neon-yellow);
+            text-shadow: 0 0 10px var(--neon-yellow-dim);
+        }
+
+        .sidebar-nav {
+            flex-grow: 1;
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            overflow-y: auto;
+        }
+
+        .nav-category {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.4);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 1.5rem 0 0.5rem 0.5rem;
+            font-weight: 600;
+        }
+
+        .nav-category:first-child { margin-top: 0; }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.2rem;
+            color: #A0ABC0;
+            text-decoration: none;
+            font-size: 1.05rem;
+            font-weight: 600;
+            border-radius: var(--radius-md);
+            border: 1px solid transparent;
+            transition: var(--trans-smooth);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, var(--neon-blue-dim), transparent);
+            transition: width 0.3s ease;
+            z-index: 0;
+        }
+
+        .nav-item:hover {
+            border-color: rgba(0, 229, 255, 0.3);
+            color: #ffffff;
+            transform: translateX(8px);
+        }
+
+        .nav-item:hover::before { width: 100%; }
+
+        .nav-item.active {
+            border: 1px solid var(--glass-border-strong);
+            background: var(--neon-blue-dark);
+            color: var(--neon-blue);
+            box-shadow: inset 0 0 15px var(--neon-blue-dim);
+        }
+        
+        .nav-item.active::before { width: 100%; }
+
+        /* Variação de Link para o Problem Solver */
+        .nav-item.ps-link:hover {
+            border-color: rgba(255, 214, 0, 0.3);
+            color: var(--neon-yellow);
+        }
+        .nav-item.ps-link::before {
+            background: linear-gradient(90deg, var(--neon-yellow-dim), transparent);
+        }
+        .nav-item.ps-link.active {
+            border-color: var(--neon-yellow);
+            color: var(--neon-yellow);
+            background: var(--neon-yellow-dark);
+            box-shadow: inset 0 0 15px var(--neon-yellow-dim);
+        }
+
+        .nav-icon {
+            width: 22px;
+            height: 22px;
+            margin-right: 15px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            z-index: 1;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-item span { z-index: 1; }
+        .nav-item:hover .nav-icon { transform: scale(1.15); }
+        /* --- SIDEBAR FOOTER (USER INFO) --- */
+        .sidebar-footer {
+            padding: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            border: 1px solid var(--neon-blue);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--neon-blue);
+            font-family: var(--font-display);
+            font-weight: bold;
+            font-size: 1.2rem;
+            box-shadow: 0 0 10px var(--neon-blue-dim);
+            background: var(--bg-deep);
+        }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            color: #ffffff;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .user-role {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.8rem;
+            font-family: var(--font-mono);
+            letter-spacing: 1px;
+            margin-top: 2px;
+        }
+
+        /* --- TOP BAR (FIXA NO TOPO) --- */
+        .sys-topbar {
+            height: var(--topbar-height);
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: calc(100% - var(--sidebar-width));
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 3rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(6, 9, 19, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: var(--z-topbar);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.6);
+        }
+
+        .status-widget {
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.5);
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            letter-spacing: 1.5px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background: var(--status-green);
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulseDotStatus 2s infinite;
+        }
+
+        /* --- HERO SECTION (LOGO PRINCIPAL) --- */
+        .hero-section {
+            width: 100%;
+            max-width: var(--container-max);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin: 0 auto 5rem auto;
+            animation: systemBoot 1.2s ease-out forwards;
+            scroll-margin-top: calc(var(--topbar-height) + 2rem);
+        }
+
+        .hero-title {
+            font-family: var(--font-display);
+            font-size: clamp(4rem, 6vw, 6.5rem);
+            font-weight: 900;
+            line-height: 1.1;
+            letter-spacing: 8px;
+            margin-bottom: 1rem;
+            color: transparent;
+            -webkit-text-stroke: 2px var(--neon-blue);
+            text-shadow: 0 0 20px var(--neon-blue-glow), inset 0 0 10px var(--neon-blue);
+            animation: neonPulseBlue 4s infinite alternate;
+            text-transform: uppercase;
+        }
+
+        .hero-subtitle {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            color: var(--neon-yellow);
+            text-transform: uppercase;
+            letter-spacing: 12px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            text-shadow: 0 0 15px var(--neon-yellow-dim);
+            margin-top: 10px;
+        }
+
+        .hero-subtitle::before, 
+        .hero-subtitle::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 2px;
+            background: var(--neon-yellow);
+            box-shadow: 0 0 10px var(--neon-yellow);
+        }
+        /* --- ESTRUTURA DE GRIDS & CARDS BASE (GLASSMORPHISM) --- */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2.5rem;
+            width: 100%;
+            max-width: var(--container-max);
+            margin: 0 auto 5rem auto;
+            scroll-margin-top: calc(var(--topbar-height) + 3rem);
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 3rem;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), inset 0 0 20px rgba(0, 229, 255, 0.02);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+        }
+
+        .glass-card:hover { 
+            transform: translateY(-8px); 
+            border-color: var(--glass-border-strong); 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9), inset 0 0 30px var(--neon-blue-dim); 
+        }
+
+        /* Cantoneiras Técnicas do Card */
+        .glass-card::before {
+            content: ''; position: absolute; top: 20px; left: 20px; width: 30px; height: 30px;
+            border-top: 2px solid var(--neon-blue); border-left: 2px solid var(--neon-blue); pointer-events: none;
+            opacity: 0.5; transition: opacity 0.3s ease;
+        }
+        .glass-card::after {
+            content: ''; position: absolute; bottom: 20px; right: 20px; width: 30px; height: 30px;
+            border-bottom: 2px solid var(--neon-blue); border-right: 2px solid var(--neon-blue); pointer-events: none;
+            opacity: 0.5; transition: opacity 0.3s ease;
+        }
+        .glass-card:hover::before, .glass-card:hover::after { opacity: 1; box-shadow: 0 0 10px var(--neon-blue); }
+
+        .card-header { 
+            margin-bottom: 2rem; 
+            padding-bottom: 1rem; 
+            border-bottom: 1px dashed rgba(255,255,255,0.1); 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+        }
+        
+        .card-title { 
+            font-size: 2.2rem; 
+            color: var(--neon-blue); 
+            text-shadow: 0 0 10px var(--neon-blue-dim); 
+            display: flex; 
+            align-items: center; 
+        }
+
+        .card-title::before { 
+            content: '>'; 
+            color: var(--neon-yellow); 
+            font-family: var(--font-mono); 
+            margin-right: 15px; 
+            font-size: 2rem; 
+            text-shadow: 0 0 10px var(--neon-yellow-dim); 
+        }
+
+        /* --- LISTA DESTACADA (PARA QUE SERVE?) --- */
+        .feature-list { list-style: none; margin: 1.5rem 0; }
+        .feature-list li { margin-bottom: 2rem; position: relative; padding-left: 4.5rem; }
+        .feature-list li:last-child { margin-bottom: 0; }
+        
+        .feature-list h4 { 
+            color: #ffffff; 
+            font-size: 1.3rem; 
+            margin-bottom: 0.5rem; 
+            letter-spacing: 1px; 
+        }
+        
+        .feature-list p { 
+            font-size: 1.1rem; 
+            margin-bottom: 0; 
+            color: rgba(255, 255, 255, 0.6); 
+            text-align: justify; 
+        }
+        
+        .feature-icon {
+            position: absolute; 
+            left: 0; 
+            top: 0; 
+            width: 45px; 
+            height: 45px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            background: rgba(0, 229, 255, 0.05); 
+            border: 1px solid var(--neon-blue); 
+            border-radius: var(--radius-sm); 
+            color: var(--neon-blue); 
+            box-shadow: inset 0 0 10px var(--neon-blue-dark);
+            transition: transform 0.3s ease;
+        }
+
+        .feature-list li:hover .feature-icon {
+            transform: scale(1.1);
+            background: var(--neon-blue-dim);
+            box-shadow: 0 0 15px var(--neon-blue-dim);
+        }
+
+        /* --- SEÇÃO DE FLUXO (DECANT & DESTINO) --- */
+        .flow-section {
+            width: 100%;
+            max-width: var(--container-max);
+            margin: 0 auto 5rem auto;
+            scroll-margin-top: calc(var(--topbar-height) + 3rem);
+        }
+
+        .flow-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .flow-header h2 {
+            font-size: 2.8rem;
+            color: #ffffff;
+            text-shadow: 0 0 15px rgba(255,255,255,0.2);
+        }
+
+        .flow-diagram-container {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: var(--radius-md);
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            position: relative;
+        }
+
+        .flow-cards-wrapper {
+            display: flex;
+            justify-content: space-between;
+            gap: 2rem;
+        }
+
+        .flow-card {
+            flex: 1;
+            background: var(--bg-surface);
+            border: 1px solid var(--glass-border);
+            padding: 2rem;
+            border-radius: var(--radius-sm);
+            text-align: center;
+            transition: var(--trans-smooth);
+            position: relative;
+            z-index: 2;
+        }
+
+        .flow-card:hover {
+            border-color: var(--neon-blue);
+            background: var(--bg-layer-2);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 0 15px var(--neon-blue-dim);
+        }
+
+        .flow-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            color: var(--neon-blue);
+            text-shadow: 0 0 15px var(--neon-blue-glow);
+        }
+
+        .flow-card h3 {
+            color: var(--neon-blue);
+            margin-bottom: 1rem;
+            font-size: 1.4rem;
+        }
+        /* --- DIAGRAMA VISUAL CONECTADO (FLUXO DO PRODUTO) --- */
+        .flow-path {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 3rem;
+            padding-top: 3rem;
+            border-top: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+
+        .path-node {
+            background: var(--bg-surface);
+            border: 1px solid var(--glass-border);
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-family: var(--font-mono);
+            font-weight: 600;
+            color: var(--neon-blue);
+            box-shadow: inset 0 0 10px rgba(0, 229, 255, 0.05);
+            transition: var(--trans-fast);
+        }
+
+        .path-node:hover {
+            background: var(--neon-blue-dark);
+            box-shadow: 0 0 15px var(--neon-blue-dim), inset 0 0 10px var(--neon-blue-dim);
+            color: #ffffff;
+            transform: scale(1.05);
+        }
+
+        .path-node.highlight {
+            border-color: var(--neon-yellow);
+            color: var(--neon-yellow);
+        }
+
+        .path-node.highlight:hover {
+            background: var(--neon-yellow-dark);
+            box-shadow: 0 0 15px var(--neon-yellow-dim), inset 0 0 10px var(--neon-yellow-dim);
+        }
+
+        .path-arrow {
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 1.5rem;
+            animation: pulseArrow 2s infinite;
+        }
+
+        @keyframes pulseArrow {
+            0%, 100% { opacity: 0.3; transform: translateX(0); }
+            50% { opacity: 1; color: var(--neon-blue); transform: translateX(5px); }
+        }
+
+        /* --- PROBLEM SOLVER (RESOLUTION CENTER) --- */
+        .ps-section {
+            width: 100%;
+            max-width: var(--container-max);
+            margin: 0 auto 5rem auto;
+            scroll-margin-top: calc(var(--topbar-height) + 3rem);
+        }
+
+        .ps-board {
+            background: rgba(10, 8, 0, 0.8);
+            border: 2px solid var(--neon-yellow);
+            border-radius: var(--radius-lg);
+            padding: 3rem;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8), inset 0 0 40px var(--neon-yellow-dark);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Faixas de isolamento (Hazard Stripes) */
+        .ps-board::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 6px;
+            background: repeating-linear-gradient(
+                45deg,
+                var(--neon-yellow),
+                var(--neon-yellow) 10px,
+                #000000 10px,
+                #000000 20px
+            );
+        }
+
+        .ps-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .ps-title {
+            font-size: 2.5rem;
+            color: var(--neon-yellow);
+            text-shadow: 0 0 15px var(--neon-yellow-glow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .ps-subtitle {
+            color: #ffffff;
+            font-size: 1.2rem;
+            margin-top: 1rem;
+        }
+
+        .ps-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+        }
+
+        .ps-item {
+            background: rgba(255, 214, 0, 0.05);
+            border: 1px solid rgba(255, 214, 0, 0.3);
+            border-radius: var(--radius-sm);
+            padding: 2rem 1.5rem;
+            text-align: center;
+            transition: var(--trans-smooth);
+        }
+
+        .ps-item:hover {
+            background: rgba(255, 214, 0, 0.15);
+            border-color: var(--neon-yellow);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.6), inset 0 0 20px var(--neon-yellow-dim);
+        }
+
+        .ps-icon {
+            font-size: 2.5rem;
+            color: var(--neon-yellow);
+            margin-bottom: 1rem;
+            filter: drop-shadow(0 0 8px var(--neon-yellow-glow));
+        }
+
+        .ps-item h4 {
+            color: #ffffff;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+        }
+
+        /* --- REGRAS DE OURO (GOLDEN RULES) --- */
+        .golden-rules-section {
+            width: 100%;
+            max-width: var(--container-max);
+            margin: 0 auto 5rem auto;
+            scroll-margin-top: calc(var(--topbar-height) + 3rem);
+        }
+
+        .golden-rules-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .rule-card {
+            background: var(--bg-layer-2);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: var(--radius-md);
+            padding: 2.5rem;
+            position: relative;
+            transition: var(--trans-smooth);
+        }
+
+        .rule-card:hover {
+            background: rgba(255,255,255,0.02);
+            border-color: rgba(255,255,255,0.3);
+            transform: translateY(-5px);
+        }
+
+        .rule-badge {
+            position: absolute;
+            top: -15px;
+            left: 20px;
+            background: var(--bg-deep);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.5);
+        }
+
+        .rule-badge.success {
+            border: 1px solid var(--status-green);
+            color: var(--status-green);
+            text-shadow: 0 0 5px var(--status-green-glow);
+        }
+
+        .rule-badge.alert {
+            border: 1px solid var(--status-red);
+            color: var(--status-red);
+            text-shadow: 0 0 5px var(--status-red-glow);
+        }
+
+        .rule-card h3 {
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            margin-top: 10px;
+            color: #ffffff;
+        }
+
+        .rule-card p {
+            font-size: 1.05rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 0;
+        }
+
+        /* Comparativo de Totes */
+        .tote-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            background: rgba(0,0,0,0.5);
+            padding: 2rem;
+            border-radius: var(--radius-md);
+            border: 1px dashed rgba(255,255,255,0.1);
+        }
+
+        .tote-view {
+            padding: 2rem;
+            border-radius: var(--radius-sm);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .tote-view.good {
+            background: rgba(0, 255, 102, 0.05);
+            border: 1px solid rgba(0, 255, 102, 0.2);
+        }
+
+        .tote-view.bad {
+            background: rgba(255, 0, 60, 0.05);
+            border: 1px solid rgba(255, 0, 60, 0.2);
+        }
+
+        .tote-icon {
+            font-size: 3.5rem;
+        }
+        
+        .tote-view h4 { font-size: 1.2rem; }
+        /* --- INFOGRÁFICO INTERATIVO (O CAMINHO DO PRODUTO) --- */
+        .infographic-section {
+            width: 100%;
+            max-width: var(--container-max);
+            margin: 0 auto 5rem auto;
+            scroll-margin-top: calc(var(--topbar-height) + 3rem);
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(0, 229, 255, 0.1);
+            border-radius: var(--radius-lg);
+            padding: 4rem;
+        }
+
+        .info-timeline {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            position: relative;
+            margin-top: 3rem;
+        }
+
+        /* Linha conectora do infográfico */
+        .info-timeline::before {
+            content: '';
+            position: absolute;
+            top: 40px;
+            left: 5%;
+            width: 90%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--neon-blue-dark), var(--neon-blue), var(--neon-yellow), var(--neon-blue-dark));
+            z-index: 0;
+            opacity: 0.5;
+        }
+
+        .info-step {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            width: 22%;
+            transition: var(--trans-smooth);
+            cursor: pointer;
+        }
+
+        .info-step:hover {
+            transform: translateY(-10px);
+        }
+
+        .info-circle {
+            width: 80px;
+            height: 80px;
+            background: var(--bg-deep);
+            border: 2px solid var(--neon-blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem auto;
+            font-size: 2rem;
+            box-shadow: 0 0 15px var(--neon-blue-dim), inset 0 0 15px var(--neon-blue-dark);
+            transition: var(--trans-smooth);
+        }
+
+        .info-step:hover .info-circle {
+            background: var(--neon-blue-dark);
+            box-shadow: 0 0 25px var(--neon-blue), inset 0 0 20px var(--neon-blue-dim);
+        }
+
+        .info-step.destaque .info-circle {
+            border-color: var(--neon-yellow);
+            box-shadow: 0 0 15px var(--neon-yellow-dim), inset 0 0 15px var(--neon-yellow-dark);
+        }
+        
+        .info-step.destaque:hover .info-circle {
+            background: var(--neon-yellow-dark);
+            box-shadow: 0 0 25px var(--neon-yellow), inset 0 0 20px var(--neon-yellow-dim);
+        }
+
+        .info-title {
+            color: #ffffff;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            font-family: var(--font-display);
+        }
+
+        .info-desc {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.4;
+        }
+
+        /* --- FERRAMENTAS DO OFÍCIO (TOOLS) --- */
+        .tools-section {
+            width: 100%;
+            max-width: var(--container-max);
+            margin: 0 auto 5rem auto;
+            scroll-margin-top: calc(var(--topbar-height) + 3rem);
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+        }
+
+        .tool-card {
+            background: var(--bg-surface);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: var(--radius-md);
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: var(--trans-smooth);
+            cursor: crosshair;
+        }
+
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            top: -100%;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, transparent, rgba(0, 229, 255, 0.1));
+            transition: var(--trans-smooth);
+        }
+
+        .tool-card:hover {
+            border-color: var(--glass-border-strong);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 -5px 20px var(--neon-blue-dim);
+        }
+
+        .tool-card:hover::before {
+            top: 0;
+        }
+
+        .tool-icon {
+            font-size: 3rem;
+            color: var(--neon-blue);
+            margin-bottom: 1.5rem;
+            filter: drop-shadow(0 0 10px var(--neon-blue-glow));
+            transition: transform 0.3s ease;
+        }
+
+        .tool-card:hover .tool-icon { transform: scale(1.1); }
+
+        .tool-card h3 {
+            font-size: 1.2rem;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .tool-card p {
+            font-size: 0.95rem;
+            color: var(--neon-blue);
+            font-family: var(--font-mono);
+            font-style: italic;
+        }
+
+        /* --- FAQ / PROBLEMAS REAIS (ACCORDIONS) --- */
+        .faq-section {
+            width: 100%;
+            max-width: var(--container-max);
+            margin: 0 auto 5rem auto;
+            scroll-margin-top: calc(var(--topbar-height) + 3rem);
+        }
+
+        .faq-accordion {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 1rem;
+            border-radius: var(--radius-sm);
+            transition: var(--trans-smooth);
+        }
+
+        .faq-trigger {
+            padding: 1.5rem 2rem;
+            width: 100%;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #ffffff;
+            font-size: 1.2rem;
+            font-family: var(--font-main);
+            font-weight: 600;
+            letter-spacing: 1px;
+            transition: var(--trans-fast);
+        }
+
+        .faq-trigger:hover {
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--neon-blue);
+        }
+
+        .faq-icon {
+            font-family: var(--font-mono);
+            font-size: 1.5rem;
+            color: var(--neon-blue);
+            transition: transform 0.3s ease;
+        }
+
+        .faq-panel {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            padding: 0 2rem;
+        }
+
+        .faq-panel p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.1rem;
+            padding-bottom: 1.5rem;
+            padding-top: 0.5rem;
+        }
+
+        .faq-accordion.active {
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 15px var(--neon-blue-dark);
+            background: rgba(0, 229, 255, 0.02);
+        }
+
+        .faq-accordion.active .faq-trigger { color: var(--neon-blue); }
+        .faq-accordion.active .faq-icon { transform: rotate(45deg); color: var(--neon-yellow); }
+
+        /* --- FOOTER QUOTE --- */
+        .system-footer {
+            width: 100%;
+            max-width: var(--container-max);
+            margin: 0 auto 3rem auto;
+            text-align: center;
+            padding: 3rem 0;
+            border-top: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+
+        .footer-quote {
+            font-size: 1.8rem;
+            font-family: var(--font-main);
+            color: rgba(255, 255, 255, 0.5);
+            font-style: italic;
+            line-height: 1.5;
+            text-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .footer-quote span {
+            color: var(--neon-yellow);
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-style: normal;
+            display: block;
+            margin-top: 10px;
+            text-shadow: 0 0 15px var(--neon-yellow-dim);
+        }
+
+        /* --- MEDIA QUERIES (Ajustes para Desktop Menor / Notebooks) --- */
+        @media (max-width: 1400px) {
+            .ps-grid { grid-template-columns: repeat(2, 1fr); }
+            .golden-rules-grid { grid-template-columns: repeat(2, 1fr); }
+            .tools-grid { grid-template-columns: repeat(2, 1fr); }
+            .hero-title { font-size: 4rem; }
+            .main-content { padding: 30px; padding-top: calc(var(--topbar-height) + 30px); }
+        }
+
+        @media (max-width: 1200px) {
+            .content-grid { grid-template-columns: 1fr; }
+            .flow-cards-wrapper { flex-direction: column; }
+            .tote-comparison { grid-template-columns: 1fr; }
+            .info-timeline { flex-wrap: wrap; gap: 2rem; justify-content: center; }
+            .info-step { width: 45%; }
+            .info-timeline::before { display: none; } /* Oculta a linha no layout quebrado */
+        }
+    </style>
+</head>
+<body>
+
+    <div id="system-bg"></div>
+    <div class="scanline-global"></div>
+
+    <div id="app-wrapper">
+        
+        <aside class="sys-sidebar">
+            <div class="sidebar-header">
+                <div class="brand-logo-mini">
+                    <span class="m">Meli</span><span class="p">PDI</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-category">Navegação de Módulo</div>
+                
+                <a href="#intro" class="nav-item index-link active">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                    <span>Dashboard Inicial</span>
+                </a>
+                
+                <a href="#conceito" class="nav-item index-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    <span>O que é o Check-in?</span>
+                </a>
+
+                <a href="#fluxo" class="nav-item index-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                    <span>Separação & Fluxo</span>
+                </a>
+
+                <a href="#problem-solver" class="nav-item ps-link index-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    <span>Problem Solver (PS)</span>
+                </a>
+
+                <a href="#regras" class="nav-item index-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    <span>Regras de Ouro</span>
+                </a>
+
+                <a href="#infografico" class="nav-item index-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 16 16 12 12 8"></polyline><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                    <span>O Caminho do Produto</span>
+                </a>
+
+                <a href="#ferramentas" class="nav-item index-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                    <span>Ferramentas de Trabalho</span>
+                </a>
+                
+                <a href="#faq" class="nav-item index-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    <span>FAQ - Problemas Reais</span>
+                </a>
+
+                <div class="nav-category" style="margin-top: 2rem;">Sistema Geral</div>
+                
+                <a href="hub.html" class="nav-item" style="border-color: rgba(255,255,255,0.1); opacity: 0.6;">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    <span>Voltar ao Hub Setores</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-avatar">TB</div>
+                <div class="user-details">
+                    <span class="user-name">Thiago Brito</span>
+                    <span class="user-role">LOGISTICS OP / PS TRACK</span>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            
+            <header class="sys-topbar">
+                <div class="status-widget">
+                    <span><span class="status-dot"></span> SECURE CONNECTION</span>
+                    <span style="opacity: 0.3;">|</span> 
+                    <span>WMS CHECK-IN SYSTEM: <span class="text-green">ONLINE</span></span>
+                </div>
+            </header>
+
+            <section id="intro" class="hero-section">
+                <h1 class="hero-title">CHECK-IN INBOUND</h1>
+                <div class="hero-subtitle">STOCK VALIDATION SYSTEM</div>
+            </section>
+            <section id="conceito" class="content-grid">
+                
+                <article class="glass-card">
+                    <div class="card-header">
+                        <h2 class="card-title">O que é o Check-in Inbound?</h2>
+                    </div>
+                    <div>
+                        <p>O Check-in Inbound é o <strong>portal de entrada oficial</strong> de um Centro de Distribuição (CD). É o momento exato em que a mercadoria deixa de ser responsabilidade do vendedor e passa a ser responsabilidade logística do Mercado Livre.</p>
+                        <p>Trata-se do processo rigoroso de <strong>recebimento físico e fiscal</strong>. Após o descarregamento nas docas, cada item é bipado individualmente, conferido com a Nota Fiscal e registrado no sistema WMS (Warehouse Management System).</p>
+                    </div>
+                </article>
+
+                <article class="glass-card">
+                    <div class="card-header">
+                        <h2 class="card-title">Para que serve?</h2>
+                    </div>
+                    <ul class="feature-list">
+                        <li>
+                            <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div>
+                            <h4>Validação Jurídica e Fiscal</h4>
+                            <p>Garante sistemicamente que o que chegou fisicamente é exatamente o que consta na nota fiscal emitida.</p>
+                        </li>
+                        <li>
+                            <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg></div>
+                            <h4>Controle de Qualidade Inicial</h4>
+                            <p>Identifica no ato produtos quebrados, avariados ou com embalagens violadas, barrando o problema na entrada.</p>
+                        </li>
+                        <li>
+                            <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></div>
+                            <h4>Visibilidade de Estoque</h4>
+                            <p>É nesse momento que o produto “nasce” sistemicamente e pode ficar disponível para venda no ecossistema.</p>
+                        </li>
+                        <li>
+                            <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg></div>
+                            <h4>Rastreabilidade Total</h4>
+                            <p>Atribui um histórico imutável ao item (quem recebeu, quando, em qual estação de trabalho e em que estado).</p>
+                        </li>
+                    </ul>
+                </article>
+
+            </section>
+
+            <section id="fluxo" class="flow-section">
+                <div class="flow-header">
+                    <h2>SEPARAÇÃO EM TOTES E FLUXO DE DESTINO</h2>
+                    <p style="text-align: center; max-width: 800px; margin: 0 auto;">Como a mercadoria se move após a bipagem? O sistema WMS decide o destino físico com base na urgência e no status de venda do produto.</p>
+                </div>
+
+                <div class="flow-diagram-container">
+                    <div class="flow-cards-wrapper">
+                        
+                        <div class="flow-card">
+                            <div class="flow-icon">📦</div>
+                            <h3>1. Processo de Decant</h3>
+                            <p>Transferência física e padronizada do produto da caixa original do fornecedor para o <strong>Tote Padrão</strong> do CD. Isso garante o trânsito perfeito nas esteiras automáticas e o armazenamento nos robôs/prateleiras.</p>
+                        </div>
+
+                        <div class="flow-card">
+                            <div class="flow-icon">🤖</div>
+                            <h3>2. Destino: Armazenagem (Stow)</h3>
+                            <p>Se o produto entra apenas para reposição de estoque padrão, o tote é direcionado via esteira para a área de Stow (Armazenagem), onde será guardado até que uma venda ocorra no futuro.</p>
+                        </div>
+
+                        <div class="flow-card" style="border-color: rgba(255, 214, 0, 0.4); background: rgba(255, 214, 0, 0.02);">
+                            <div class="flow-icon" style="color: var(--neon-yellow); text-shadow: 0 0 15px var(--neon-yellow-glow);">⚡</div>
+                            <h3 style="color: var(--neon-yellow);">3. Fluxo Direto (Putwall)</h3>
+                            <p>Se o item <strong>já possui uma venda pendente</strong> aguardando envio, o sistema "fura a fila" e direciona o tote direto para o Putwall ou área de Cross-docking interno, acelerando radicalmente a expedição.</p>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+            <div class="flow-path">
+                <div class="path-node">Recebimento</div>
+                <div class="path-arrow">➔</div>
+                <div class="path-node">Conferência (Bipagem)</div>
+                <div class="path-arrow">➔</div>
+                <div class="path-node">Decant</div>
+                <div class="path-arrow">➔</div>
+                <div class="path-node highlight">Destino: Stow ou Putwall</div>
+            </div>
+
+            <section id="problem-solver" class="ps-section">
+                <div class="ps-board">
+                    <div class="ps-header">
+                        <h2 class="ps-title"><span>⚠️</span> PROBLEM SOLVER – RESOLUTION CENTER</h2>
+                        <p class="ps-subtitle">O ponto de inteligência técnica onde o fluxo é restaurado quando o padrão falha.</p>
+                    </div>
+
+                    <div class="ps-grid">
+                        <div class="ps-item">
+                            <div class="ps-icon">📊</div>
+                            <h4>Sobras e Faltas</h4>
+                            <p class="text-muted" style="font-size: 0.9rem; margin-top: 10px;">Divergência física vs fiscal detectada no WMS.</p>
+                        </div>
+                        <div class="ps-item">
+                            <div class="ps-icon">🔍</div>
+                            <h4>EAN Inválido</h4>
+                            <p class="text-muted" style="font-size: 0.9rem; margin-top: 10px;">Código de barras não cadastrado ou ilegível.</p>
+                        </div>
+                        <div class="ps-item">
+                            <div class="ps-icon">🩹</div>
+                            <h4>Avarias</h4>
+                            <p class="text-muted" style="font-size: 0.9rem; margin-top: 10px;">Produtos com danos que impedem a venda ao cliente.</p>
+                        </div>
+                        <div class="ps-item">
+                            <div class="ps-icon">❓</div>
+                            <h4>Itens Sem ID</h4>
+                            <p class="text-muted" style="font-size: 0.9rem; margin-top: 10px;">Produtos que perderam sua identidade sistêmica.</p>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 30px; padding: 20px; border: 1px dashed var(--neon-yellow-dim); border-radius: 8px; text-align: center; background: rgba(0,0,0,0.3);">
+                        <p class="text-mono" style="color: var(--neon-yellow); margin-bottom: 0; font-size: 0.9rem;">
+                            ESTADO DO SISTEMA: <span style="animation: neonPulseYellow 2s infinite;">AGUARDANDO RESOLUÇÃO DE PENDÊNCIAS...</span>
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="regras" class="golden-rules-section">
+                <div class="flow-header">
+                    <h2>REGRAS DE OURO (GOLDEN RULES)</h2>
+                    <p>Os pilares inegociáveis para uma operação de Check-in de alta performance.</p>
+                </div>
+
+                <div class="golden-rules-grid">
+                    <div class="rule-card">
+                        <div class="rule-badge success">✔️ CHECK</div>
+                        <h3>Bipou, Colocou</h3>
+                        <p>Cada bipagem deve ser seguida da colocação imediata no tote. Evite acúmulo de itens na estação.</p>
+                    </div>
+                    <div class="rule-card">
+                        <div class="rule-badge success">✔️ CHECK</div>
+                        <h3>Um EAN por vez</h3>
+                        <p>Nunca tente bipar múltiplos itens simultaneamente. A precisão é a prioridade zero.</p>
+                    </div>
+                    <div class="rule-card">
+                        <div class="rule-badge alert">❌ ALERTA</div>
+                        <h3>Qualidade Primeiro</h3>
+                        <p>A embalagem do produto é a cara do Mercado Livre. Não aceite itens sujos ou violados.</p>
+                    </div>
+                    <div class="rule-card">
+                        <div class="rule-badge success">✔️ CHECK</div>
+                        <h3>Organização do Tote</h3>
+                        <p>O tote é a unidade de transporte. Itens bem arrumados evitam quedas e avarias nas esteiras.</p>
+                    </div>
+                    <div class="rule-card">
+                        <div class="rule-badge alert">❌ ALERTA</div>
+                        <h3>Segurança & EPIs</h3>
+                        <p>O uso de luvas e calçados de segurança é obrigatório em 100% do tempo de operação.</p>
+                    </div>
+                    <div class="rule-card">
+                        <div class="rule-badge success">✔️ CHECK</div>
+                        <h3>Limpeza da Estação</h3>
+                        <p>5S aplicado. Papéis e plásticos de descarte devem estar nos locais corretos.</p>
+                    </div>
+                </div>
+
+                <div class="tote-comparison">
+                    <div class="tote-view good">
+                        <div class="tote-icon">🧺</div>
+                        <h4>Tote Organizado</h4>
+                        <p class="text-green" style="font-size: 0.9rem; font-family: var(--font-mono);">FLUXO OTIMIZADO - SEM RISCO DE QUEDA</p>
+                        <ul style="text-align: left; font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-top: 10px;">
+                            <li>• Itens abaixo da borda do tote</li>
+                            <li>• Distribuição uniforme de peso</li>
+                            <li>• Etiquetas visíveis para scanner</li>
+                        </ul>
+                    </div>
+                    <div class="tote-view bad">
+                        <div class="tote-icon">⚠️</div>
+                        <h4>Tote Transbordando</h4>
+                        <p class="text-red" style="font-size: 0.9rem; font-family: var(--font-mono);">RISCO DE TRAVAMENTO EM CONVEYOR</p>
+                        <ul style="text-align: left; font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-top: 10px;">
+                            <li>• Itens saindo para fora das bordas</li>
+                            <li>• Empilhamento instável</li>
+                            <li>• Risco alto de avaria interna</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+            <section id="infografico" class="infographic-section">
+                <div class="flow-header">
+                    <h2>O CAMINHO DO PRODUTO</h2>
+                    <p>Entenda a jornada física e sistêmica desde a chegada na doca até a prateleira.</p>
+                </div>
+
+                <div class="info-timeline">
+                    <div class="info-step">
+                        <div class="info-circle">🚛</div>
+                        <h4 class="info-title">1. Recebimento</h4>
+                        <p class="info-desc">Descarregamento na doca e conferência macro (paletes/caixas fechadas) via YMS.</p>
+                    </div>
+                    <div class="info-step">
+                        <div class="info-circle">📱</div>
+                        <h4 class="info-title">2. Conferência</h4>
+                        <p class="info-desc">Bipagem individual. Validação física contra a nota fiscal eletrônica (Match sistêmico).</p>
+                    </div>
+                    <div class="info-step">
+                        <div class="info-circle">📦</div>
+                        <h4 class="info-title">3. Decant</h4>
+                        <p class="info-desc">Transferência da caixa do fornecedor para o tote logístico padrão do Mercado Livre.</p>
+                    </div>
+                    <div class="info-step destaque">
+                        <div class="info-circle">🎯</div>
+                        <h4 class="info-title" style="color: var(--neon-yellow);">4. Destino Final</h4>
+                        <p class="info-desc">Direcionamento via esteira para armazenagem (Stow) ou expedição direta (Putwall).</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="ferramentas" class="tools-section">
+                <div class="flow-header">
+                    <h2>FERRAMENTAS DO OFÍCIO</h2>
+                    <p>O hardware logístico que conecta o mundo físico ao sistema WMS.</p>
+                </div>
+
+                <div class="tools-grid">
+                    <div class="tool-card">
+                        <div class="tool-icon">📱</div>
+                        <h3>Coletor de Dados</h3>
+                        <p>"Seus olhos no sistema"</p>
+                        <p class="text-muted" style="font-size: 0.85rem; margin-top: 15px; font-family: var(--font-main); font-style: normal;">Scanner principal para ler EANs, QR Codes e interagir com o software de inbound.</p>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon">🧺</div>
+                        <h3>Totes Logísticos</h3>
+                        <p>"Unidade padrão interna"</p>
+                        <p class="text-muted" style="font-size: 0.85rem; margin-top: 15px; font-family: var(--font-main); font-style: normal;">Caixas plásticas rastreáveis que transportam os itens pelas esteiras do CD.</p>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon">🖨️</div>
+                        <h3>Impressora Térmica</h3>
+                        <p>"Identidade do produto"</p>
+                        <p class="text-muted" style="font-size: 0.85rem; margin-top: 15px; font-family: var(--font-main); font-style: normal;">Gera etiquetas LPN (License Plate Number) internas para itens sem código próprio.</p>
+                    </div>
+                    
+                    <div class="tool-card">
+                        <div class="tool-icon">⚖️</div>
+                        <h3>Balança & Paquímetro</h3>
+                        <p>"Controle de cubagem"</p>
+                        <p class="text-muted" style="font-size: 0.85rem; margin-top: 15px; font-family: var(--font-main); font-style: normal;">Ferramentas para aferir peso e dimensões corretas do item na primeira entrada.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="faq" class="faq-section">
+                <div class="flow-header">
+                    <h2 style="color: var(--status-red); text-shadow: 0 0 15px var(--status-red-glow);">Travou no processo? Chame o Problem Solver.</h2>
+                    <p>Protocolos rápidos de resolução para os problemas mais comuns na estação.</p>
+                </div>
+
+                <div class="faq-accordion" onclick="toggleAccordion(this)">
+                    <div class="faq-trigger">EAN Não Cadastrado <span class="faq-icon">+</span></div>
+                    <div class="faq-panel">
+                        <p><strong>Procedimento:</strong> Isole o item em um tote de exceção (Andon/PS). O Problem Solver fará a busca pelo ASIN/SKU no sistema principal ou no catálogo do Seller, imprimindo uma nova etiqueta LPN válida para liberar o fluxo.</p>
+                    </div>
+                </div>
+
+                <div class="faq-accordion" onclick="toggleAccordion(this)">
+                    <div class="faq-trigger">Divergência de Quantidade (Falta ou Sobra) <span class="faq-icon">+</span></div>
+                    <div class="faq-panel">
+                        <p><strong>Procedimento:</strong> Realize a recontagem física cautelosa. Se o erro persistir, o sistema bloqueará a caixa virtual. O PS deve investigar o histórico da transportadora e do fornecedor, reportando o Shortage (falta) ou Overage (sobra) financeiro.</p>
+                    </div>
+                </div>
+
+                <div class="faq-accordion" onclick="toggleAccordion(this)">
+                    <div class="faq-trigger">Avarias e Danos de Transporte <span class="faq-icon">+</span></div>
+                    <div class="faq-panel">
+                        <p><strong>Critério de Aceite:</strong> Se o produto interno sofreu dano, vazamento ou a embalagem original está comprometida inviabilizando a venda, o item não entra no estoque bom. Ele é bipado como "Unsellable" (Invisível para venda) e enviado para o setor de Logística Reversa/Descarte.</p>
+                    </div>
+                </div>
+            </section>
+
+            <footer class="system-footer">
+                <div class="footer-quote">
+                    "O Check-in é o ponto onde o estoque nasce.<br>
+                    <span>Se a validação falha aqui, o erro se multiplica no sistema."</span>
+                </div>
+            </footer>
+
+        </main> </div> <script>
+        // 1. Lógica dos Accordions do FAQ
+        function toggleAccordion(element) {
+            element.classList.toggle('active');
+            const panel = element.querySelector('.faq-panel');
+            const icon = element.querySelector('.faq-icon');
+            
+            if (element.classList.contains('active')) {
+                panel.style.maxHeight = panel.scrollHeight + "px";
+                icon.textContent = "×";
+            } else {
+                panel.style.maxHeight = null;
+                icon.textContent = "+";
+            }
+        }
+
+        // 2. ScrollSpy Funcional (Rastreia o scroll e atualiza a Sidebar)
+        document.addEventListener('DOMContentLoaded', () => {
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.index-link');
+
+            window.addEventListener('scroll', () => {
+                let current = '';
+                
+                // Pegar a posição atual do scroll considerando o topo da janela
+                const scrollY = window.pageYOffset;
+
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    // Subtraindo a altura da Top Bar + um buffer de conforto
+                    if (scrollY >= sectionTop - 150) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === `#${current}`) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

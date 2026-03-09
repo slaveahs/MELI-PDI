@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meli PDI - Inbound Dock Control</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ==========================================================================
+           01. SYSTEM CORE VARIABLES (PALETA CYBERPUNK / DOCK CONTROL)
+           ========================================================================== */
+        :root {
+            /* Cores Neon Principais */
+            --neon-blue: #00E5FF;
+            --neon-blue-glow: rgba(0, 229, 255, 0.6);
+            --neon-blue-dim: rgba(0, 229, 255, 0.15);
+            --neon-blue-dark: rgba(0, 229, 255, 0.05);
+            
+            --neon-yellow: #FFD600;
+            --neon-yellow-glow: rgba(255, 214, 0, 0.6);
+            --neon-yellow-dim: rgba(255, 214, 0, 0.15);
+            --neon-yellow-dark: rgba(255, 214, 0, 0.05);
+
+            /* Cores de Status Funcional (YMS Dashboard) */
+            --status-green: #00FF66;
+            --status-green-glow: rgba(0, 255, 102, 0.5);
+            --status-red: #FF003C;
+            --status-red-glow: rgba(255, 0, 60, 0.5);
+            --status-orange: #FF8C00;
+            
+            /* Backgrounds e Superfícies Glassmorphism */
+            --bg-deep: #020308;
+            --bg-surface: #060913;
+            --glass-base: rgba(8, 12, 22, 0.85); /* Fundo um pouco mais sólido para leitura */
+            --glass-light: rgba(15, 22, 40, 0.6);
+            --glass-border-blue: rgba(0, 229, 255, 0.3);
+            --glass-border-yellow: rgba(255, 214, 0, 0.3);
+            
+            /* Tipografia */
+            --font-display: 'Orbitron', sans-serif;
+            --font-body: 'Rajdhani', sans-serif;
+            
+            /* Cores de Texto */
+            --text-pure: #FFFFFF;
+            --text-main: #E2E8F0;
+            --text-muted: #64748B;
+            
+            /* Estrutura e Grid */
+            --sidebar-width: 320px;
+            --topbar-height: 70px;
+            --container-max: 1400px;
+            
+            /* Bordas e Sombras */
+            --radius-xl: 16px;
+            --radius-lg: 12px;
+            --radius-md: 8px;
+            --radius-sm: 4px;
+            --shadow-glass: 0 15px 35px rgba(0, 0, 0, 0.7);
+            
+            /* Transições */
+            --transition-fast: 0.2s ease;
+            --transition-smooth: 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            
+            /* Z-Index Layers */
+            --z-back: -10;
+            --z-base: 1;
+            --z-content: 10;
+            --z-topbar: 40;
+            --z-sidebar: 50;
+            --z-overlay: 999;
+        }
+
+        /* ==========================================================================
+           02. GLOBAL RESET & FULL PAGE SCROLL SETUP
+           ========================================================================== */
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth; /* Permite que os links do menu deslizem suavemente */
+        }
+
+        /* Removemos o overflow: hidden. Agora a página cresce o quanto precisar. */
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            min-height: 100vh;
+            overflow-x: hidden; 
+            display: flex;
+            position: relative;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Custom Scrollbar Sistêmica */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-deep); border-left: 1px solid rgba(0, 229, 255, 0.1); }
+        ::-webkit-scrollbar-thumb { background: rgba(0, 229, 255, 0.3); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--neon-blue); box-shadow: 0 0 10px var(--neon-blue); }
+
+        /* ==========================================================================
+           03. BACKGROUND ESTÁTICO (FIXO)
+           ========================================================================== */
+        /* O fundo fica fixo enquanto o conteúdo rola por cima */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: var(--z-back);
+            background-image: 
+                linear-gradient(rgba(0, 229, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 229, 255, 0.04) 1px, transparent 1px);
+            background-size: 50px 50px;
+            background-position: center center;
+            transform: perspective(1000px) rotateX(60deg) scale(2.5) translateY(-200px);
+            animation: gridMove 25s linear infinite;
+            pointer-events: none;
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: calc(var(--z-back) + 1);
+            background: radial-gradient(circle at center, transparent 15%, #010204 100%);
+            pointer-events: none;
+        }
+        /* ==========================================================================
+           04. TYPOGRAPHY & UTILITIES
+           ========================================================================== */
+        h1, h2, h3, h4, h5 { font-family: var(--font-display); font-weight: 700; letter-spacing: 2px; color: var(--text-pure); }
+        p { line-height: 1.7; margin-bottom: 1.2rem; font-size: 1.15rem; color: var(--text-main); }
+        ul, ol { list-style: none; }
+        a { text-decoration: none; color: inherit; }
+        button { cursor: pointer; border: none; outline: none; background: transparent; font-family: inherit; }
+
+        .text-blue { color: var(--neon-blue); text-shadow: 0 0 8px var(--neon-blue-dim); font-weight: 600; }
+        .text-yellow { color: var(--neon-yellow); text-shadow: 0 0 8px var(--neon-yellow-dim); font-weight: 600; }
+        .text-red { color: var(--status-red); text-shadow: 0 0 8px var(--status-red-glow); font-weight: 600; }
+        .text-green { color: var(--status-green); text-shadow: 0 0 8px var(--status-green-glow); font-weight: 600; }
+
+        /* ==========================================================================
+           05. KEYFRAMES & ANIMATIONS
+           ========================================================================== */
+        @keyframes gridMove {
+            0% { transform: perspective(1000px) rotateX(60deg) scale(2.5) translateY(-200px); }
+            100% { transform: perspective(1000px) rotateX(60deg) scale(2.5) translateY(0px); }
+        }
+
+        @keyframes systemBoot {
+            0% { opacity: 0; filter: contrast(2) brightness(0.5); transform: translateY(20px); }
+            100% { opacity: 1; filter: contrast(1) brightness(1); transform: translateY(0); }
+        }
+
+        @keyframes neonPulseBlue {
+            0%, 100% { text-shadow: 0 0 10px var(--neon-blue), 0 0 20px var(--neon-blue-glow), 0 0 40px var(--neon-blue-dim); opacity: 1; }
+            50% { text-shadow: 0 0 5px var(--neon-blue), 0 0 10px var(--neon-blue-dim); opacity: 0.7; }
+        }
+
+        @keyframes scanlineSweep {
+            0% { top: -10vh; opacity: 0; }
+            10% { opacity: 0.3; }
+            90% { opacity: 0.3; }
+            100% { top: 110vh; opacity: 0; }
+        }
+
+        @keyframes pulseDotStatus {
+            0% { box-shadow: 0 0 0 0 rgba(0, 255, 102, 0.7); }
+            70% { box-shadow: 0 0 0 8px rgba(0, 255, 102, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 255, 102, 0); }
+        }
+
+        @keyframes warningBlink {
+            0%, 100% { background-color: rgba(255, 0, 60, 0.1); border-color: var(--status-red); }
+            50% { background-color: rgba(255, 0, 60, 0.3); border-color: #ff4d79; box-shadow: 0 0 15px var(--status-red-glow); }
+        }
+
+        /* Efeito global de scanner da tela */
+        .global-scanner {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 8px; z-index: var(--z-overlay);
+            background: linear-gradient(to bottom, transparent, var(--neon-blue), transparent);
+            animation: scanlineSweep 8s linear infinite; pointer-events: none; opacity: 0.3;
+        }
+
+        /* ==========================================================================
+           06. SYSTEM SIDEBAR (FIXA E EXCLUSIVA DO RECEBIMENTO)
+           ========================================================================== */
+        /* Como o body agora rola, a sidebar DEVE ser fixed */
+        .sys-sidebar {
+            width: var(--sidebar-width); height: 100vh; position: fixed; left: 0; top: 0;
+            background: var(--glass-base); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid var(--glass-border-blue); display: flex; flex-direction: column;
+            box-shadow: 5px 0 30px rgba(0,0,0,0.8), inset -2px 0 20px rgba(0, 229, 255, 0.05);
+            z-index: var(--z-sidebar);
+        }
+
+        .sidebar-header {
+            height: var(--topbar-height); display: flex; align-items: center; justify-content: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05); background: linear-gradient(to bottom, rgba(0, 229, 255, 0.05), transparent);
+            position: relative; flex-shrink: 0;
+        }
+
+        .sidebar-header::after {
+            content: ''; position: absolute; bottom: -1px; left: 10%; width: 80%; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--neon-blue), transparent);
+        }
+
+        .brand-logo-mini { font-family: var(--font-display); font-size: 1.8rem; display: flex; gap: 8px; }
+        .brand-logo-mini .m { color: transparent; -webkit-text-stroke: 1.5px var(--neon-blue); text-shadow: 0 0 8px var(--neon-blue-dim); }
+        .brand-logo-mini .p { color: var(--neon-yellow); text-shadow: 0 0 8px var(--neon-yellow-dim); }
+
+        .sidebar-nav {
+            flex-grow: 1; padding: 2rem 1.5rem; display: flex; flex-direction: column; gap: 0.8rem; overflow-y: auto;
+        }
+
+        .nav-category { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; margin: 1rem 0 0.5rem 0.5rem; font-weight: 600; }
+
+        .nav-item {
+            display: flex; align-items: center; padding: 1rem 1.2rem; color: var(--text-main); text-decoration: none;
+            font-size: 1.05rem; font-weight: 600; border-radius: var(--radius-md); border: 1px solid transparent; 
+            transition: var(--transition-smooth); position: relative; overflow: hidden;
+        }
+
+        .nav-item::before {
+            content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 0;
+            background: linear-gradient(90deg, var(--neon-blue-dim), transparent); transition: width 0.3s ease; z-index: 0;
+        }
+
+        .nav-item:hover { border-color: rgba(0, 229, 255, 0.2); color: var(--text-pure); transform: translateX(8px); }
+        .nav-item:hover::before { width: 100%; }
+
+        /* Estilo para links de Índice Interno (Amarelo) */
+        .nav-item.index-link:hover { border-color: rgba(255, 214, 0, 0.2); color: var(--neon-yellow); }
+        .nav-item.index-link::before { background: linear-gradient(90deg, var(--neon-yellow-dim), transparent); }
+
+        .nav-icon { width: 20px; height: 20px; margin-right: 15px; fill: none; stroke: currentColor; stroke-width: 2; z-index: 1; transition: transform 0.3s ease; }
+        .nav-item span { z-index: 1; }
+        .nav-item:hover .nav-icon { transform: scale(1.15); }
+
+        .sidebar-footer {
+            padding: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.05); background: rgba(0,0,0,0.3); display: flex; align-items: center; gap: 15px; flex-shrink: 0;
+        }
+
+        .user-avatar {
+            width: 45px; height: 45px; border: 1px solid var(--neon-blue); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center;
+            color: var(--neon-blue); font-family: var(--font-display); font-weight: bold; box-shadow: 0 0 10px var(--neon-blue-dim); background: var(--bg-deep);
+        }
+
+        .user-details { display: flex; flex-direction: column; }
+        .user-name { color: var(--text-pure); font-size: 1rem; font-weight: 600; }
+        .user-role { color: var(--text-muted); font-size: 0.8rem; font-family: var(--font-display); }
+
+        /* ==========================================================================
+           07. MAIN WORKSPACE (ÁREA DE CONTEÚDO COM ROLAGEM GLOBAL)
+           ========================================================================== */
+        /* Empurra o conteúdo para a direita, liberando o espaço da sidebar fixa */
+        .sys-workspace {
+            margin-left: var(--sidebar-width); 
+            width: calc(100% - var(--sidebar-width));
+            display: flex; 
+            flex-direction: column; 
+            min-height: 100vh;
+            background: radial-gradient(circle at top right, rgba(0, 229, 255, 0.03) 0%, transparent 60%);
+            animation: systemBoot 1.5s ease-out forwards;
+        }
+
+        /* Top Bar fixada no teto durante o scroll (Sticky) */
+        .sys-topbar {
+            height: var(--topbar-height); 
+            display: flex; align-items: center; justify-content: flex-end; padding: 0 3rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05); 
+            background: rgba(6, 9, 19, 0.85); 
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            position: sticky; top: 0; z-index: var(--z-topbar); 
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+        }
+
+        .status-widget { font-family: var(--font-display); font-size: 0.85rem; color: var(--text-muted); display: flex; gap: 20px; align-items: center; letter-spacing: 1px; }
+        .status-dot { width: 8px; height: 8px; background: var(--status-green); border-radius: 50%; display: inline-block; animation: pulseDotStatus 2s infinite; }
+
+        .workspace-content {
+            padding: 4rem; display: flex; flex-direction: column; align-items: center;
+        }
+
+        /* ==========================================================================
+           08. HERO SECTION (INBOUND DOCK LOGO NEON GIGANTE)
+           ========================================================================== */
+        .hero-section {
+            width: 100%; max-width: var(--container-max); display: flex; flex-direction: column; align-items: center; text-align: center;
+            margin-bottom: 5rem;
+        }
+
+        .giant-logo {
+            font-family: var(--font-display); font-size: 6.5rem; font-weight: 900;
+            line-height: 1; letter-spacing: 10px; margin-bottom: 0.5rem;
+        }
+
+        /* Efeito de Neon Vazado (Texto Transparente + Borda Iluminada) */
+        .hollow-neon-title {
+            color: transparent; -webkit-text-stroke: 3px var(--neon-blue);
+            text-shadow: 0 0 20px var(--neon-blue-glow), inset 0 0 10px var(--neon-blue);
+            animation: neonFlickerBlue 4s infinite alternate; text-transform: uppercase;
+        }
+
+        .dock-subtitle {
+            font-family: var(--font-display); font-size: 1.8rem; color: var(--neon-yellow);
+            text-transform: uppercase; letter-spacing: 15px; display: flex; align-items: center; gap: 20px;
+            text-shadow: 0 0 15px var(--neon-yellow-dim); margin-top: 15px;
+        }
+
+        .dock-subtitle::before, .dock-subtitle::after {
+            content: ''; display: block; width: 60px; height: 2px;
+            background: var(--neon-yellow); box-shadow: 0 0 10px var(--neon-yellow);
+        }
+
+        /* ==========================================================================
+           09. GLASSMORPHISM CARDS BASE ("O QUE É?" E "PARA QUE SERVE?")
+           ========================================================================== */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-md);
+            width: 100%;
+            max-width: var(--container-max);
+            margin-bottom: var(--spacing-lg);
+            /* Scroll Margin para quando clicar no link do menu lateral, o título não ficar escondido pela Top Bar */
+            scroll-margin-top: calc(var(--topbar-height) + 2rem);
+        }
+
+        .glass-card {
+            background: var(--glass-base);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border-blue);
+            border-radius: var(--radius-lg);
+            padding: 3rem;
+            box-shadow: var(--shadow-glass), inset 0 0 20px var(--neon-blue-dark);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+        }
+
+        .glass-card:hover { 
+            transform: translateY(-8px); 
+            border-color: var(--neon-blue); 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9), inset 0 0 30px var(--neon-blue-dim); 
+        }
+
+        /* Cantoneiras Técnicas do Card */
+        .glass-card::before {
+            content: ''; position: absolute; top: 20px; left: 20px; width: 25px; height: 25px;
+            border-top: 2px solid var(--neon-blue); border-left: 2px solid var(--neon-blue); pointer-events: none;
+        }
+        .glass-card::after {
+            content: ''; position: absolute; bottom: 20px; right: 20px; width: 25px; height: 25px;
+            border-bottom: 2px solid var(--neon-blue); border-right: 2px solid var(--neon-blue); pointer-events: none;
+        }
+
+        .card-header { 
+            margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px dashed rgba(255,255,255,0.1); 
+            display: flex; align-items: center; gap: 15px; 
+        }
+        
+        .card-title { font-size: 2.2rem; color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue-dim); display: flex; align-items: center; }
+        .card-title::before { content: '>'; color: var(--neon-yellow); font-family: var(--font-display); margin-right: 15px; font-size: 2rem; text-shadow: 0 0 10px var(--neon-yellow-dim); }
+
+        /* Lista Destacada (Para que serve?) */
+        .feature-list { list-style: none; margin: 1.5rem 0; }
+        .feature-list li { margin-bottom: 1.8rem; position: relative; padding-left: 3.5rem; }
+        .feature-list li:last-child { margin-bottom: 0; }
+        .feature-list h4 { color: var(--text-pure); font-size: 1.3rem; margin-bottom: 0.5rem; letter-spacing: 1px; }
+        .feature-list p { font-size: 1.1rem; margin-bottom: 0; color: var(--text-muted); text-align: justify; }
+        
+        .feature-icon {
+            position: absolute; left: 0; top: 0; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;
+            background: rgba(0, 229, 255, 0.05); border: 1px solid var(--neon-blue); border-radius: var(--radius-sm); 
+            color: var(--neon-blue); box-shadow: inset 0 0 10px var(--neon-blue-dark);
+        }
+        /* ==========================================================================
+           10. TIMELINE INTERATIVA (PASSO A PASSO DA DOCA)
+           ========================================================================== */
+        .timeline-section { 
+            width: 100%; 
+            max-width: var(--container-max); 
+            margin-bottom: var(--spacing-lg); 
+            scroll-margin-top: calc(var(--topbar-height) + 2rem);
+        }
+        
+        .timeline-container { 
+            position: relative; 
+            margin-top: 3rem; 
+            padding-left: 30px; 
+        }
+        
+        /* Linha Vertical da Timeline (Fluxo contínuo) */
+        .timeline-container::before {
+            content: ''; position: absolute; top: 0; left: 10px; height: 100%; width: 2px;
+            background: linear-gradient(to bottom, transparent, var(--neon-blue), var(--neon-yellow), var(--neon-blue), transparent);
+            box-shadow: 0 0 15px var(--neon-blue); opacity: 0.6;
+        }
+
+        .timeline-step { 
+            position: relative; 
+            margin-bottom: 1.5rem; 
+            cursor: pointer; 
+        }
+        
+        .timeline-step:last-child { margin-bottom: 0; }
+
+        .timeline-trigger {
+            background: var(--glass-light); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius-md);
+            padding: 1.5rem 2rem 1.5rem 4rem; display: flex; justify-content: space-between; align-items: center;
+            transition: var(--transition-fast); position: relative; z-index: 2;
+        }
+
+        /* Ponto Luminous de cada Etapa */
+        .timeline-dot {
+            position: absolute; left: -26px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px;
+            background: var(--bg-deep); border: 2px solid var(--neon-blue); border-radius: 50%; z-index: 3; transition: var(--transition-fast);
+        }
+
+        .step-title { font-family: var(--font-display); font-size: 1.3rem; color: var(--text-main); font-weight: 600; letter-spacing: 1px; }
+        .step-icon { width: 24px; height: 24px; fill: none; stroke: var(--text-muted); stroke-width: 2; transition: transform 0.3s ease; }
+
+        /* Hover da Etapa */
+        .timeline-step:hover .timeline-trigger { background: rgba(0, 229, 255, 0.05); border-color: var(--glass-border-blue); }
+        .timeline-step:hover .timeline-dot { background: var(--neon-blue); box-shadow: 0 0 15px var(--neon-blue); }
+        .timeline-step:hover .step-title { color: var(--text-pure); text-shadow: 0 0 8px var(--neon-blue-dim); }
+
+        /* Área Expansível do Passo a Passo */
+        .timeline-content {
+            max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            background: rgba(0,0,0,0.4); border-radius: 0 0 var(--radius-md) var(--radius-md); margin: 0 1rem;
+        }
+        
+        .timeline-content-inner { 
+            padding: 2rem; border-left: 2px dashed var(--neon-blue); margin-left: 2rem; 
+            color: var(--text-main); font-size: 1.15rem; text-align: justify; 
+        }
+
+        /* Estado ATIVO (Aberto) do Accordion da Timeline */
+        .timeline-step.active .timeline-trigger { border-color: var(--neon-blue); background: var(--neon-blue-dark); border-radius: var(--radius-md) var(--radius-md) 0 0; }
+        .timeline-step.active .timeline-dot { background: var(--neon-blue); box-shadow: 0 0 20px var(--neon-blue); transform: translateY(-50%) scale(1.4); }
+        .timeline-step.active .step-title { color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue-dim); }
+        .timeline-step.active .step-icon { stroke: var(--neon-blue); transform: rotate(180deg); }
+
+        /* ==========================================================================
+           11. PROBLEM SOLVER CARD (HIGHLIGHT YELLOW)
+           ========================================================================== */
+        .ps-card {
+            width: 100%; 
+            max-width: var(--container-max); 
+            margin-bottom: var(--spacing-lg);
+            border-color: var(--glass-border-yellow); 
+            box-shadow: var(--shadow-glass), inset 0 0 20px var(--neon-yellow-dark);
+            scroll-margin-top: calc(var(--topbar-height) + 2rem);
+        }
+        
+        .ps-card::before, .ps-card::after { border-color: var(--neon-yellow); }
+        .ps-card:hover { border-color: var(--neon-yellow); box-shadow: 0 20px 50px rgba(0,0,0,0.9), inset 0 0 30px var(--neon-yellow-dim); }
+        
+        .ps-card .card-title { color: var(--neon-yellow); text-shadow: 0 0 15px var(--neon-yellow-dim); }
+        .ps-card .card-title::before { content: '🛡️'; font-size: 2.2rem; text-shadow: none; filter: drop-shadow(0 0 10px var(--neon-yellow)); margin-right: 20px; }
+        
+        .ps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-top: 2rem; }
+        
+        .ps-item {
+            background: rgba(255, 214, 0, 0.05); border: 1px solid rgba(255, 214, 0, 0.2); padding: 1.5rem;
+            border-radius: var(--radius-sm); display: flex; align-items: center; gap: 15px; transition: var(--transition-fast);
+        }
+        
+        .ps-item:hover { 
+            background: rgba(255, 214, 0, 0.1); border-color: var(--neon-yellow); 
+            transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 0 15px var(--neon-yellow-dim); 
+        }
+        
+        .ps-item span { color: var(--text-pure); font-weight: 600; font-size: 1.15rem; font-family: var(--font-display); letter-spacing: 1px; }
+        .ps-item .warn-icon { color: var(--status-red); filter: drop-shadow(0 0 8px var(--status-red-glow)); width: 32px; height: 32px; }
+        /* ==========================================================================
+           12. GOLDEN RULES (REGRAS DE OURO DA DOCA)
+           ========================================================================== */
+        .golden-section { 
+            width: 100%; 
+            max-width: var(--container-max); 
+            margin-bottom: var(--spacing-lg); 
+            scroll-margin-top: calc(var(--topbar-height) + 2rem);
+        }
+        
+        .golden-title {
+            text-align: center; margin-bottom: 3rem; font-size: 2.5rem; color: var(--text-pure);
+            text-shadow: 0 0 15px rgba(255,255,255,0.3); font-family: var(--font-display);
+        }
+
+        .golden-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; }
+
+        .golden-card {
+            background: rgba(0, 0, 0, 0.5); border: 1px solid var(--glass-border-blue);
+            padding: 2.5rem 2rem; text-align: center; border-radius: var(--radius-md);
+            transition: var(--transition-smooth); position: relative; overflow: hidden;
+        }
+
+        .golden-card::before {
+            content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 4px;
+            background: var(--neon-blue); transform: scaleX(0); transition: transform 0.4s ease; transform-origin: left;
+        }
+
+        .golden-card:hover {
+            background: var(--neon-blue-dark); border-color: var(--neon-blue);
+            box-shadow: 0 10px 30px rgba(0,229,255,0.1); transform: translateY(-10px);
+        }
+
+        .golden-card:hover::before { transform: scaleX(1); box-shadow: 0 0 20px var(--neon-blue); }
+
+        .golden-icon { font-size: 3.5rem; margin-bottom: 1.5rem; display: inline-block; filter: drop-shadow(0 0 10px var(--neon-blue)); }
+        .golden-card:hover .golden-icon { transform: scale(1.15); transition: 0.3s; }
+        
+        .golden-card h3 { font-size: 1.4rem; color: var(--neon-blue); margin-bottom: 1rem; }
+        .golden-card p { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 0; line-height: 1.5; }
+
+        /* ==========================================================================
+           13. INTERACTIVE AREA (LABORATÓRIO DA DOCA)
+           ========================================================================== */
+        .lab-section {
+            background: rgba(5, 8, 15, 0.95); border: 2px dashed rgba(0, 229, 255, 0.4);
+            border-radius: var(--radius-lg); padding: 4rem; margin-bottom: var(--spacing-lg); 
+            width: 100%; max-width: var(--container-max); position: relative; 
+            box-shadow: inset 0 0 80px rgba(0, 229, 255, 0.05);
+            scroll-margin-top: calc(var(--topbar-height) + 2rem);
+        }
+
+        .lab-title {
+            text-align: center; margin-bottom: 3rem; font-family: var(--font-display); font-size: 2.8rem;
+            color: var(--neon-blue); text-shadow: 0 0 20px var(--neon-blue-dim); letter-spacing: 2px;
+        }
+
+        /* YMS Dashboard Simulado */
+        .yms-dashboard {
+            display: flex; justify-content: space-between; align-items: center; background: #010205;
+            padding: 2.5rem; border-radius: var(--radius-md); border: 1px solid #111; margin-bottom: 3rem;
+            box-shadow: inset 0 0 20px rgba(0,0,0,1);
+        }
+
+        .truck-node { display: flex; flex-direction: column; align-items: center; gap: 15px; font-family: var(--font-display); }
+        .truck-icon { font-size: 3.5rem; }
+        .truck-label { font-size: 1rem; letter-spacing: 2px; }
+
+        .truck-green { color: var(--status-green); text-shadow: 0 0 20px var(--status-green-glow); }
+        .truck-yellow { color: var(--neon-yellow); text-shadow: 0 0 20px var(--neon-yellow-glow); animation: neonPulseYellow 2s infinite; }
+        .truck-red { color: var(--status-red); text-shadow: 0 0 20px var(--status-red-glow); animation: warningBlink 1s infinite alternate; border-radius: 8px; padding: 5px; }
+
+        /* Controles do Laboratório */
+        .lab-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; }
+        
+        .control-panel {
+            background: rgba(255,255,255,0.02); padding: 2.5rem; border-radius: var(--radius-md);
+            border: 1px solid rgba(255,255,255,0.05); text-align: center; display: flex; flex-direction: column; justify-content: center;
+        }
+
+        .control-panel h4 { margin-bottom: 2rem; color: var(--text-pure); font-size: 1.4rem; }
+
+        /* Slider Customizado */
+        .cyber-slider {
+            -webkit-appearance: none; width: 100%; height: 8px; background: #111; border-radius: 4px; outline: none; margin-bottom: 1.5rem;
+            border: 1px solid #333;
+        }
+        .cyber-slider::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none; width: 24px; height: 24px; border-radius: 50%;
+            background: var(--neon-blue); cursor: pointer; box-shadow: 0 0 15px var(--neon-blue);
+        }
+        .slider-labels { display: flex; justify-content: space-between; font-family: var(--font-display); font-size: 0.95rem; color: var(--text-muted); font-weight: 600; }
+
+        /* Mini Game Estilos */
+        .game-display { font-family: var(--font-display); font-size: 4rem; color: var(--neon-yellow); text-shadow: 0 0 20px var(--neon-yellow-dim); margin-bottom: 1.5rem; font-weight: 900; }
+        .btn-group { display: flex; gap: 15px; justify-content: center; }
+        .btn-cyber {
+            background: transparent; border: 1px solid var(--neon-blue); color: var(--neon-blue);
+            padding: 1rem 2rem; font-family: var(--font-display); font-size: 1.1rem; font-weight: bold;
+            border-radius: var(--radius-sm); transition: var(--transition-fast); text-transform: uppercase; letter-spacing: 2px; cursor: pointer;
+        }
+        .btn-cyber:hover { background: var(--neon-blue); color: var(--bg-deep); box-shadow: 0 0 20px var(--neon-blue-glow); }
+        .btn-cyber.danger { border-color: var(--status-red); color: var(--status-red); }
+        .btn-cyber.danger:hover { background: var(--status-red); color: var(--text-pure); box-shadow: 0 0 20px var(--status-red-glow); }
+
+        /* ==========================================================================
+           14. ADVANCED CONTENT (ACCORDIONS)
+           ========================================================================== */
+        .adv-section { 
+            width: 100%; 
+            max-width: var(--container-max); 
+            margin-bottom: 5rem; 
+            scroll-margin-top: calc(var(--topbar-height) + 2rem);
+        }
+        
+        .adv-accordion {
+            border: 1px solid var(--glass-border-blue); margin-bottom: 1.5rem; border-radius: var(--radius-md);
+            background: rgba(0,0,0,0.6); transition: var(--transition-fast);
+        }
+
+        .adv-trigger {
+            padding: 2rem; width: 100%; text-align: left; color: var(--neon-blue); font-family: var(--font-display);
+            font-size: 1.3rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; letter-spacing: 1px;
+        }
+
+        .adv-trigger:hover { background: var(--neon-blue-dark); color: var(--text-pure); }
+        
+        .adv-icon { font-size: 1.5rem; transition: transform 0.3s ease; font-weight: bold; color: var(--neon-yellow); }
+        
+        .adv-panel { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); padding: 0 2rem; }
+        .adv-panel p { color: var(--text-main); font-size: 1.15rem; margin-top: 1.5rem; text-align: justify; line-height: 1.8; }
+
+        /* Accordion Ativo */
+        .adv-accordion.active { border-color: var(--neon-yellow); box-shadow: 0 0 20px var(--neon-yellow-dark); }
+        .adv-accordion.active .adv-trigger { color: var(--neon-yellow); border-bottom: 1px dashed rgba(255,214,0,0.2); }
+        .adv-accordion.active .adv-icon { transform: rotate(45deg); }
+        .adv-accordion.active .adv-panel { padding-bottom: 2rem; }
+
+        /* ==========================================================================
+           15. FOOTER QUOTE & DESKTOP ADJUSTMENTS
+           ========================================================================== */
+        .footer-quote {
+            text-align: center; margin-top: 2rem; padding: 4rem 2rem; border-top: 1px dashed var(--glass-border-yellow); width: 100%; max-width: var(--container-max);
+        }
+        
+        .footer-quote h3 {
+            color: var(--neon-yellow); font-style: italic; font-size: 2.2rem; line-height: 1.6;
+            text-shadow: 0 0 20px var(--neon-yellow-dim); font-family: var(--font-body); letter-spacing: 2px; font-weight: 500;
+        }
+        .footer-quote span { color: var(--text-pure); font-weight: 700; font-family: var(--font-display); }
+
+        /* Para garantir que o layout mantenha coerência mesmo em notebooks menores (ex: 13 polegadas) */
+        @media (max-width: 1366px) {
+            .ps-grid { grid-template-columns: repeat(2, 1fr); }
+            .golden-grid { grid-template-columns: repeat(2, 1fr); }
+            .giant-logo { font-size: 5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="global-scanner"></div>
+
+    <div class="app-layout">
+        
+        <aside class="sys-sidebar">
+            <div class="sidebar-header">
+                <div class="brand-logo-mini">
+                    <span class="m">Meli</span><span class="p">PDI</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-category">Navegação da Doca</div>
+                
+                <a href="#intro" class="nav-item index-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                    <span>Visão Geral</span>
+                </a>
+                
+                <a href="#timeline" class="nav-item index-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                    <span>Passo a Passo (Fluxo)</span>
+                </a>
+
+                <a href="#problem-solver" class="nav-item index-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    <span>O Problem Solver</span>
+                </a>
+
+                <a href="#golden-rules" class="nav-item index-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    <span>Regras de Ouro</span>
+                </a>
+
+                <a href="#laboratorio" class="nav-item index-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                    <span>Laboratório da Doca</span>
+                </a>
+
+                <a href="#avancado" class="nav-item index-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                    <span>Base Avançada</span>
+                </a>
+
+                <div class="nav-category" style="margin-top: 2rem;">Sistema Geral</div>
+                
+                <a href="index.html" class="nav-item" style="border-color: rgba(255,255,255,0.1); opacity: 0.7;">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    <span>Voltar para Home</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-avatar">TB</div>
+                <div class="user-details">
+                    <span class="user-name">Thiago Brito</span>
+                    <span class="user-role">EXPEDIÇÃO LOG</span>
+                </div>
+            </div>
+        </aside>
+
+        <main class="sys-workspace">
+            
+            <header class="sys-topbar">
+                <div class="status-widget">
+                    <span><span class="status-dot"></span> CONNECTION: SECURE</span>
+                    <span style="opacity: 0.3;">|</span> 
+                    <span>DOCK SYSTEM: <span class="text-green">ONLINE</span></span>
+                </div>
+            </header>
+
+            <div class="workspace-content">
+                
+                <section id="intro" class="hero-section">
+                    <h1 class="giant-logo">
+                        <span class="hollow-neon-title">RECEBIMENTO</span>
+                    </h1>
+                    <div class="dock-subtitle">DOCK CONTROL SYSTEM</div>
+                </section>
+                <div class="content-grid">
+                    
+                    <article class="glass-card">
+                        <div class="card-header">
+                            <h2 class="card-title">O que é o Recebimento?</h2>
+                        </div>
+                        <div>
+                            <p>
+                                É o <span class="text-blue">processo físico e sistêmico</span> de acolher os veículos dos vendedores (Sellers) ou transportadoras, alocá-los nas docas, descarregar a mercadoria, realizar a conferência macro (contagem de caixas fechadas ou paletes) e validar a documentação fiscal antes de liberar a carga para a triagem e o Check-in.
+                            </p>
+                        </div>
+                    </article>
+
+                    <article class="glass-card">
+                        <div class="card-header">
+                            <h2 class="card-title">Para que serve?</h2>
+                        </div>
+                        <ul class="feature-list">
+                            <li>
+                                <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3v18"></path><path d="M3 15h18"></path><path d="M3 9h18"></path><path d="M7 3v18"></path></svg></div>
+                                <h4>Controle de Pátio e Fluxo</h4>
+                                <p>Organiza qual caminhão entra, em qual doca ele encosta e a que horas, evitando o caos externo.</p>
+                            </li>
+                            <li>
+                                <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div>
+                                <h4>Validação Fiscal Inicial</h4>
+                                <p>Garante que a carga tem Nota Fiscal válida (DANFE) autorizada pela SEFAZ.</p>
+                            </li>
+                            <li>
+                                <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 12 11 14 15 10"></polyline></svg></div>
+                                <h4>Filtro de Qualidade de Transporte</h4>
+                                <p>Verifica avarias, tombamentos e responsabilidade da transportadora no ato.</p>
+                            </li>
+                        </ul>
+                    </article>
+
+                </div>
+
+                <section id="timeline" class="timeline-section">
+                    <div class="card-header" style="justify-content: center; border: none; margin-bottom: 0;">
+                        <h2 class="card-title" style="font-size: 2.5rem;">Como Funciona (Passo a Passo)</h2>
+                    </div>
+                    
+                    <div class="timeline-container">
+                        
+                        <div class="timeline-step" onclick="toggleTimeline(this)">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-trigger">
+                                <span class="step-title">1. Controle de Portaria (YMS – Yard Management System)</span>
+                                <svg class="step-icon" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </div>
+                            <div class="timeline-content">
+                                <div class="timeline-content-inner">
+                                    O caminhão chega à portaria. O sistema YMS registra a entrada, confere se o agendamento está correto e coloca o veículo na fila virtual do pátio aguardando liberação de doca.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-step" onclick="toggleTimeline(this)">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-trigger">
+                                <span class="step-title">2. Direcionamento para a Doca</span>
+                                <svg class="step-icon" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </div>
+                            <div class="timeline-content">
+                                <div class="timeline-content-inner">
+                                    O sistema ou o líder de pátio direciona o caminhão para uma doca específica. O motorista manobra e encosta em segurança. O uso do calço de roda é obrigatório antes de qualquer operação.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-step" onclick="toggleTimeline(this)">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-trigger">
+                                <span class="step-title">3. Abertura e Inspeção Visual</span>
+                                <svg class="step-icon" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </div>
+                            <div class="timeline-content">
+                                <div class="timeline-content-inner">
+                                    Abertura cuidadosa da porta do baú (risco de queda de carga). Inspeção visual inicial para constatar tombamentos, derramamentos químicos ou condições inadequadas de transporte.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-step" onclick="toggleTimeline(this)">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-trigger">
+                                <span class="step-title">4. Descarregamento</span>
+                                <svg class="step-icon" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </div>
+                            <div class="timeline-content">
+                                <div class="timeline-content-inner">
+                                    Retirada física das mercadorias do caminhão utilizando paleteiras, empilhadeiras ou esteiras, garantindo a ergonomia e o fluxo contínuo.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-step" onclick="toggleTimeline(this)">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-trigger">
+                                <span class="step-title">5. Conferência Cega (Macro)</span>
+                                <svg class="step-icon" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </div>
+                            <div class="timeline-content">
+                                <div class="timeline-content-inner">
+                                    O conferente conta os volumes (caixas fechadas ou paletes) SEM ter acesso prévio à quantidade informada na nota fiscal. O sistema valida se a contagem cega bate com a NF (Match sistêmico).
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-step" onclick="toggleTimeline(this)">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-trigger">
+                                <span class="step-title">6. Staging (Área de Espera)</span>
+                                <svg class="step-icon" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </div>
+                            <div class="timeline-content">
+                                <div class="timeline-content-inner">
+                                    Após o recebimento físico e validação fiscal, as mercadorias são alocadas em uma área temporária de transição (Staging) aguardando serem puxadas para o processo de Check-in.
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+
+                <article id="problem-solver" class="glass-card ps-card">
+                    <div class="card-header" style="border-bottom-color: rgba(255, 214, 0, 0.2);">
+                        <h2 class="card-title">O Problem Solver no Recebimento</h2>
+                    </div>
+                    <p style="color: var(--text-pure); font-size: 1.2rem;">Na doca, a agilidade técnica de um PS evita que um erro de entrada se transforme em um gargalo sistêmico em todo o fluxo logístico. Principais focos de atuação:</p>
+                    
+                    <div class="ps-grid">
+                        <div class="ps-item">
+                            <svg class="warn-icon" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                            <span>Divergência de Conferência Cega</span>
+                        </div>
+                        <div class="ps-item">
+                            <svg class="warn-icon" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                            <span>Carga Avariada no Baú</span>
+                        </div>
+                        <div class="ps-item">
+                            <svg class="warn-icon" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                            <span>Produto “Sem Dono”</span>
+                        </div>
+                        <div class="ps-item">
+                            <svg class="warn-icon" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                            <span>Erro de Agendamento (No-Show)</span>
+                        </div>
+                    </div>
+                </article>
+                <section id="golden-rules" class="golden-section">
+                    <h2 class="golden-title">REGRAS DE OURO (GOLDEN RULES)</h2>
+                    <div class="golden-grid">
+                        
+                        <div class="golden-card">
+                            <span class="golden-icon">🚧</span>
+                            <h3>Segurança de Doca</h3>
+                            <p>Calço na roda, doca travada e comunicação clara com o motorista antes de abrir o baú do caminhão.</p>
+                        </div>
+                        
+                        <div class="golden-card">
+                            <span class="golden-icon">🏋️</span>
+                            <h3>Ergonomia</h3>
+                            <p>Postura correta e uso de equipamentos adequados (paleteiras/esteiras) preservam a saúde da equipe.</p>
+                        </div>
+                        
+                        <div class="golden-card">
+                            <span class="golden-icon">👁️</span>
+                            <h3>Conferência Real</h3>
+                            <p>Sem "chute" ou dedução sistêmica. A conferência cega exige contagem física real de cada volume.</p>
+                        </div>
+                        
+                        <div class="golden-card">
+                            <span class="golden-icon">⚠️</span>
+                            <h3>Isolamento de Avarias</h3>
+                            <p>Carga tombada ou vazando não segue o fluxo normal. Isola-se imediatamente (Segurança Hazmat).</p>
+                        </div>
+
+                    </div>
+                </section>
+
+                <section id="laboratorio" class="lab-section">
+                    <h2 class="lab-title">LABORATÓRIO DA DOCA</h2>
+                    
+                    <div class="yms-dashboard">
+                        <div class="truck-node">
+                            <span class="truck-icon truck-green">🚛</span>
+                            <span class="truck-label">DOCA 01: DESCARREGANDO</span>
+                        </div>
+                        <div class="truck-node">
+                            <span class="truck-icon truck-yellow">🚛</span>
+                            <span class="truck-label">PÁTIO: AGUARDANDO</span>
+                        </div>
+                        <div class="truck-node">
+                            <span class="truck-icon truck-red">🚛</span>
+                            <span class="truck-label">DOCA 04: ATRASADO/NO-SHOW</span>
+                        </div>
+                    </div>
+
+                    <div class="lab-controls">
+                        <div class="control-panel">
+                            <h4>Visão Sistêmica: Fluxo da Carga</h4>
+                            <input type="range" min="1" max="100" value="10" class="cyber-slider" id="fluxoSlider">
+                            <div class="slider-labels">
+                                <span class="text-blue" id="sliderLabel1">RECEBIMENTO (Macro / Paletes)</span>
+                                <span class="text-muted" id="sliderLabel2">CHECK-IN (Micro / Unidades)</span>
+                            </div>
+                        </div>
+
+                        <div class="control-panel">
+                            <h4>Simulador: Conferência Cega</h4>
+                            <p style="font-size: 1rem; color: var(--text-muted); margin-bottom: 1.5rem;">Conte os volumes que saem do caminhão. (Alvo Sistêmico Oculto: 15 caixas)</p>
+                            <div class="game-display" id="contadorCaixas">00</div>
+                            <div class="btn-group">
+                                <button class="btn-cyber" onclick="contarCaixa()">+1 Caixa</button>
+                                <button class="btn-cyber danger" onclick="validarConferencia()">Validar NF</button>
+                                <button class="btn-cyber" style="border-color: var(--text-muted); color: var(--text-muted);" onclick="resetarContagem()">Reset</button>
+                            </div>
+                            <div id="resultadoGame" style="margin-top: 20px; font-weight: bold; font-family: var(--font-display); font-size: 1.2rem;"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="avancado" class="adv-section">
+                    <h2 class="card-title" style="margin-bottom: 3rem; justify-content: center; color: var(--text-pure); font-size: 2.5rem;">Base de Conhecimento Avançada</h2>
+                    
+                    <div class="adv-accordion" onclick="toggleAccordion(this)">
+                        <div class="adv-trigger">O Quilômetro Zero da Qualidade <span class="adv-icon">+</span></div>
+                        <div class="adv-panel"><p>Se um erro de quantidade, avaria ou documentação passar despercebido pelo Recebimento, ele contaminará o Check-in, causará furos no Inventário, atrasará o processo de Picking e, em última instância, impactará o cliente final. A doca funciona como o primeiro escudo protetor do CD.</p></div>
+                    </div>
+
+                    <div class="adv-accordion" onclick="toggleAccordion(this)">
+                        <div class="adv-trigger">Dicionário da Doca <span class="adv-icon">+</span></div>
+                        <div class="adv-panel"><p><strong>YMS (Yard Management System):</strong> Sistema de gestão de pátio.<br><br><strong>Conferência Cega:</strong> Contar volumes sem saber o total esperado pela NF.<br><br><strong>No-Show:</strong> Veículo ou transportadora que agendou horário e não apareceu.</p></div>
+                    </div>
+
+                    <div class="adv-accordion" onclick="toggleAccordion(this)">
+                        <div class="adv-trigger">Matemática da Produtividade (Throughput) <span class="adv-icon">+</span></div>
+                        <div class="adv-panel"><p>A eficiência de uma doca é medida pela vazão: veículos descarregados por hora e volume total de caixas ou paletes processados. Uma doca ociosa enquanto o pátio está cheio é um sintoma claro de gargalo de mão de obra ou lentidão em sistemas operacionais.</p></div>
+                    </div>
+
+                    <div class="adv-accordion" onclick="toggleAccordion(this)">
+                        <div class="adv-trigger">O Mito do “Deixa Entrar” <span class="adv-icon">+</span></div>
+                        <div class="adv-panel"><p>Existe muita pressão do transportador para liberar os veículos rapidamente. Ceder a essa pressão sem realizar a conferência cega de forma rigorosa gera divergências sistêmicas brutais, as quais a operação do Mercado Livre terá que absorver e corrigir financeiramente depois.</p></div>
+                    </div>
+
+                    <div class="adv-accordion" onclick="toggleAccordion(this)">
+                        <div class="adv-trigger">Hazmat na Entrada (Cargas Perigosas) <span class="adv-icon">+</span></div>
+                        <div class="adv-panel"><p>Produtos inflamáveis, corrosivos, químicos instáveis ou baterias danificadas exigem a ativação de um protocolo imediato de segurança na doca. O isolamento da área deve ser executado rigorosamente antes que o produto entre nas esteiras do fluxo principal.</p></div>
+                    </div>
+
+                    <div class="adv-accordion" onclick="toggleAccordion(this)">
+                        <div class="adv-trigger">Dores do Motorista & Logística Reversa <span class="adv-icon">+</span></div>
+                        <div class="adv-panel"><p>O tempo de espera no pátio custa muito dinheiro ao motorista. Um processo de recebimento fluido e dinâmico, aliado a uma devolução no ato (quando a carga está fora dos padrões do MELI) feita de forma justificada, mantém a parceria logística saudável e eficiente.</p></div>
+                    </div>
+                </section>
+
+                <footer class="footer-quote">
+                    <h3>"Recebimento é o quilômetro zero da qualidade.<br><span>Se o erro entra pela doca, ele percorre o CD inteiro.</span>"</h3>
+                </footer>
+
+            </div> </main> </div> <script>
+        // 1. Lógica da Timeline Interativa
+        function toggleTimeline(element) {
+            const allSteps = document.querySelectorAll('.timeline-step');
+            
+            // Fecha as outras abas para manter a interface limpa
+            allSteps.forEach(step => {
+                if (step !== element && step.classList.contains('active')) {
+                    step.classList.remove('active');
+                    step.querySelector('.timeline-content').style.maxHeight = null;
+                }
+            });
+
+            // Abre ou fecha a aba clicada com transição fluida
+            element.classList.toggle('active');
+            const content = element.querySelector('.timeline-content');
+            if (element.classList.contains('active')) {
+                content.style.maxHeight = content.scrollHeight + "px";
+            } else {
+                content.style.maxHeight = null;
+            }
+        }
+
+        // 2. Lógica dos Accordions do Conteúdo Avançado
+        function toggleAccordion(element) {
+            element.classList.toggle('active');
+            const panel = element.querySelector('.adv-panel');
+            const icon = element.querySelector('.adv-icon');
+            
+            if (element.classList.contains('active')) {
+                panel.style.maxHeight = panel.scrollHeight + "px";
+                icon.textContent = "×";
+            } else {
+                panel.style.maxHeight = null;
+                icon.textContent = "+";
+            }
+        }
+
+        // 3. Lógica do Slider do Laboratório (Macro vs Micro)
+        const slider = document.getElementById('fluxoSlider');
+        const label1 = document.getElementById('sliderLabel1');
+        const label2 = document.getElementById('sliderLabel2');
+
+        slider.addEventListener('input', function() {
+            let val = this.value;
+            // Transição visual do foco do processo
+            if (val < 50) {
+                label1.className = 'text-blue';
+                label2.className = 'text-muted';
+            } else {
+                label1.className = 'text-muted';
+                label2.className = 'text-yellow';
+            }
+        });
+
+        // 4. Lógica do Mini-Game: Simulador de Conferência Cega
+        let contagem = 0;
+        const alvo = 15; // O sistema sabe (NF), o conferente está "cego"
+        const display = document.getElementById('contadorCaixas');
+        const resultadoMsg = document.getElementById('resultadoGame');
+
+        function atualizarDisplay() {
+            display.textContent = contagem < 10 ? '0' + contagem : contagem;
+        }
+
+        function contarCaixa() {
+            contagem++;
+            atualizarDisplay();
+            resultadoMsg.textContent = ""; // Limpa a mensagem ao continuar a contagem
+        }
+
+        function resetarContagem() {
+            contagem = 0;
+            atualizarDisplay();
+            resultadoMsg.textContent = "";
+        }
+
+        function validarConferencia() {
+            if (contagem === 0) {
+                resultadoMsg.textContent = "ALERTA: Nenhuma caixa foi contabilizada!";
+                resultadoMsg.style.color = "var(--status-orange)";
+                resultadoMsg.style.textShadow = "none";
+                return;
+            }
+
+            if (contagem === alvo) {
+                resultadoMsg.textContent = "MATCH SISTÊMICO! Conferência validada com sucesso.";
+                resultadoMsg.style.color = "var(--status-green)";
+                resultadoMsg.style.textShadow = "0 0 15px var(--status-green-glow)";
+            } else if (contagem > alvo) {
+                resultadoMsg.textContent = `SOBRA DE CARGA! A NF indica ${alvo}, mas você contou ${contagem}. Acionar o PS.`;
+                resultadoMsg.style.color = "var(--status-red)";
+                resultadoMsg.style.textShadow = "0 0 15px var(--status-red-glow)";
+            } else {
+                resultadoMsg.textContent = `FALTA DE CARGA! A NF indica ${alvo}, mas você contou apenas ${contagem}. Acionar o PS.`;
+                resultadoMsg.style.color = "var(--status-red)";
+                resultadoMsg.style.textShadow = "0 0 15px var(--status-red-glow)";
+            }
+        }
+        
+        // 5. ScrollSpy Simples: Atualiza o menu lateral baseado no scroll (Toque extra de sistema Desktop)
+        const sections = document.querySelectorAll('section');
+        const navLinks = document.querySelectorAll('.index-link');
+
+        document.querySelector('.sys-workspace').addEventListener('scroll', () => {
+            let current = '';
+            
+            // O scroll target é a workspace agora, não o window, então pegamos o scrollTop dela
+            const scrollY = document.querySelector('.sys-workspace').scrollTop;
+            
+            sections.forEach(section => {
+                // Compensação para a TopBar
+                const sectionTop = section.offsetTop - 150; 
+                if (scrollY >= sectionTop) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>

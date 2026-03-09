@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTIF (On-Time In-Full) | MeLi PDI Terminal</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ==========================================================================
+           01. ROOT VARIABLES (ULTIMATE METRIC / BINARY THEME)
+           ========================================================================== */
+        :root {
+            /* Palette Base: Deep Binary Dark */
+            --bg-absolute: #050505; 
+            --bg-panel-deep: rgba(15, 15, 15, 0.85);
+            --bg-card-glass: rgba(25, 25, 25, 0.65);
+            --bg-card-hover: rgba(40, 40, 40, 0.85);
+
+            /* Tema de Cores OTIF (Perfeição Titânio e Guilhotina Laser) */
+            --titanium-pure: #FFFFFF;
+            --titanium-glow: rgba(255, 255, 255, 0.5);
+            --titanium-dim: rgba(255, 255, 255, 0.1);
+
+            --laser-red: #FF0055;
+            --laser-glow: rgba(255, 0, 85, 0.5);
+            --laser-dim: rgba(255, 0, 85, 0.1);
+
+            /* Cores de Suporte (Pass / Fail) */
+            --pass-green: #00FF66;
+            --fail-red: #FF003C;
+            --text-title: #FFFFFF;
+            --text-main: #E2E8F0;
+            --text-muted: #888888;
+
+            /* Tipografia */
+            --font-display: 'Orbitron', sans-serif;
+            --font-body: 'Rajdhani', sans-serif;
+            --font-mono: 'Share Tech Mono', monospace;
+            --font-code: 'Fira Code', monospace;
+
+            /* Bordas e Sombras (Glassmorphism) */
+            --border-otif: rgba(255, 255, 255, 0.3);
+            --border-laser: rgba(255, 0, 85, 0.6);
+            --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.9);
+            --shadow-neon-titanium: 0 0 15px var(--titanium-glow), inset 0 0 10px var(--titanium-dim);
+            --shadow-neon-laser: 0 0 15px var(--laser-glow), inset 0 0 10px var(--laser-dim);
+            
+            /* Medidas Estruturais (TRAVADAS PARA DESKTOP) */
+            --sidebar-width: 280px;
+            --topbar-height: 80px;
+            --radius-card: 4px; /* Mais quadrado para remeter a rigor militar/binário */
+            --transition-hud: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        /* ==========================================================================
+           02. CSS RESET & GLOBAL SETUP (FORCED DESKTOP)
+           ========================================================================== */
+        *, *::before, *::after {
+            margin: 0; padding: 0; box-sizing: border-box;
+        }
+
+        html { font-size: 16px; scroll-behavior: smooth; }
+
+        body {
+            background-color: var(--bg-absolute);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            min-height: 100vh;
+            min-width: 1200px; /* <--- TRAVA ABSOLUTA DE DESKTOP */
+            overflow-x: auto;  
+            display: flex;
+            position: relative;
+        }
+
+        /* Custom Scrollbar - Binary Style */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg-absolute); border-left: 1px solid var(--border-otif); }
+        ::-webkit-scrollbar-thumb { background: var(--titanium-dim); border: 1px solid var(--titanium-pure); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--titanium-pure); box-shadow: 0 0 15px var(--titanium-pure); }
+
+        /* Tipografia Global */
+        h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--text-title); }
+        p { font-size: 1.2rem; line-height: 1.7; margin-bottom: 1.2rem; }
+        strong { color: var(--titanium-pure); font-weight: 700; text-shadow: 0 0 8px var(--titanium-dim); }
+
+        /* ==========================================================================
+           03. BACKGROUND EFFECTS (TARGET GRID)
+           ========================================================================== */
+        body::before {
+            content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -3;
+            /* Malha de precisão / Alvo */
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 0, 85, 0.02) 1px, transparent 1px);
+            background-size: 40px 40px; pointer-events: none;
+        }
+
+        body::after {
+            content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2;
+            background: radial-gradient(circle at 50% 50%, rgba(255, 0, 85, 0.03) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        /* ==========================================================================
+           04. GLOBAL KEYFRAMES (STRICT ANIMATIONS)
+           ========================================================================== */
+        @keyframes scanline-v { 0% { transform: translateY(-100%); } 100% { transform: translateY(100vh); } }
+        
+        @keyframes pulse-strict {
+            0% { box-shadow: 0 0 10px var(--titanium-dim); border-color: rgba(255, 255, 255, 0.3); }
+            50% { box-shadow: 0 0 20px var(--titanium-glow); border-color: var(--titanium-pure); }
+            100% { box-shadow: 0 0 10px var(--titanium-dim); border-color: rgba(255, 255, 255, 0.3); }
+        }
+
+        @keyframes pulse-laser {
+            0% { box-shadow: 0 0 10px var(--laser-dim); border-color: rgba(255, 0, 85, 0.3); }
+            50% { box-shadow: 0 0 25px var(--laser-glow); border-color: var(--laser-red); }
+            100% { box-shadow: 0 0 10px var(--laser-dim); border-color: rgba(255, 0, 85, 0.3); }
+        }
+
+        .hud-scanner {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 2px;
+            background: linear-gradient(to right, transparent, var(--titanium-pure), transparent);
+            opacity: 0.5; z-index: 9999; pointer-events: none; animation: scanline-v 5s linear infinite;
+        }
+        /* ==========================================================================
+           05. GLOBAL LAYOUT (GRID E WRAPPERS)
+           ========================================================================== */
+        .app-wrapper {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+            position: relative;
+            z-index: 10;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.02), transparent 60%);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 4rem 4rem 4rem;
+        }
+
+        /* ==========================================================================
+           06. SIDEBAR (TERMINAL NAVIGATION) - ACOMPANHA A PÁGINA (DESKTOP)
+           ========================================================================== */
+        .sys-sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-panel-deep);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border-otif);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0; 
+            z-index: 100;
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.9);
+        }
+
+        /* Feixe de luz vertical Titânio */
+        .sys-sidebar::after {
+            content: '';
+            position: absolute;
+            top: 0; right: -1px;
+            width: 2px; height: 100%;
+            background: linear-gradient(to bottom, transparent, var(--titanium-pure), transparent);
+            opacity: 0.8;
+        }
+
+        .sidebar-brand {
+            height: var(--topbar-height);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 1px dashed var(--border-otif);
+            background: radial-gradient(circle at top, var(--titanium-dim), transparent);
+            position: relative;
+        }
+
+        .sidebar-brand::before {
+            content: '';
+            position: absolute;
+            bottom: -1px; left: 0; width: 40%; height: 2px;
+            background: var(--titanium-pure);
+            box-shadow: 0 0 10px var(--titanium-pure);
+        }
+
+        .brand-logo {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: var(--text-title);
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .brand-logo span {
+            color: var(--laser-red);
+            text-shadow: 0 0 15px rgba(255, 0, 85, 0.5);
+        }
+
+        .brand-sub {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--titanium-pure);
+            letter-spacing: 4px;
+            margin-top: 5px;
+            text-transform: uppercase;
+        }
+
+        /* Menu de Navegação */
+        .nav-menu {
+            flex-grow: 1;
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 20px;
+            color: var(--text-muted);
+            font-family: var(--font-body);
+            font-size: 1.05rem;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-decoration: none;
+            position: relative;
+            transition: var(--transition-hud);
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid transparent;
+            border-radius: var(--radius-card);
+            clip-path: polygon(0 0, 100% 0, 100% 70%, 92% 100%, 0 100%);
+        }
+
+        /* Linha de seleção do menu (Vermelho Laser no Hover) */
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0;
+            height: 100%; width: 3px;
+            background: var(--laser-red);
+            transform: scaleY(0);
+            transition: 0.3s;
+        }
+
+        .nav-link:hover {
+            color: var(--text-pure);
+            background: rgba(255, 0, 85, 0.05);
+            border-color: rgba(255, 0, 85, 0.2);
+            padding-left: 25px;
+        }
+
+        .nav-link:hover::before {
+            transform: scaleY(1);
+            box-shadow: 0 0 15px var(--laser-glow);
+        }
+
+        /* Estado ATIVO (Página Atual: OTIF) */
+        .nav-link.active {
+            color: var(--bg-absolute);
+            background: var(--titanium-pure);
+            border-color: var(--titanium-pure);
+            font-weight: 900;
+        }
+
+        .nav-link.active::before {
+            background: var(--laser-red);
+            transform: scaleY(1);
+            box-shadow: 0 0 15px var(--laser-glow);
+        }
+
+        .nav-icon {
+            width: 20px; height: 20px;
+            fill: none; stroke: currentColor; stroke-width: 2;
+            transition: 0.3s;
+        }
+
+        .nav-link:hover .nav-icon {
+            transform: scale(1.1);
+            color: var(--laser-red);
+        }
+
+        .nav-link.active .nav-icon {
+            color: var(--bg-absolute);
+        }
+
+        /* ==========================================================================
+           07. TOPBAR (SYSTEM HEADER)
+           ========================================================================== */
+        .sys-topbar {
+            height: var(--topbar-height);
+            width: 100%;
+            background: var(--bg-panel-deep);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--border-otif);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 4rem;
+            position: sticky;
+            top: 0;
+            z-index: 90;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+        }
+
+        .topbar-path {
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .topbar-path span {
+            color: var(--laser-red);
+            text-shadow: 0 0 8px var(--laser-dim);
+        }
+
+        /* Status em Modo "Strict" / Titânio */
+        .topbar-status {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-family: var(--font-code);
+            font-size: 0.8rem;
+            color: var(--titanium-pure);
+            letter-spacing: 1px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 8px 15px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 10px var(--titanium-dim);
+        }
+
+        .status-dot-strict {
+            width: 8px; height: 8px;
+            background: var(--titanium-pure);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--titanium-glow);
+            animation: pulse-strict 1.5s infinite alternate;
+        }
+        /* ==========================================================================
+           08. HERO SECTION
+           ========================================================================== */
+        .hero-section {
+            margin-bottom: 3rem;
+            position: relative;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-otif);
+        }
+
+        .hero-section::after {
+            content: '';
+            position: absolute;
+            bottom: -1px; left: 0;
+            width: 250px; height: 3px;
+            background: var(--titanium-pure);
+            box-shadow: 0 0 15px var(--titanium-glow);
+        }
+
+        .hero-title-wrapper {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .hero-title {
+            font-size: 4.5rem;
+            font-weight: 900;
+            color: var(--text-title);
+            letter-spacing: 5px;
+            line-height: 1.1;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .hero-title span {
+            color: var(--laser-red);
+            text-shadow: 0 0 20px var(--laser-glow);
+        }
+
+        .hero-subtitle {
+            font-family: var(--font-mono);
+            font-size: 1.5rem;
+            color: var(--text-main);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .hero-subtitle::before {
+            content: '[STRICT_COMPLIANCE]';
+            font-size: 1rem;
+            color: var(--bg-absolute);
+            background: var(--titanium-pure);
+            padding: 4px 10px;
+            border: 1px solid var(--titanium-pure);
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .hero-quote {
+            margin-top: 1.5rem;
+            font-family: var(--font-body);
+            font-size: 1.3rem;
+            color: var(--titanium-pure);
+            font-style: italic;
+            border-left: 4px solid var(--titanium-pure);
+            padding-left: 15px;
+            background: linear-gradient(90deg, var(--titanium-dim), transparent);
+            padding: 10px 15px;
+            border-radius: 0 4px 4px 0;
+        }
+
+        /* ==========================================================================
+           09. CONTENT PANELS & GLASSMORPHISM
+           ========================================================================== */
+        .tech-panel {
+            background: var(--bg-card-glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: var(--radius-card);
+            padding: 3rem; margin-bottom: 3rem; position: relative;
+            box-shadow: var(--shadow-glass); transition: var(--transition-hud);
+        }
+        
+        .tech-panel:hover {
+            border-color: var(--titanium-pure); background: var(--bg-card-hover);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.9), inset 0 0 20px var(--titanium-dim);
+        }
+        
+        /* Cantoneiras HUD Titânio (Rigidez) */
+        .tech-panel::before, .tech-panel::after {
+            content: ''; position: absolute; width: 30px; height: 30px;
+            border: 3px solid var(--titanium-pure); opacity: 0.8; transition: 0.3s;
+        }
+        .tech-panel::before { top: 15px; left: 15px; border-right: none; border-bottom: none; }
+        .tech-panel::after { bottom: 15px; right: 15px; border-left: none; border-top: none; }
+        
+        .panel-header { display: flex; align-items: center; gap: 20px; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 1.5rem; }
+        .panel-title { font-size: 2rem; color: var(--text-title); letter-spacing: 2px; }
+        
+        .panel-icon {
+            width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
+            background: var(--titanium-dim); border: 1px solid var(--border-otif); border-radius: var(--radius-card);
+            color: var(--titanium-pure); font-size: 1.8rem; box-shadow: var(--shadow-neon-titanium);
+        }
+        
+        .highlight-box {
+            background: rgba(255, 255, 255, 0.05); border-left: 4px solid var(--titanium-pure);
+            padding: 1.5rem; margin: 1.5rem 0; font-family: var(--font-mono); font-size: 1.1rem; color: var(--text-pure);
+        }
+        
+        .cyber-list { list-style: none; margin-top: 1.5rem; }
+        .cyber-list li { position: relative; padding-left: 35px; margin-bottom: 1.5rem; font-size: 1.15rem; line-height: 1.6; }
+        .cyber-list li::before { content: '>'; position: absolute; left: 0; top: 0; font-family: var(--font-mono); color: var(--laser-red); font-size: 1.4rem; font-weight: 900; text-shadow: 0 0 10px var(--laser-glow); }
+        .list-title { display: block; color: var(--text-pure); font-family: var(--font-display); font-size: 1.2rem; margin-bottom: 5px; }
+
+        .cyber-btn {
+            background: var(--titanium-dim); border: 1px solid var(--titanium-pure);
+            color: var(--titanium-pure); padding: 12px 25px; font-family: var(--font-display);
+            font-size: 1rem; cursor: pointer; border-radius: 4px; transition: 0.3s;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .cyber-btn:hover { background: var(--titanium-pure); color: var(--bg-absolute); box-shadow: 0 0 15px var(--titanium-glow); font-weight: bold; }
+
+        /* Estilos da Fórmula Matemática OTIF */
+        .math-formula {
+            display: flex; align-items: center; justify-content: center; gap: 15px;
+            background: rgba(0,0,0,0.8); padding: 2rem; border: 1px dashed var(--titanium-pure);
+            margin: 2rem 0; font-family: var(--font-code); font-size: 1.5rem; color: var(--white-core);
+            border-radius: 4px; box-shadow: inset 0 0 20px rgba(255,255,255,0.05);
+        }
+        .math-fraction {
+            display: flex; flex-direction: column; align-items: center; text-align: center;
+        }
+        .math-numerator { border-bottom: 2px solid var(--titanium-pure); padding-bottom: 10px; color: var(--pass-green); text-shadow: 0 0 10px rgba(0,255,102,0.3); }
+        .math-denominator { padding-top: 10px; color: var(--text-muted); }
+        /* EFEITOS ADICIONAIS OTIF */
+        .otif-text {
+            color: var(--titanium-pure);
+            font-family: var(--font-mono);
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hud-scanner"></div>
+
+    <div class="app-wrapper">
+        
+        <aside class="sys-sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">MELI<span>PDI</span></div>
+                <div class="brand-sub">SYS.MODULE // ACTIVE</div>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    <span>Home Dashboard</span>
+                </a>
+                
+                <a href="hub.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                    <span>Hub de Setores</span>
+                </a>
+                
+                <a href="glossario.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                    <span>Glossário Técnico</span>
+                </a>
+                
+                <a href="sla-detalhado.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <span>Deep Dive: SLA</span>
+                </a>
+
+                <a href="backlog-detalhado.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                    <span>Monitor: Backlog</span>
+                </a>
+
+                <a href="kpi-detalhado.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    <span>Analytics: KPIs</span>
+                </a>
+
+                <a href="throughput-detalhado.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="13 19 22 12 13 5 13 19"></polygon><polygon points="2 19 11 12 2 5 2 19"></polygon></svg>
+                    <span>Throughput & Vazão</span>
+                </a>
+
+                <a href="takttime-detalhado.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <span>Takt Time & Ritmo</span>
+                </a>
+
+                <a href="gargalo.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                    <span>Gargalo & Restrições</span>
+                </a>
+
+                <a href="dashboard.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                    <span>Dashboards & Gestão</span>
+                </a>
+
+                <a href="leadtime.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="5" r="3"></circle><line x1="12" y1="22" x2="12" y2="8"></line><path d="M5 12H2a10 10 0 0 0 20 0h-3"></path></svg>
+                    <span>Lead Time (Jornada)</span>
+                </a>
+
+                <a href="forecast.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 3v18h18"></path><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"></path></svg>
+                    <span>Forecast & Previsão</span>
+                </a>
+
+                <div style="height: 1px; background: var(--border-otif); margin: 15px 0; opacity: 0.5;"></div>
+
+                <a href="#" class="nav-link active">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+                    <span>OTIF (A Métrica Final)</span>
+                </a>
+            </nav>
+
+            <div style="padding: 20px; border-top: 1px dashed var(--border-otif); text-align: center;">
+                <div style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--titanium-pure); opacity: 0.5; letter-spacing: 1.5px;">
+                    SECURE CONNECTION<br>OSASCO_CD // 2026
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            
+            <header class="sys-topbar">
+                <div class="topbar-path">
+                    MELI PDI <span>/</span> ULTIMATE_METRICS <span>/</span> OTIF_EVALUATOR.exe
+                </div>
+                <div class="topbar-status">
+                    STATUS: STRICT MODE ACTIVE
+                    <div class="status-dot-strict"></div>
+                </div>
+            </header>
+
+            <div class="container">
+                
+                <section class="hero-section">
+                    <div class="hero-title-wrapper">
+                        <h1 class="hero-title">OTIF <span>_</span></h1>
+                    </div>
+                    <div class="hero-subtitle">On-Time In-Full</div>
+                    
+                    <div class="hero-quote">
+                        "Na logística, não existe 'meio certo'. Ou entregou a promessa completa, ou falhou com o cliente."
+                    </div>
+                </section>
+
+                <section class="tech-panel" id="section-definition">
+                    <div class="panel-header">
+                        <div class="panel-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                        </div>
+                        <h2 class="panel-title">SEÇÃO 1 // AS CONDIÇÕES INEGOCIÁVEIS</h2>
+                    </div>
+
+                    <p>
+                        <strong>OTIF</strong> é a sigla para <em>On-Time In-Full</em> (No Prazo e Completo). É a métrica de nível de serviço mais rigorosa do Supply Chain. Para que um pedido seja considerado um sucesso (Pass), ele precisa satisfazer duas condições simultaneamente:
+                    </p>
+
+                    <div style="display: flex; gap: 20px; margin-top: 2rem;">
+                        <div style="flex: 1; background: rgba(0,0,0,0.6); padding: 25px; border-top: 4px solid var(--laser-red); border-radius: 4px;">
+                            <h3 style="color: var(--laser-red); font-family: var(--font-display); font-size: 1.5rem; margin-bottom: 10px;">ON-TIME (NO PRAZO)</h3>
+                            <p style="font-size: 1rem; color: var(--text-main); margin: 0;">Entregue exatamente na data e hora combinadas no momento da compra (SLA cumprido).</p>
+                        </div>
+                        <div style="flex: 1; background: rgba(0,0,0,0.6); padding: 25px; border-top: 4px solid var(--titanium-pure); border-radius: 4px;">
+                            <h3 style="color: var(--titanium-pure); font-family: var(--font-display); font-size: 1.5rem; margin-bottom: 10px;">IN-FULL (COMPLETO)</h3>
+                            <p style="font-size: 1rem; color: var(--text-main); margin: 0;">Com 100% dos itens solicitados, sem avarias e nas quantidades exatas.</p>
+                        </div>
+                    </div>
+
+                    <div class="math-formula">
+                        <span>OTIF = </span>
+                        <div class="math-fraction">
+                            <span class="math-numerator">Pedidos NO PRAZO e COMPLETOS</span>
+                            <span class="math-denominator">Total de Pedidos Expedidos</span>
+                        </div>
+                        <span> × 100</span>
+                    </div>
+
+                    <h3 style="font-family: var(--font-display); font-size: 1.5rem; color: var(--titanium-pure); margin-top: 3rem; margin-bottom: 1.5rem;">PARA QUE SERVE? (O IMPACTO NO ECOSSISTEMA)</h3>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                        
+                        <div style="background: rgba(0,0,0,0.5); border-left: 3px solid var(--titanium-pure); padding: 20px; border-radius: 4px;">
+                            <h4 style="color: var(--titanium-pure); font-size: 1.1rem; margin-bottom: 10px; font-family: var(--font-display);">1. PROTEÇÃO DE REPUTAÇÃO E BUY BOX</h4>
+                            <p style="margin: 0; font-size: 1rem; color: var(--text-main);">Em grandes marketplaces, o algoritmo pune severamente centros de distribuição com baixo OTIF. Uma queda constante significa perder o selo de "Entrega Rápida" (como as modalidades Full ou Flex), despencando nas buscas.</p>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.5); border-left: 3px solid var(--laser-red); padding: 20px; border-radius: 4px;">
+                            <h4 style="color: var(--laser-red); font-size: 1.1rem; margin-bottom: 10px; font-family: var(--font-display);">2. REDUÇÃO DE CUSTO WISMO (SAC)</h4>
+                            <p style="margin: 0; font-size: 1rem; color: var(--text-main);"><em>"Where Is My Order?"</em> Cada ponto que o OTIF cai traduz-se num pico de mensagens no SAC. O custo de manter uma equipa apenas para explicar atrasos ou itens em falta destrói a margem de lucro.</p>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.5); border-left: 3px solid var(--titanium-pure); padding: 20px; border-radius: 4px;">
+                            <h4 style="color: var(--titanium-pure); font-size: 1.1rem; margin-bottom: 10px; font-family: var(--font-display);">3. ALINHAMENTO DA CADEIA (PONTA A PONTA)</h4>
+                            <p style="margin: 0; font-size: 1rem; color: var(--text-main);">Diferente do Takt Time, que avalia uma esteira, o OTIF avalia o esforço conjunto do Fornecedor + CD + Transportadora. Se um falha, o OTIF falha.</p>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.5); border-left: 3px solid var(--laser-red); padding: 20px; border-radius: 4px;">
+                            <h4 style="color: var(--laser-red); font-size: 1.1rem; margin-bottom: 10px; font-family: var(--font-display);">4. VISIBILIDADE DO EFEITO CHICOTE</h4>
+                            <p style="margin: 0; font-size: 1rem; color: var(--text-main);">Falhas de fornecimento no Inbound refletem-se dias depois em falhas de In-Full no Outbound. O OTIF mostra como a cadeia inteira está conectada.</p>
+                        </div>
+
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-scenarios" style="border-color: rgba(255, 255, 255, 0.4);">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(255, 255, 255, 0.1); border-color: var(--titanium-pure); color: var(--titanium-pure); box-shadow: 0 0 15px var(--titanium-glow);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--text-pure);">SEÇÃO 2 // COMO FUNCIONA NA PRÁTICA</h2>
+                    </div>
+
+                    <p>
+                        A natureza do OTIF é <strong>binária e implacável</strong>. É "Tudo ou Nada" (Pass/Fail). Se um centro de distribuição expede 10.000 pedidos num dia, e 9.500 chegam perfeitos e no prazo, o OTIF daquele lote é de 95%. Veja como os cenários se desdobram:
+                    </p>
+
+                    <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 2rem;">
+                        
+                        <div style="background: rgba(0,255,102,0.05); border-left: 4px solid var(--pass-green); padding: 20px; border-radius: 4px;">
+                            <h4 style="color: var(--pass-green); font-size: 1.1rem; margin-bottom: 5px; font-family: var(--font-display);">CENÁRIO 1: SUCESSO TOTAL (100% OTIF)</h4>
+                            <p style="margin: 0; font-size: 1rem; color: var(--text-main);">O cliente compra um telemóvel e uma capa. A promessa é entrega na terça-feira. Na terça, a caixa chega contendo exatamente os dois itens intactos.</p>
+                        </div>
+
+                        <div style="background: rgba(255,0,85,0.05); border-left: 4px solid var(--laser-red); padding: 20px; border-radius: 4px;">
+                            <h4 style="color: var(--laser-red); font-size: 1.1rem; margin-bottom: 5px; font-family: var(--font-display);">CENÁRIO 2: FALHA ON-TIME (0% OTIF)</h4>
+                            <p style="margin: 0; font-size: 1rem; color: var(--text-main);">O cliente compra uma televisão para sexta-feira. A TV chega intacta, mas apenas no sábado de manhã. O cliente teve uma quebra de expectativa. Todo o esforço logístico foi em vão para a métrica.</p>
+                        </div>
+
+                        <div style="background: rgba(255,0,85,0.05); border-left: 4px solid var(--laser-red); padding: 20px; border-radius: 4px;">
+                            <h4 style="color: var(--laser-red); font-size: 1.1rem; margin-bottom: 5px; font-family: var(--font-display);">CENÁRIO 3: FALHA IN-FULL (0% OTIF)</h4>
+                            <p style="margin: 0; font-size: 1rem; color: var(--text-main);">O cliente compra 3 pacotes de fraldas. Chegam na data certa, mas a caixa só contém 2 pacotes devido a um erro de Picking no CD. A confiança na marca está quebrada.</p>
+                        </div>
+
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-traps" style="border-color: rgba(255, 0, 85, 0.4);">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(255, 0, 85, 0.1); border-color: var(--laser-red); color: var(--laser-red); box-shadow: 0 0 15px var(--laser-glow);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--text-pure);">SEÇÃO 3 // AS ARMADILHAS DO OTIF</h2>
+                    </div>
+
+                    <p>O conceito do que é "Completo" e "No Prazo" pode gerar debates acesos entre as equipas de Operações, Transportes e Comercial. Eis as maiores armadilhas:</p>
+
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 2rem;">
+                        <div style="background: rgba(0,0,0,0.6); padding: 20px; border-radius: 4px; border-top: 2px solid var(--titanium-pure);">
+                            <strong style="color: var(--titanium-pure); font-family: var(--font-display); font-size: 1.1rem; display: block; margin-bottom: 10px;">A ARMADILHA DO SPLIT (DIVISÃO)</strong>
+                            <p style="font-size: 0.95rem; color: var(--text-main); margin-bottom: 10px;">O cliente compra um telemóvel e uma película no mesmo pedido. O telemóvel sai de um CD e chega na terça (no prazo). A película sai de outro CD e chega na quarta (atrasada).</p>
+                            <span style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--laser-red);">[ VEREDICTO ] Falha de OTIF. O pedido global não foi In-Full na terça-feira. A malha logística é forçada a melhorar a sua inteligência de alocação de stock.</span>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.6); padding: 20px; border-radius: 4px; border-top: 2px solid var(--laser-red);">
+                            <strong style="color: var(--laser-red); font-family: var(--font-display); font-size: 1.1rem; display: block; margin-bottom: 10px;">ENTREGA ANTECIPADA (EARLY DELIVERY)</strong>
+                            <p style="font-size: 0.95rem; color: var(--text-main); margin-bottom: 10px;">A promessa feita ao cliente era sexta-feira, mas a transportadora entregou o pacote na quarta-feira.</p>
+                            <span style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--pass-green);">[ B2C ] Sucesso de On-Time (o cliente adora a surpresa).</span><br>
+                            <span style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--laser-red);">[ B2B ] Falha de On-Time. O cliente empresarial pode não ter doca ou equipa para descarregar a mercadoria antes do tempo, gerando filas e multas.</span>
+                        </div>
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-golden-rules" style="border-color: rgba(255, 255, 255, 0.4);">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(255, 255, 255, 0.1); border-color: var(--titanium-pure); color: var(--titanium-pure); box-shadow: 0 0 15px var(--titanium-glow);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 6.91 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--text-pure);">SEÇÃO 4 // REGRAS DE OURO DA MÉTRICA FINAL</h2>
+                    </div>
+
+                    <ul class="cyber-list">
+                        <li>
+                            <strong class="list-title" style="color: var(--titanium-pure);">O SLA dita o On-Time:</strong> 
+                            Quem define o "Prazo" é a promessa feita no checkout do site, e não o tempo de expedição interno do CD. Se o CD embalou a caixa muito rápido, mas o camião atrasou na autoestrada, o OTIF global falhou.
+                        </li>
+                        <li>
+                            <strong class="list-title" style="color: var(--laser-red);">Cuidado com o "Estoque Fantasma":</strong> 
+                            É a principal doença do In-Full. O sistema diz que há 5 unidades na prateleira, o site vende, mas quando o operador lá chega para recolher, a posição está vazia (furto, erro ou avaria não reportada). Acurácia de inventário é pré-requisito absoluto.
+                        </li>
+                        <li>
+                            <strong class="list-title" style="color: var(--titanium-pure);">Não mascare os números:</strong> 
+                            É muito comum as empresas tentarem medir o On-Time separado do In-Full para os números parecerem maiores (ex: 98% no prazo e 97% completos). O verdadeiro indicador de excelência exige a multiplicação das perdas ou a medição perfeitamente combinada.
+                        </li>
+                        <li>
+                            <strong class="list-title" style="color: var(--laser-red);">Defina claramente o Cut-off (Horário de Corte):</strong> 
+                            O CD precisa de ter um limite muito claro. Se a transportadora exige gaiolas na doca até às 18:00, qualquer pedido que a área de Packing finalize às 18:01 será uma falha de On-Time no dia seguinte, mesmo que a esteira tenha funcionado bem.
+                        </li>
+                        <li>
+                            <strong class="list-title" style="color: var(--titanium-pure);">Derrube os Silos Departamentais:</strong> 
+                            O OTIF destrói a desculpa clássica do <em>"eu fiz a minha parte"</em>. Se o Inbound guardou o produto na rua errada, o Picking não o vai achar, o Packing não o vai embalar e a transportadora não o vai levar. A falha é de toda a cadeia.
+                        </li>
+                    </ul>
+                </section>
+                <section class="tech-panel" id="section-problem-solving" style="border-color: rgba(255, 255, 255, 0.4);">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(255, 255, 255, 0.1); border-color: var(--titanium-pure); color: var(--titanium-pure); box-shadow: 0 0 15px var(--titanium-glow);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--text-pure);">SEÇÃO 5 // A VISÃO DO PROBLEM SOLVER</h2>
+                    </div>
+
+                    <p>
+                        Para um analista de Problem Solving a atuar diretamente no piso, o OTIF é um indicador de resultado (<em>Lagging Indicator</em>). Quando o OTIF cai, o erro já aconteceu e o cliente já foi impactado. O papel do analista é desmembrar a métrica e estancar a sangria.
+                    </p>
+
+                    <div style="display: flex; gap: 30px; margin-top: 2rem;">
+                        
+                        <div style="flex: 1; background: rgba(0,0,0,0.6); border-top: 4px solid var(--laser-red); padding: 20px; border-radius: 4px;">
+                            <h3 style="color: var(--laser-red); font-family: var(--font-display); font-size: 1.1rem; margin-bottom: 10px;">INVESTIGANDO QUEDAS NO ON-TIME</h3>
+                            <p style="font-size: 0.95rem; color: var(--text-main); margin-bottom: 10px;">O problema foi interno ou externo?</p>
+                            <ul style="list-style-type: square; padding-left: 20px; font-family: var(--font-body); font-size: 0.95rem; color: var(--text-muted); line-height: 1.5;">
+                                <li><strong>Interno (Gargalos):</strong> Se os pacotes perderam o <em>cut-off</em> das carretas, cruze com os Dashboards. Houve gargalo no Packing? O Cycle Time estava acima do Takt Time?</li>
+                                <li><strong>Externo (Last Mile):</strong> O CD despachou a tempo, mas a transportadora falhou. Mapeie se o problema é numa rota específica (trânsito, roubo) ou se o parceiro está com excesso de volume.</li>
+                            </ul>
+                        </div>
+
+                        <div style="flex: 1; background: rgba(0,0,0,0.6); border-top: 4px solid var(--titanium-pure); padding: 20px; border-radius: 4px;">
+                            <h3 style="color: var(--titanium-pure); font-family: var(--font-display); font-size: 1.1rem; margin-bottom: 10px;">INVESTIGANDO QUEDAS NO IN-FULL</h3>
+                            <p style="font-size: 0.95rem; color: var(--text-main); margin-bottom: 10px;">Onde os itens se perderam ou estragaram?</p>
+                            <ul style="list-style-type: square; padding-left: 20px; font-family: var(--font-body); font-size: 0.95rem; color: var(--text-muted); line-height: 1.5;">
+                                <li><strong>Faltas (Shortage):</strong> Auditar o processo de Picking e verificar a saúde sistémica (Acurácia de Inventário). Acontece muito na mesma rua do mezanino? É erro crónico de reposição.</li>
+                                <li><strong>Avarias:</strong> Se o pedido sai bem e chega quebrado, audite o Poka-Yoke de Packing. O operador usou as almofadas de ar adequadas? A caixa era demasiado grande?</li>
+                            </ul>
+                        </div>
+
+                    </div>
+
+                    <div style="background: rgba(0,0,0,0.8); border: 1px solid var(--laser-red); border-radius: 8px; padding: 2rem; margin-top: 3rem; position: relative;">
+                        <h4 style="color: var(--white-core); font-family: var(--font-display); font-size: 1.2rem; text-align: center; margin-bottom: 5px;">CALCULADORA DE IMPACTO BINÁRIO</h4>
+                        <p style="color: var(--text-muted); text-align: center; font-family: var(--font-mono); font-size: 0.9rem; margin-bottom: 2rem;">Insira as falhas diárias e veja como o sistema penaliza o nível de serviço de forma implacável.</p>
+                        
+                        <div style="display: flex; gap: 20px; align-items: flex-end; justify-content: center; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 150px;">
+                                <label style="color: var(--titanium-pure); font-family: var(--font-mono); font-size: 0.8rem;">TOTAL EXPEDIDO (VOL):</label>
+                                <input type="number" id="calc-total" value="10000" class="cyber-input" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.8); border: 1px solid var(--titanium-pure); color: var(--white-core); font-family: var(--font-mono); font-size: 1.2rem; margin-top: 5px;">
+                            </div>
+                            <div style="flex: 1; min-width: 150px;">
+                                <label style="color: var(--laser-red); font-family: var(--font-mono); font-size: 0.8rem;">FALHAS ON-TIME (ATRASOS):</label>
+                                <input type="number" id="calc-late" value="150" class="cyber-input" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.8); border: 1px solid var(--laser-red); color: var(--laser-red); font-family: var(--font-mono); font-size: 1.2rem; margin-top: 5px;">
+                            </div>
+                            <div style="flex: 1; min-width: 150px;">
+                                <label style="color: var(--laser-red); font-family: var(--font-mono); font-size: 0.8rem;">FALHAS IN-FULL (INCOMPLETOS):</label>
+                                <input type="number" id="calc-defect" value="50" class="cyber-input" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.8); border: 1px solid var(--laser-red); color: var(--laser-red); font-family: var(--font-mono); font-size: 1.2rem; margin-top: 5px;">
+                            </div>
+                            
+                            <div style="width: 100%; text-align: center; border-top: 1px dashed rgba(255,255,255,0.2); margin-top: 15px; padding-top: 20px;">
+                                <span style="font-family: var(--font-mono); color: var(--text-muted); font-size: 0.9rem; letter-spacing: 2px;">OTIF FINAL DO LOTE</span><br>
+                                <strong id="calc-otif-result" style="color: var(--pass-green); font-family: var(--font-display); font-size: 3rem; text-shadow: 0 0 15px rgba(0,255,102,0.5);">98.00%</strong>
+                                <p id="calc-otif-feedback" style="font-family: var(--font-mono); font-size: 0.9rem; color: var(--pass-green); margin-top: 10px;">Saudável. Operação de Excelência.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <div style="margin-top: 4rem; text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.3); border-bottom: 1px solid rgba(255, 255, 255, 0.3); padding: 3rem 0; background: radial-gradient(circle at center, rgba(255, 255, 255, 0.05), transparent 70%);">
+                    <h2 style="font-family: var(--font-display); font-size: 2.2rem; color: var(--text-title); line-height: 1.4; text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);">
+                        O OTIF é o juiz final do Supply Chain.<br>
+                        Não importa o quão rápido a sua esteira rodou,<br>
+                        se o cliente <span style="color: var(--laser-red); text-shadow: 0 0 20px var(--laser-glow);">não recebeu tudo a que tinha direito na hora certa</span>,<br>
+                        <span style="color: var(--titanium-pure); border-bottom: 2px solid var(--titanium-pure);">a operação inteira falhou.</span>
+                    </h2>
+                </div>
+
+            </div> <footer style="margin-top: auto; padding: 2rem 4rem; background: var(--bg-panel-deep); border-top: 1px solid var(--border-otif); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; box-shadow: 0 -10px 30px rgba(0,0,0,0.5);">
+                
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                    <span style="font-family: var(--font-display); font-size: 1.2rem; color: var(--text-pure); letter-spacing: 2px;">
+                        MELI <span style="color: var(--laser-red); text-shadow: 0 0 10px rgba(255,0,85,0.5);">PDI</span>
+                    </span>
+                    <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); letter-spacing: 2px;">
+                        LOGISTICS DOCUMENTATION // OTIF_MODULE_V11.0
+                    </span>
+                </div>
+
+                <div style="display: flex; gap: 30px; font-family: var(--font-code); font-size: 0.8rem;">
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <span style="color: var(--titanium-pure); text-shadow: 0 0 8px var(--titanium-dim);">BINARY CHECK</span>
+                        <span style="color: var(--text-main);">STRICT</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <span style="color: var(--laser-red); text-shadow: 0 0 8px rgba(255,0,85,0.4);">SERVICE LEVEL</span>
+                        <span style="color: var(--text-main);">VERIFIED</span>
+                    </div>
+                </div>
+
+                <div style="text-align: right; font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); letter-spacing: 1px;">
+                    <span style="color: var(--titanium-pure);">[ ULTIMATE METRIC ONLINE ]</span><br>
+                    TERMINAL_ID: OSASCO_CD // 2026
+                </div>
+
+            </footer>
+
+        </main> </div> 
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // 1. SYSTEM BOOT LOG
+            console.log("%c[SYS_BOOT]%c Inicializando Engine de OTIF...", "color: #FFFFFF; font-weight: bold;", "color: #E2E8F0;");
+            console.log("%c[MODULE]%c Verificação Binária Pass/Fail ativada...", "color: #FF0055; font-weight: bold;", "color: #E2E8F0;");
+            
+            // 2. INTERSECTION OBSERVER (ANIMAÇÃO DOS PAINÉIS DE VIDRO)
+            const animatedElements = document.querySelectorAll('.tech-panel');
+            
+            animatedElements.forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(30px)';
+                el.style.transition = 'opacity 0.7s ease-out, transform 0.7s cubic-bezier(0.25, 1, 0.5, 1)';
+            });
+
+            const elementObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                        
+                        const originalBorder = getComputedStyle(entry.target).borderColor;
+                        entry.target.style.borderColor = 'var(--text-pure)';
+                        
+                        setTimeout(() => {
+                            entry.target.style.borderColor = originalBorder;
+                        }, 250);
+
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+
+            animatedElements.forEach(el => {
+                elementObserver.observe(el);
+            });
+
+            // 3. CALCULADORA DE OTIF BINÁRIO
+            const inputTotal = document.getElementById('calc-total');
+            const inputLate = document.getElementById('calc-late');
+            const inputDefect = document.getElementById('calc-defect');
+            const resultOtif = document.getElementById('calc-otif-result');
+            const feedbackOtif = document.getElementById('calc-otif-feedback');
+
+            function calculateOTIF() {
+                const total = parseFloat(inputTotal.value);
+                const late = parseFloat(inputLate.value);
+                const defect = parseFloat(inputDefect.value);
+
+                // Validações básicas
+                if (isNaN(total) || isNaN(late) || isNaN(defect) || total <= 0) {
+                    resultOtif.innerText = "ERR";
+                    resultOtif.style.color = "var(--laser-red)";
+                    feedbackOtif.innerText = "Dados Inválidos.";
+                    return;
+                }
+
+                if ((late + defect) > total) {
+                    resultOtif.innerText = "FAIL";
+                    resultOtif.style.color = "var(--laser-red)";
+                    feedbackOtif.innerText = "Erros excedem o volume total.";
+                    return;
+                }
+
+                // Cálculo Binário Implacável: (Total - Falhas) / Total
+                // Assumimos aqui, para simplicidade do simulador de piso, que as falhas não se sobrepõem 
+                // (O que piora a métrica, servindo de lição mais rigorosa)
+                const perfectOrders = total - (late + defect);
+                const otifPercentage = (perfectOrders / total) * 100;
+
+                resultOtif.innerText = `${otifPercentage.toFixed(2)}%`;
+
+                // Regras de Cores e Feedback (Padrão Altíssima Performance)
+                if (otifPercentage >= 98.0) {
+                    resultOtif.style.color = "var(--pass-green)";
+                    resultOtif.style.textShadow = "0 0 15px rgba(0,255,102,0.5)";
+                    feedbackOtif.style.color = "var(--pass-green)";
+                    feedbackOtif.innerText = "Saudável. Operação de Excelência. Buy Box Garantida.";
+                } else if (otifPercentage >= 95.0 && otifPercentage < 98.0) {
+                    resultOtif.style.color = "#FFD700"; // Amarelo
+                    resultOtif.style.textShadow = "0 0 15px rgba(255,215,0,0.5)";
+                    feedbackOtif.style.color = "#FFD700";
+                    feedbackOtif.innerText = "Alerta Amarelo. Investigar causas raízes do desvio imediatamente.";
+                } else {
+                    resultOtif.style.color = "var(--laser-red)";
+                    resultOtif.style.textShadow = "0 0 15px var(--laser-glow)";
+                    feedbackOtif.style.color = "var(--laser-red)";
+                    feedbackOtif.innerText = "CRÍTICO! Ruptura de SLA. Risco elevado de penalização no algoritmo e pico no SAC.";
+                }
+            }
+
+            // Listeners para atualizar ao vivo
+            inputTotal.addEventListener('input', calculateOTIF);
+            inputLate.addEventListener('input', calculateOTIF);
+            inputDefect.addEventListener('input', calculateOTIF);
+
+        });
+    </script>
+</body>
+</html>

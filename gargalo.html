@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gargalo & Restrições | MeLi PDI Terminal</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ==========================================================================
+           01. ROOT VARIABLES (BOTTLENECK / CHOKE THEME)
+           ========================================================================== */
+        :root {
+            /* Palette Base: Deep Industrial Dark */
+            --bg-absolute: #0A0303; 
+            --bg-panel-deep: rgba(20, 5, 5, 0.85);
+            --bg-card-glass: rgba(35, 10, 10, 0.65);
+            --bg-card-hover: rgba(50, 15, 15, 0.85);
+
+            /* Tema de Cores Gargalo (Restrição e Acúmulo) */
+            --crimson-choke: #FF2A2A;
+            --crimson-glow: rgba(255, 42, 42, 0.5);
+            --crimson-dim: rgba(255, 42, 42, 0.1);
+
+            --amber-wip: #FFB300;
+            --amber-glow: rgba(255, 179, 0, 0.5);
+            --amber-dim: rgba(255, 179, 0, 0.1);
+
+            /* Cores de Suporte / Alertas */
+            --cyan-tech: #00E5FF;
+            --white-core: #FFFFFF;
+
+            /* Tipografia */
+            --font-display: 'Orbitron', sans-serif;
+            --font-body: 'Rajdhani', sans-serif;
+            --font-mono: 'Share Tech Mono', monospace;
+            --font-code: 'Fira Code', monospace;
+
+            /* Cores de Texto */
+            --text-title: #FFFFFF;
+            --text-main: #E2E8F0;
+            --text-muted: #B59696;
+
+            /* Bordas e Sombras (Glassmorphism) */
+            --border-choke: rgba(255, 42, 42, 0.3);
+            --border-active: rgba(255, 179, 0, 0.6);
+            --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.9);
+            --shadow-neon-crimson: 0 0 15px var(--crimson-glow), inset 0 0 10px var(--crimson-dim);
+            --shadow-neon-amber: 0 0 15px var(--amber-glow), inset 0 0 10px var(--amber-dim);
+            
+            /* Medidas Estruturais (TRAVADAS PARA DESKTOP) */
+            --sidebar-width: 280px;
+            --topbar-height: 80px;
+            --radius-card: 8px;
+            --transition-hud: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        /* ==========================================================================
+           02. CSS RESET & GLOBAL SETUP (FORCED DESKTOP)
+           ========================================================================== */
+        *, *::before, *::after {
+            margin: 0; padding: 0; box-sizing: border-box;
+        }
+
+        html { font-size: 16px; scroll-behavior: smooth; }
+
+        body {
+            background-color: var(--bg-absolute);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            min-height: 100vh;
+            min-width: 1200px; /* <--- TRAVA ABSOLUTA DE DESKTOP */
+            overflow-x: auto;  
+            display: flex;
+            position: relative;
+        }
+
+        /* Custom Scrollbar - Crimson Choke Style */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg-absolute); border-left: 1px solid var(--border-choke); }
+        ::-webkit-scrollbar-thumb { background: var(--crimson-dim); border: 1px solid var(--crimson-choke); border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--crimson-choke); box-shadow: 0 0 15px var(--crimson-choke); }
+
+        /* Tipografia Global */
+        h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--text-title); }
+        p { font-size: 1.2rem; line-height: 1.7; margin-bottom: 1.2rem; }
+        strong { color: var(--crimson-choke); font-weight: 600; text-shadow: 0 0 8px var(--crimson-dim); }
+
+        /* ==========================================================================
+           03. BACKGROUND EFFECTS (GRID & RADIALS)
+           ========================================================================== */
+        body::before {
+            content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -3;
+            /* Grid de tensão visual */
+            background-image: 
+                linear-gradient(rgba(255, 42, 42, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 179, 0, 0.02) 1px, transparent 1px);
+            background-size: 40px 40px; pointer-events: none;
+        }
+
+        body::after {
+            content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2;
+            background: radial-gradient(circle at 10% 90%, rgba(255, 42, 42, 0.05) 0%, transparent 40%),
+                        radial-gradient(circle at 90% 10%, rgba(255, 179, 0, 0.04) 0%, transparent 40%);
+            pointer-events: none;
+        }
+
+        /* ==========================================================================
+           04. GLOBAL KEYFRAMES (RESTRICTION ANIMATIONS)
+           ========================================================================== */
+        @keyframes scanline-v { 0% { transform: translateY(-100%); } 100% { transform: translateY(100vh); } }
+        
+        @keyframes pulse-choke {
+            0% { box-shadow: 0 0 10px var(--crimson-dim); border-color: rgba(255, 42, 42, 0.3); }
+            50% { box-shadow: 0 0 25px var(--crimson-glow); border-color: var(--crimson-choke); }
+            100% { box-shadow: 0 0 10px var(--crimson-dim); border-color: rgba(255, 42, 42, 0.3); }
+        }
+
+        @keyframes wip-accumulation {
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.8; }
+        }
+
+        @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(30px); } 100% { opacity: 1; transform: translateY(0); } }
+
+        .hud-scanner {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 2px;
+            background: linear-gradient(to right, transparent, var(--crimson-choke), transparent);
+            opacity: 0.5; z-index: 9999; pointer-events: none; animation: scanline-v 6s linear infinite;
+        }
+        /* ==========================================================================
+           05. GLOBAL LAYOUT (GRID E WRAPPERS)
+           ========================================================================== */
+        .app-wrapper {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+            position: relative;
+            z-index: 10;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background: radial-gradient(circle at top right, rgba(255, 42, 42, 0.02), transparent 60%);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 4rem 4rem 4rem;
+        }
+
+        /* ==========================================================================
+           06. SIDEBAR (TERMINAL NAVIGATION) - ACOMPANHA A PÁGINA (DESKTOP)
+           ========================================================================== */
+        .sys-sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-panel-deep);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border-choke);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0; 
+            z-index: 100;
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.9);
+        }
+
+        /* Feixe de luz vertical carmesim */
+        .sys-sidebar::after {
+            content: '';
+            position: absolute;
+            top: 0; right: -1px;
+            width: 2px; height: 100%;
+            background: linear-gradient(to bottom, transparent, var(--crimson-choke), transparent);
+            opacity: 0.6;
+        }
+
+        .sidebar-brand {
+            height: var(--topbar-height);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 1px dashed var(--border-choke);
+            background: radial-gradient(circle at top, var(--crimson-dim), transparent);
+            position: relative;
+        }
+
+        .sidebar-brand::before {
+            content: '';
+            position: absolute;
+            bottom: -1px; left: 0; width: 40%; height: 2px;
+            background: var(--crimson-choke);
+            box-shadow: 0 0 10px var(--crimson-choke);
+        }
+
+        .brand-logo {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: var(--text-title);
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+
+        .brand-logo span {
+            color: var(--amber-wip);
+            text-shadow: 0 0 15px rgba(255, 179, 0, 0.5);
+        }
+
+        .brand-sub {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--crimson-choke);
+            letter-spacing: 4px;
+            margin-top: 5px;
+            text-transform: uppercase;
+        }
+
+        /* Menu de Navegação */
+        .nav-menu {
+            flex-grow: 1;
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 20px;
+            color: var(--text-muted);
+            font-family: var(--font-body);
+            font-size: 1.05rem;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-decoration: none;
+            position: relative;
+            transition: var(--transition-hud);
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid transparent;
+            border-radius: var(--radius-card);
+            clip-path: polygon(0 0, 100% 0, 100% 70%, 92% 100%, 0 100%);
+        }
+
+        /* Linha de seleção do menu (Amber no Hover) */
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0;
+            height: 100%; width: 3px;
+            background: var(--amber-wip);
+            transform: scaleY(0);
+            transition: 0.3s;
+        }
+
+        .nav-link:hover {
+            color: var(--text-pure);
+            background: rgba(255, 179, 0, 0.05);
+            border-color: rgba(255, 179, 0, 0.2);
+            padding-left: 25px;
+        }
+
+        .nav-link:hover::before {
+            transform: scaleY(1);
+            box-shadow: 0 0 15px var(--amber-glow);
+        }
+
+        /* Estado ATIVO (Página Atual: Gargalo) */
+        .nav-link.active {
+            color: var(--crimson-choke);
+            background: var(--crimson-dim);
+            border-color: var(--border-choke);
+        }
+
+        .nav-link.active::before {
+            background: var(--crimson-choke);
+            transform: scaleY(1);
+            box-shadow: 0 0 15px var(--crimson-glow);
+        }
+
+        .nav-icon {
+            width: 20px; height: 20px;
+            fill: none; stroke: currentColor; stroke-width: 2;
+            transition: 0.3s;
+        }
+
+        .nav-link:hover .nav-icon {
+            transform: scale(1.1);
+            color: var(--amber-wip);
+        }
+
+        .nav-link.active .nav-icon {
+            color: var(--crimson-choke);
+        }
+
+        /* ==========================================================================
+           07. TOPBAR (SYSTEM HEADER)
+           ========================================================================== */
+        .sys-topbar {
+            height: var(--topbar-height);
+            width: 100%;
+            background: var(--bg-panel-deep);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--border-choke);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 4rem;
+            position: sticky;
+            top: 0;
+            z-index: 90;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+        }
+
+        .topbar-path {
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .topbar-path span {
+            color: var(--amber-wip);
+            text-shadow: 0 0 8px var(--amber-dim);
+        }
+
+        /* Status em Modo "Choke" / Crimson Red */
+        .topbar-status {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-family: var(--font-code);
+            font-size: 0.8rem;
+            color: var(--crimson-choke);
+            letter-spacing: 1px;
+            border: 1px solid rgba(255, 42, 42, 0.4);
+            padding: 8px 15px;
+            border-radius: 4px;
+            background: rgba(255, 42, 42, 0.05);
+            box-shadow: 0 0 10px var(--crimson-dim);
+        }
+
+        .status-dot-choke {
+            width: 8px; height: 8px;
+            background: var(--crimson-choke);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--crimson-glow);
+            animation: pulse-choke 1.5s infinite alternate;
+        }
+        /* ==========================================================================
+           08. HERO SECTION
+           ========================================================================== */
+        .hero-section {
+            margin-bottom: 3rem;
+            position: relative;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-choke);
+        }
+
+        .hero-section::after {
+            content: '';
+            position: absolute;
+            bottom: -1px; left: 0;
+            width: 250px; height: 3px;
+            background: var(--crimson-choke);
+            box-shadow: 0 0 15px var(--crimson-glow);
+        }
+
+        .hero-title-wrapper {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .hero-title {
+            font-size: 4.5rem;
+            font-weight: 900;
+            color: var(--text-title);
+            letter-spacing: 5px;
+            line-height: 1.1;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+        }
+
+        .hero-title span {
+            color: var(--amber-wip);
+            text-shadow: 0 0 20px var(--amber-glow);
+        }
+
+        .hero-subtitle {
+            font-family: var(--font-mono);
+            font-size: 1.5rem;
+            color: var(--text-main);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .hero-subtitle::before {
+            content: '[BOTTLENECK_ANALYSIS]';
+            font-size: 1rem;
+            color: var(--crimson-choke);
+            background: var(--crimson-dim);
+            padding: 4px 10px;
+            border: 1px solid rgba(255, 42, 42, 0.3);
+            border-radius: 4px;
+        }
+
+        .hero-quote {
+            margin-top: 1.5rem;
+            font-family: var(--font-body);
+            font-size: 1.3rem;
+            color: var(--amber-wip);
+            font-style: italic;
+            border-left: 4px solid var(--amber-wip);
+            padding-left: 15px;
+            background: linear-gradient(90deg, var(--amber-dim), transparent);
+            padding: 10px 15px;
+            border-radius: 0 4px 4px 0;
+        }
+
+        /* ==========================================================================
+           09. CONTENT PANELS & GLASSMORPHISM
+           ========================================================================== */
+        .tech-panel {
+            background: var(--bg-card-glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 179, 0, 0.2);
+            border-radius: var(--radius-card);
+            padding: 3rem; margin-bottom: 3rem; position: relative;
+            box-shadow: var(--shadow-glass); transition: var(--transition-hud);
+        }
+        
+        .tech-panel:hover {
+            border-color: var(--amber-wip); background: var(--bg-card-hover);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.9), inset 0 0 20px var(--amber-dim);
+        }
+        
+        /* Cantoneiras HUD Amber */
+        .tech-panel::before, .tech-panel::after {
+            content: ''; position: absolute; width: 30px; height: 30px;
+            border: 2px solid var(--amber-wip); opacity: 0.5; transition: 0.3s;
+        }
+        .tech-panel::before { top: 15px; left: 15px; border-right: none; border-bottom: none; }
+        .tech-panel::after { bottom: 15px; right: 15px; border-left: none; border-top: none; }
+        
+        .panel-header { display: flex; align-items: center; gap: 20px; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 1.5rem; }
+        .panel-title { font-size: 2rem; color: var(--text-title); letter-spacing: 2px; }
+        
+        .panel-icon {
+            width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
+            background: var(--crimson-dim); border: 1px solid var(--border-choke); border-radius: var(--radius-card);
+            color: var(--crimson-choke); font-size: 1.8rem; box-shadow: var(--shadow-neon-crimson);
+        }
+        
+        .highlight-box {
+            background: rgba(255, 42, 42, 0.05); border-left: 4px solid var(--crimson-choke);
+            padding: 1.5rem; margin: 1.5rem 0; font-family: var(--font-mono); font-size: 1.1rem; color: var(--text-pure);
+        }
+        
+        .cyber-list { list-style: none; margin-top: 1.5rem; }
+        .cyber-list li { position: relative; padding-left: 35px; margin-bottom: 1.5rem; font-size: 1.15rem; line-height: 1.6; }
+        .cyber-list li::before { content: '>'; position: absolute; left: 0; top: 0; font-family: var(--font-mono); color: var(--amber-wip); font-size: 1.4rem; font-weight: 900; text-shadow: 0 0 10px var(--amber-glow); }
+        .list-title { display: block; color: var(--text-pure); font-family: var(--font-display); font-size: 1.2rem; margin-bottom: 5px; }
+
+        .cyber-btn {
+            background: var(--amber-dim); border: 1px solid var(--amber-wip);
+            color: var(--amber-wip); padding: 12px 25px; font-family: var(--font-display);
+            font-size: 1rem; cursor: pointer; border-radius: 4px; transition: 0.3s;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .cyber-btn:hover { background: var(--amber-wip); color: var(--bg-absolute); box-shadow: 0 0 15px var(--amber-glow); }
+        /* EFEITOS ADICIONAIS GARGALO */
+        .choke-text {
+            color: var(--crimson-choke);
+            font-family: var(--font-mono);
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(255, 42, 42, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hud-scanner"></div>
+
+    <div class="app-wrapper">
+        
+        <aside class="sys-sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">MELI<span>PDI</span></div>
+                <div class="brand-sub">SYS.MODULE // ACTIVE</div>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    <span>Home Dashboard</span>
+                </a>
+                
+                <a href="hub.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                    <span>Hub de Setores</span>
+                </a>
+                
+                <a href="glossario.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                    <span>Glossário Técnico</span>
+                </a>
+                
+                <a href="sla-detalhado.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <span>Deep Dive: SLA</span>
+                </a>
+
+                <a href="backlog-detalhado.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                    <span>Monitor: Backlog</span>
+                </a>
+
+                <a href="kpi-detalhado.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    <span>Analytics: KPIs</span>
+                </a>
+
+                <a href="throughput-detalhado.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="13 19 22 12 13 5 13 19"></polygon><polygon points="2 19 11 12 2 5 2 19"></polygon></svg>
+                    <span>Throughput & Vazão</span>
+                </a>
+
+                <a href="takttime-detalhado.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <span>Takt Time & Ritmo</span>
+                </a>
+
+                <div style="height: 1px; background: var(--border-choke); margin: 15px 0; opacity: 0.5;"></div>
+
+                <a href="#" class="nav-link active">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                    <span>Gargalo & Restrições</span>
+                </a>
+            </nav>
+
+            <div style="padding: 20px; border-top: 1px dashed var(--border-choke); text-align: center;">
+                <div style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--crimson-choke); opacity: 0.5; letter-spacing: 1.5px;">
+                    SECURE CONNECTION<br>OSASCO_CD // 2026
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            
+            <header class="sys-topbar">
+                <div class="topbar-path">
+                    MELI PDI <span>/</span> BOTTLENECK_MGMT <span>/</span> CHOKEPOINT.exe
+                </div>
+                <div class="topbar-status">
+                    STATUS: CHOKE MONITOR ACTIVE
+                    <div class="status-dot-choke"></div>
+                </div>
+            </header>
+
+            <div class="container">
+                
+                <section class="hero-section">
+                    <div class="hero-title-wrapper">
+                        <h1 class="hero-title">GARGALO <span>_</span></h1>
+                    </div>
+                    <div class="hero-subtitle">O Elo Mais Fraco da Corrente</div>
+                    
+                    <div class="hero-quote">
+                        "Não importa quão rápido você corra; o seu limite é o limite do seu estrangulamento."
+                    </div>
+                </section>
+
+                <section class="tech-panel" id="section-definition">
+                    <div class="panel-header">
+                        <div class="panel-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                        </div>
+                        <h2 class="panel-title">SEÇÃO 1 // O QUE É UM GARGALO?</h2>
+                    </div>
+
+                    <p>
+                        Um gargalo (ou <em>bottleneck</em>) é qualquer ponto na cadeia logística onde a <strong>capacidade de processamento é menor do que a demanda exigida</strong>. Baseado na Teoria das Restrições (TOC) de Goldratt, o gargalo é o elo mais fraco da corrente: ele dita a velocidade máxima e a capacidade total de todo o centro de distribuição. 
+                    </p>
+                    <p>
+                        A regra física é letal: Não importa o quão rápido seja o seu processo de Picking; se o Packing for lento, a expedição inteira será lenta.
+                    </p>
+                    
+                    <div style="margin: 2rem 0; text-align: center;">
+                        
+                    </div>
+
+                    <h3 style="font-family: var(--font-display); font-size: 1.5rem; color: var(--amber-wip); margin-top: 3rem; margin-bottom: 1.5rem;">PARA QUE SERVE (A IDENTIFICAÇÃO E GESTÃO)</h3>
+                    
+                    <ul class="cyber-list">
+                        <li><strong class="list-title" style="color: var(--amber-wip);">Garantir o fluxo contínuo:</strong> Evitar o violento efeito "anda e para" na operação, onde áreas ociosas esperam interminavelmente por áreas sobrecarregadas.</li>
+                        <li><strong class="list-title" style="color: var(--amber-wip);">Proteger os SLAs:</strong> Assegurar que os pedidos não fiquem travados na esteira e percam o horário de corte (cut-off) das transportadoras.</li>
+                        <li><strong class="list-title" style="color: var(--amber-wip);">Otimização Cirúrgica de Recursos:</strong> Direcionar investimentos, manutenções e horas extras <em>exatamente</em> para o ponto que está travando a operação, em vez de desperdiçar esforço em áreas que já têm folga.</li>
+                        <li><strong class="list-title" style="color: var(--amber-wip);">Redução de Acúmulo (WIP):</strong> Evitar montanhas de produtos parados entre uma etapa e outra (ex: gaiolas cheias no meio do corredor esperando consolidação).</li>
+                    </ul>
+                </section>
+                <section class="tech-panel" id="section-anatomy" style="border-color: rgba(255, 42, 42, 0.4);">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(255, 42, 42, 0.1); border-color: var(--crimson-choke); color: var(--crimson-choke); box-shadow: 0 0 15px var(--crimson-glow);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--text-pure);">SEÇÃO 2 // COMO FUNCIONA NA PRÁTICA</h2>
+                    </div>
+
+                    <p>
+                        Em um centro de fulfillment, o gargalo se manifesta fisicamente como uma <strong>fila ou um acúmulo de trabalho</strong> antes de uma etapa, seguido por uma área completamente ociosa logo depois dela. A matemática não mente:
+                    </p>
+
+                    <div style="background: rgba(0,0,0,0.6); padding: 20px; border-radius: 8px; border: 1px dashed var(--crimson-choke); margin: 2rem 0;">
+                        <h4 style="color: var(--crimson-choke); font-family: var(--font-mono); font-size: 1rem; margin-bottom: 15px; text-align: center; letter-spacing: 2px;">[ SIMULAÇÃO DE ESTRANGULAMENTO DE CAPACIDADE ]</h4>
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; font-family: var(--font-display); font-size: 0.9rem; text-align: center;">
+                            <div style="flex: 1; background: rgba(255, 255, 255, 0.05); padding: 15px 5px; border-bottom: 3px solid var(--text-muted);">
+                                <span style="color: var(--text-muted); display: block;">INBOUND</span>
+                                <strong style="color: var(--white-core); font-size: 1.2rem;">1.000 un/h</strong>
+                            </div>
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--text-muted)" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            
+                            <div style="flex: 1; background: rgba(255, 255, 255, 0.05); padding: 15px 5px; border-bottom: 3px solid var(--text-muted);">
+                                <span style="color: var(--text-muted); display: block;">PUTAWAY</span>
+                                <strong style="color: var(--white-core); font-size: 1.2rem;">800 un/h</strong>
+                            </div>
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--text-muted)" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            
+                            <div style="flex: 1; background: rgba(255, 179, 0, 0.1); padding: 15px 5px; border-bottom: 3px solid var(--amber-wip);">
+                                <span style="color: var(--text-muted); display: block;">PICKING</span>
+                                <strong style="color: var(--amber-wip); font-size: 1.2rem; text-shadow: 0 0 10px var(--amber-glow);">1.200 un/h</strong>
+                            </div>
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--text-muted)" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            
+                            <div style="flex: 1; background: rgba(255, 42, 42, 0.15); padding: 15px 5px; border-bottom: 3px solid var(--crimson-choke); animation: pulse-choke 2s infinite alternate;">
+                                <span style="color: var(--text-pure); display: block;">PACKING</span>
+                                <strong style="color: var(--crimson-choke); font-size: 1.3rem; text-shadow: 0 0 15px var(--crimson-glow);">600 un/h</strong>
+                                <span style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--crimson-choke); display: block; margin-top: 5px;">[ GARGALO ]</span>
+                            </div>
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--crimson-choke)" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+
+                            <div style="flex: 1; background: rgba(255, 255, 255, 0.05); padding: 15px 5px; border-bottom: 3px solid var(--text-muted); opacity: 0.5;">
+                                <span style="color: var(--text-muted); display: block;">OUTBOUND</span>
+                                <strong style="color: var(--white-core); font-size: 1.2rem;">1.000 un/h</strong>
+                            </div>
+                        </div>
+
+                        <div class="highlight-box" style="border-left-color: var(--crimson-choke); background: rgba(255, 42, 42, 0.05); margin-bottom: 0;">
+                            <span style="color: var(--crimson-choke); font-weight: bold;">[O RESULTADO DO ESTRANGULAMENTO]</span><br>
+                            Mesmo que o Picking seja uma máquina formidável e consiga separar 1.200 itens por hora, <strong>o centro de distribuição só conseguirá expedir 600 itens por hora</strong>. O Packing limita absolutamente todo o sistema. Pior: o Picking super-rápido vai empilhar 600 caixas de Backlog no chão a cada hora.
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 2rem; text-align: center;">
+                        [attachment_0](attachment)
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-examples" style="border-color: rgba(255, 179, 0, 0.4);">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(255, 179, 0, 0.1); border-color: var(--amber-wip); color: var(--amber-wip); box-shadow: 0 0 15px var(--amber-glow);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--text-pure);">SEÇÃO 3 // EXEMPLOS EM UM FULFILLMENT CENTER</h2>
+                    </div>
+
+                    <p>
+                        Gargalos não são apenas lentidão humana. Muitas vezes, o operador quer trabalhar rápido, mas o sistema ou a física do galpão o impedem. Eles se dividem em quatro grandes vilões:
+                    </p>
+
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 2rem;">
+                        
+                        <div style="background: rgba(0,0,0,0.5); border-left: 3px solid var(--cyan-tech); padding: 20px; border-radius: 4px;">
+                            <h4 style="color: var(--cyan-tech); font-size: 1.1rem; margin-bottom: 10px; font-family: var(--font-display);">[1] GARGALO SISTÊMICO</h4>
+                            <p style="margin: 0; font-size: 1rem; color: var(--text-main);">O WMS (Warehouse Management System) apresenta lentidão ou intermitência de rede, fazendo com que os coletores (scanners) demorem 5 segundos a mais para processar cada bipe. Milhares de bipes por hora = vazão destruída.</p>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.5); border-left: 3px solid var(--amber-wip); padding: 20px; border-radius: 4px;">
+                            <h4 style="color: var(--amber-wip); font-size: 1.1rem; margin-bottom: 10px; font-family: var(--font-display);">[2] GARGALO FÍSICO / LAYOUT</h4>
+                            <p style="margin: 0; font-size: 1rem; color: var(--text-main);">Corredores muito estreitos na área de prateleiras (mezanino) ou rotas mal planejadas no WMS, causando congestionamento de operadores de picking que não conseguem se ultrapassar nos corredores (efeito "fila de trânsito").</p>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.5); border-left: 3px solid var(--crimson-choke); padding: 20px; border-radius: 4px;">
+                            <h4 style="color: var(--crimson-choke); font-size: 1.1rem; margin-bottom: 10px; font-family: var(--font-display);">[3] GARGALO DE EQUIPAMENTO</h4>
+                            <p style="margin: 0; font-size: 1rem; color: var(--text-main);">A esteira principal (Sorter) que leva as caixas do packing para as docas para de funcionar ou fica cheia (alta recirculação). As estações de embalagem são forçadas a pausar porque não há mais onde colocar a caixa finalizada.</p>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.5); border-left: 3px solid var(--text-muted); padding: 20px; border-radius: 4px;">
+                            <h4 style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 10px; font-family: var(--font-display);">[4] GARGALO DE INSUMOS</h4>
+                            <p style="margin: 0; font-size: 1rem; color: var(--text-main);">Falta de material básico: caixas de papelão do tamanho correto que não foram reabastecidas, fita adesiva acabando ou bobinas térmicas zeradas impedindo a impressão da DANFE/Etiqueta de Envio.</p>
+                        </div>
+
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-golden-rules">
+                    <div class="panel-header">
+                        <div class="panel-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 6.91 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        </div>
+                        <h2 class="panel-title">SEÇÃO 4 // REGRAS DE OURO</h2>
+                    </div>
+
+                    <p>
+                        Gerir uma operação logística sem entender o gargalo é "enxugar gelo". Para que a operação flua com maestria, três leis absolutas (derivadas do Sistema Toyota de Produção e da TOC) devem ser respeitadas:
+                    </p>
+
+                    <div style="display: flex; flex-direction: column; gap: 20px; margin-top: 2rem;">
+                        
+                        <div style="background: rgba(255, 42, 42, 0.05); border: 1px solid var(--crimson-choke); padding: 20px; border-radius: 8px; position: relative; overflow: hidden;">
+                            <div style="position: absolute; right: -20px; top: -20px; font-family: var(--font-display); font-size: 6rem; color: rgba(255, 42, 42, 0.1); font-weight: 900; line-height: 1;">01</div>
+                            <h3 style="color: var(--crimson-choke); font-family: var(--font-display); font-size: 1.3rem; margin-bottom: 10px;">O GARGALO NUNCA PODE PARAR</h3>
+                            <p style="font-size: 1.05rem; color: var(--text-main); margin: 0; position: relative; z-index: 2;">Como ele dita o ritmo de tudo, um minuto perdido no gargalo é <strong>um minuto perdido para toda a operação</strong>. O horário de almoço ou pausa dos operadores dessa área restrita deve ser rigorosamente revezado para que a máquina ou estação continue operando 100% do tempo.</p>
+                        </div>
+
+                        <div style="background: rgba(255, 179, 0, 0.05); border: 1px solid var(--amber-wip); padding: 20px; border-radius: 8px; position: relative; overflow: hidden;">
+                            <div style="position: absolute; right: -20px; top: -20px; font-family: var(--font-display); font-size: 6rem; color: rgba(255, 179, 0, 0.1); font-weight: 900; line-height: 1;">02</div>
+                            <h3 style="color: var(--amber-wip); font-family: var(--font-display); font-size: 1.3rem; margin-bottom: 10px;">NÃO ACELERE PROCESSOS ANTES DO GARGALO</h3>
+                            <p style="font-size: 1.05rem; color: var(--text-main); margin: 0; position: relative; z-index: 2;">Fazer o Picking trabalhar no máximo da capacidade enquanto o Packing está travado só vai gerar uma montanha de caixas no chão (WIP acumulado), atrapalhando a passagem, gerando confusão e aumentando drasticamente o risco de avarias ou perdas.</p>
+                        </div>
+
+                        <div style="background: rgba(0, 229, 255, 0.05); border: 1px solid var(--cyan-tech); padding: 20px; border-radius: 8px; position: relative; overflow: hidden;">
+                            <div style="position: absolute; right: -20px; top: -20px; font-family: var(--font-display); font-size: 6rem; color: rgba(0, 229, 255, 0.1); font-weight: 900; line-height: 1;">03</div>
+                            <h3 style="color: var(--cyan-tech); font-family: var(--font-display); font-size: 1.3rem; margin-bottom: 10px;">O GARGALO É MÓVEL (WANDERING BOTTLENECK)</h3>
+                            <p style="font-size: 1.05rem; color: var(--text-main); margin: 0; position: relative; z-index: 2;">A restrição não desaparece, ela <strong>muda de lugar</strong>. Ao resolver o gargalo do Packing (ex: adicionando mais 5 estações e subindo a vazão para 900 un/h), a restrição migra instantaneamente para a próxima etapa mais lenta (no nosso exemplo inicial, passaria a ser o Putaway, travado em 800 un/h).</p>
+                        </div>
+
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-problem-solving" style="border-color: rgba(0, 229, 255, 0.4);">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(0, 229, 255, 0.1); border-color: var(--cyan-tech); color: var(--cyan-tech); box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--text-pure);">SEÇÃO 5 // ANÁLISE: A VISÃO DO PROBLEM SOLVER</h2>
+                    </div>
+
+                    <p>
+                        Para atuar de forma cirúrgica e resolver problemas no piso de fábrica, a abordagem diante de um gargalo deve ser sempre dividida em duas frentes de batalha:
+                    </p>
+
+                    <div style="display: flex; gap: 30px; margin-top: 2rem;">
+                        <div style="flex: 1; background: rgba(0,0,0,0.5); border-left: 4px solid var(--amber-wip); padding: 20px; border-radius: 4px;">
+                            <h3 style="color: var(--amber-wip); font-family: var(--font-display); font-size: 1.2rem; margin-bottom: 10px;">1. AÇÃO DE CONTENÇÃO (IMEDIATA)</h3>
+                            <p style="font-size: 0.95rem; color: var(--text-main); margin-bottom: 10px;">O que fazer <strong>agora</strong> para o processo voltar a fluir e o SLA não estourar?</p>
+                            <ul style="list-style-type: square; padding-left: 20px; font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-muted); line-height: 1.5;">
+                                <li><strong>Remanejar operadores:</strong> Mover equipe transversal (cross-trained) de áreas mais rápidas e com folga (ex: Inbound) para ajudar imediatamente na etapa estrangulada.</li>
+                                <li><strong>Water Spiders:</strong> Abastecer a área com insumos de forma emergencial (abastecedores levando caixas até as estações para o operador não precisar sair do lugar).</li>
+                            </ul>
+                        </div>
+
+                        <div style="flex: 1; background: rgba(0,0,0,0.5); border-left: 4px solid var(--cyan-tech); padding: 20px; border-radius: 4px;">
+                            <h3 style="color: var(--cyan-tech); font-family: var(--font-display); font-size: 1.2rem; margin-bottom: 10px;">2. CAUSA RAIZ (DEFINITIVA)</h3>
+                            <p style="font-size: 0.95rem; color: var(--text-main); margin-bottom: 10px;">Por que esse gargalo se formou hoje? Como evitar amanhã?</p>
+                            <ul style="list-style-type: square; padding-left: 20px; font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-muted); line-height: 1.5;">
+                                <li><strong>Investigação:</strong> Foi falha de dimensionamento (Headcount)? Pico inesperado de itens grandes (Non-Sort)? Micro-paradas sistêmicas?</li>
+                                <li><strong>Ferramentas:</strong> Utilizar os "5 Porquês" ou o Diagrama de Ishikawa para chegar à raiz da anomalia e criar um plano de ação (SOP).</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+
+                    <hr style="border: 0; border-top: 1px dashed var(--border-choke); margin: 3rem 0; opacity: 0.5;">
+
+                    <h3 style="font-family: var(--font-display); font-size: 1.5rem; color: var(--text-pure); margin-bottom: 1rem;">GARGALOS ESTÁTICOS VS. DINÂMICOS E A LEI DO WIP</h3>
+                    <p>No e-commerce, o volume e o perfil dos pedidos mudam drasticamente, o que faz com que o gargalo mude de lugar durante o próprio turno (<em>Wandering Bottlenecks</em>).</p>
+
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 1.5rem;">
+                        <div style="background: rgba(255, 42, 42, 0.05); padding: 15px; border-radius: 4px; border: 1px solid var(--border-choke);">
+                            <strong style="color: var(--crimson-choke); display: block; margin-bottom: 5px;">ESTÁTICO VS DINÂMICO</strong>
+                            <p style="font-size: 0.95rem; color: var(--text-main); margin: 0;"><strong>Estático:</strong> Um Sorter principal que tem capacidade máxima inalterável. Ele sempre será o teto. <br><strong>Dinâmico:</strong> Mix de produtos. Se de manhã entra uma onda de pedidos com itens pequenos, o gargalo vai para o Packing. Se à tarde a onda muda para pacotes de ração pesada, o gargalo se move instantaneamente para a movimentação de empilhadeiras.</p>
+                        </div>
+                        <div style="background: rgba(255, 179, 0, 0.05); padding: 15px; border-radius: 4px; border: 1px solid var(--border-active);">
+                            <strong style="color: var(--amber-wip); display: block; margin-bottom: 5px;">A RELAÇÃO DIRETA COM O WIP</strong>
+                            <p style="font-size: 0.95rem; color: var(--text-main); margin: 0;">O WIP (Trabalho em Processo) é o sintoma visual mais claro de um gargalo. O acúmulo de inventário sempre se forma <strong>imediatamente antes do gargalo</strong>. Se vir operadores de braços cruzados, o gargalo está <em>antes</em> deles. Se vir operadores soterrados de caixas, o gargalo <em>são eles</em>.</p>
+                        </div>
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-hidden-sim" style="border-color: rgba(255, 179, 0, 0.4);">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(255, 179, 0, 0.1); border-color: var(--amber-wip); color: var(--amber-wip); box-shadow: 0 0 15px var(--amber-glow);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        </div>
+                        <h2 class="panel-title">SEÇÃO 6 // GARGALOS OCULTOS & SIMULADOR</h2>
+                    </div>
+
+                    <p>Muitas vezes, a operação atinge o ritmo perfeito durante a execução, mas a meta do dia não é batida. O gargalo pode estar escondido nas transições:</p>
+                    <ul class="cyber-list" style="margin-top: 0; margin-bottom: 2rem;">
+                        <li><strong class="list-title" style="color: var(--amber-wip);">Troca de Turno:</strong> Quanto tempo leva entre o Turno 1 deslogar dos coletores e o Turno 2 logar e começar a bipar? Se essa transição demora 20 minutos com a esteira vazia, você perdeu capacidade irrecuperável.</li>
+                        <li><strong class="list-title" style="color: var(--amber-wip);">Setup de Insumos:</strong> O operador para a cada 30 min para buscar caixas no fundo do armazém? A solução é a figura do <em>Water Spider</em> (abastecedor) para manter a estação alimentada sem interromper o fluxo.</li>
+                    </ul>
+                    
+
+                    <div style="background: rgba(0,0,0,0.8); border: 1px solid var(--crimson-choke); border-radius: 8px; padding: 2rem; margin-top: 3rem; position: relative;">
+                        <h3 style="color: var(--white-core); font-family: var(--font-display); font-size: 1.5rem; text-align: center; margin-bottom: 5px;">SIMULADOR DE GARGALO MÓVEL (WANDERING BOTTLENECK)</h3>
+                        <p style="color: var(--text-muted); text-align: center; font-family: var(--font-mono); font-size: 0.9rem; margin-bottom: 2rem;">Observe como a restrição e o acúmulo de caixas (WIP) mudam de lugar ao aplicarmos melhorias locais.</p>
+
+                        <div style="text-align: center; margin-bottom: 2rem;">
+                            <span style="font-family: var(--font-mono); color: var(--cyan-tech); letter-spacing: 2px; font-size: 0.9rem;">THROUGHPUT REAL DO SISTEMA</span><br>
+                            <span id="sim-throughput" style="font-family: var(--font-display); font-size: 3rem; color: var(--crimson-choke); font-weight: bold; text-shadow: 0 0 15px var(--crimson-glow);">600</span>
+                            <span style="color: var(--text-muted); font-family: var(--font-mono);"> un/h</span>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; text-align: center; font-family: var(--font-display); position: relative; gap: 10px;">
+                            
+                            <div class="sim-station" id="st-inbound" style="flex: 1; padding: 15px 5px; border-bottom: 3px solid var(--text-muted); background: rgba(255,255,255,0.05); transition: 0.5s;">
+                                <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">INBOUND</span>
+                                <strong class="sim-val" style="font-size: 1.3rem; color: var(--white-core);">1000</strong>
+                            </div>
+                            
+                            <div class="sim-wip" id="wip-putaway" style="width: 20px; height: 20px; border-radius: 50%; background: transparent; transition: 0.5s;"></div>
+                            
+                            <div class="sim-station" id="st-putaway" style="flex: 1; padding: 15px 5px; border-bottom: 3px solid var(--text-muted); background: rgba(255,255,255,0.05); transition: 0.5s;">
+                                <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">PUTAWAY</span>
+                                <strong class="sim-val" style="font-size: 1.3rem; color: var(--white-core);">800</strong>
+                            </div>
+                            
+                            <div class="sim-wip" id="wip-picking" style="width: 20px; height: 20px; border-radius: 50%; background: transparent; transition: 0.5s;"></div>
+
+                            <div class="sim-station" id="st-picking" style="flex: 1; padding: 15px 5px; border-bottom: 3px solid var(--text-muted); background: rgba(255,255,255,0.05); transition: 0.5s;">
+                                <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">PICKING</span>
+                                <strong class="sim-val" style="font-size: 1.3rem; color: var(--white-core);">1200</strong>
+                            </div>
+                            
+                            <div class="sim-wip" id="wip-packing" style="width: 20px; height: 20px; border-radius: 50%; background: var(--amber-wip); box-shadow: 0 0 10px var(--amber-wip); animation: wip-accumulation 1s infinite alternate; transition: 0.5s;" title="WIP Acumulado"></div>
+
+                            <div class="sim-station choke-active" id="st-packing" style="flex: 1; padding: 15px 5px; border-bottom: 3px solid var(--crimson-choke); background: rgba(255,42,42,0.15); box-shadow: inset 0 0 15px rgba(255,42,42,0.3); transition: 0.5s;">
+                                <span style="font-size: 0.8rem; color: var(--crimson-choke); display: block;">PACKING</span>
+                                <strong class="sim-val" style="font-size: 1.3rem; color: var(--crimson-choke); text-shadow: 0 0 10px var(--crimson-glow);">600</strong>
+                            </div>
+
+                            <div class="sim-wip" id="wip-outbound" style="width: 20px; height: 20px; border-radius: 50%; background: transparent; transition: 0.5s;"></div>
+
+                            <div class="sim-station" id="st-outbound" style="flex: 1; padding: 15px 5px; border-bottom: 3px solid var(--text-muted); background: rgba(255,255,255,0.05); transition: 0.5s;">
+                                <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">OUTBOUND</span>
+                                <strong class="sim-val" style="font-size: 1.3rem; color: var(--white-core);">1000</strong>
+                            </div>
+                        </div>
+
+                        <div style="text-align: center; margin-top: 3rem;">
+                            <button id="btn-fix-packing" class="cyber-btn" style="border-color: var(--crimson-choke); color: var(--crimson-choke);">1. RESOLVER GARGALO DO PACKING (+400 UN/H)</button>
+                            <button id="btn-fix-putaway" class="cyber-btn" style="border-color: var(--amber-wip); color: var(--amber-wip); display: none; margin: 0 auto;">2. RESOLVER NOVO GARGALO NO PUTAWAY (+300 UN/H)</button>
+                            <button id="btn-reset-sim" class="cyber-btn" style="border-color: var(--cyan-tech); color: var(--cyan-tech); display: none; margin: 0 auto;">RESETAR SIMULADOR</button>
+                            <p id="sim-feedback" style="font-family: var(--font-mono); font-size: 0.95rem; color: var(--text-muted); margin-top: 15px; height: 40px;">O Packing dita o ritmo atual. Clique no botão acima para adicionar operadores e resolver esta restrição.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <div style="margin-top: 4rem; text-align: center; border-top: 1px solid rgba(255, 42, 42, 0.3); border-bottom: 1px solid rgba(255, 42, 42, 0.3); padding: 3rem 0; background: radial-gradient(circle at center, rgba(255, 42, 42, 0.05), transparent 70%);">
+                    <h2 style="font-family: var(--font-display); font-size: 2.2rem; color: var(--text-title); line-height: 1.4; text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);">
+                        Você nunca vai eliminar todos os gargalos.<br>
+                        O seu trabalho é <span style="color: var(--amber-wip); text-shadow: 0 0 20px var(--amber-glow);">escolher onde o gargalo deve estar</span><br>
+                        e garantir que ele <span style="color: var(--crimson-choke); border-bottom: 2px solid var(--crimson-choke);">nunca pare de trabalhar.</span>
+                    </h2>
+                </div>
+
+            </div> <footer style="margin-top: auto; padding: 2rem 4rem; background: var(--bg-panel-deep); border-top: 1px solid var(--border-choke); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; box-shadow: 0 -10px 30px rgba(0,0,0,0.5);">
+                
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                    <span style="font-family: var(--font-display); font-size: 1.2rem; color: var(--text-pure); letter-spacing: 2px;">
+                        MELI <span style="color: var(--amber-wip); text-shadow: 0 0 10px rgba(255,179,0,0.5);">PDI</span>
+                    </span>
+                    <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); letter-spacing: 2px;">
+                        LOGISTICS DOCUMENTATION // CHOKEPOINT_MODULE_V7.0
+                    </span>
+                </div>
+
+                <div style="display: flex; gap: 30px; font-family: var(--font-code); font-size: 0.8rem;">
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <span style="color: var(--crimson-choke); text-shadow: 0 0 8px var(--crimson-dim);">BOTTLENECK</span>
+                        <span style="color: var(--text-main);">DETECTED</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <span style="color: var(--amber-wip); text-shadow: 0 0 8px rgba(255,179,0,0.4);">WIP ACCUMULATION</span>
+                        <span style="color: var(--text-main);">TRACKING</span>
+                    </div>
+                </div>
+
+                <div style="text-align: right; font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); letter-spacing: 1px;">
+                    <span style="color: var(--crimson-choke);">[ RESTRICTION ENGINE ONLINE ]</span><br>
+                    TERMINAL_ID: OSASCO_CD // 2026
+                </div>
+
+            </footer>
+
+        </main> </div> 
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // 1. SYSTEM BOOT LOG
+            console.log("%c[SYS_BOOT]%c Inicializando Engine de Restrições...", "color: #FF2A2A; font-weight: bold;", "color: #E2E8F0;");
+            console.log("%c[MODULE]%c Mapeando WIP e simulando deslocamento de gargalos...", "color: #FFB300; font-weight: bold;", "color: #E2E8F0;");
+            
+            // 2. INTERSECTION OBSERVER (ANIMAÇÃO DOS PAINÉIS DE VIDRO)
+            const animatedElements = document.querySelectorAll('.tech-panel');
+            
+            animatedElements.forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(30px)';
+                el.style.transition = 'opacity 0.7s ease-out, transform 0.7s cubic-bezier(0.25, 1, 0.5, 1)';
+            });
+
+            const elementObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                        
+                        const originalBorder = getComputedStyle(entry.target).borderColor;
+                        entry.target.style.borderColor = 'var(--text-pure)';
+                        
+                        setTimeout(() => {
+                            entry.target.style.borderColor = originalBorder;
+                        }, 250);
+
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+
+            animatedElements.forEach(el => {
+                elementObserver.observe(el);
+            });
+
+            // 3. SIMULADOR DE GARGALO MÓVEL (WANDERING BOTTLENECK LOGIC)
+            const btnFixPacking = document.getElementById('btn-fix-packing');
+            const btnFixPutaway = document.getElementById('btn-fix-putaway');
+            const btnResetSim = document.getElementById('btn-reset-sim');
+            const simFeedback = document.getElementById('sim-feedback');
+            const simThroughput = document.getElementById('sim-throughput');
+
+            // Arrays com os nós HTML para manipulação de estilo
+            const stPacking = document.getElementById('st-packing');
+            const wipPacking = document.getElementById('wip-packing');
+            
+            const stPutaway = document.getElementById('st-putaway');
+            const wipPutaway = document.getElementById('wip-putaway');
+            const wipPicking = document.getElementById('wip-picking'); // WIP vai aparecer aqui quando Putaway for o gargalo, pois Inbound(1000) > Putaway(800)
+
+            // ESTADO 1: Fix Packing
+            btnFixPacking.addEventListener('click', () => {
+                // Atualiza Packing para 1000
+                stPacking.querySelector('.sim-val').innerText = '1000';
+                
+                // Remove Estilos de Gargalo do Packing
+                stPacking.style.borderBottom = '3px solid var(--text-muted)';
+                stPacking.style.background = 'rgba(255,255,255,0.05)';
+                stPacking.style.boxShadow = 'none';
+                stPacking.querySelector('.sim-val').style.color = 'var(--white-core)';
+                stPacking.querySelector('.sim-val').style.textShadow = 'none';
+                stPacking.querySelector('span').style.color = 'var(--text-muted)';
+                
+                // Remove WIP antes do Packing
+                wipPacking.style.background = 'transparent';
+                wipPacking.style.boxShadow = 'none';
+                wipPacking.style.animation = 'none';
+
+                // Aplica Estilos de Gargalo no Putaway (que era 800)
+                stPutaway.style.borderBottom = '3px solid var(--crimson-choke)';
+                stPutaway.style.background = 'rgba(255,42,42,0.15)';
+                stPutaway.style.boxShadow = 'inset 0 0 15px rgba(255,42,42,0.3)';
+                stPutaway.querySelector('.sim-val').style.color = 'var(--crimson-choke)';
+                stPutaway.querySelector('.sim-val').style.textShadow = '0 0 10px var(--crimson-glow)';
+                stPutaway.querySelector('span').style.color = 'var(--crimson-choke)';
+                
+                // Adiciona WIP antes do Putaway (pois Inbound manda 1000, Putaway faz 800)
+                wipPutaway.style.background = 'var(--amber-wip)';
+                wipPutaway.style.boxShadow = '0 0 10px var(--amber-wip)';
+                wipPutaway.style.animation = 'wip-accumulation 1s infinite alternate';
+
+                // Atualiza Throughput Total do Sistema para 800
+                simThroughput.innerText = '800';
+                simThroughput.style.color = 'var(--amber-wip)';
+                simThroughput.style.textShadow = '0 0 15px var(--amber-glow)';
+
+                // Altera Botões e Mensagem
+                btnFixPacking.style.display = 'none';
+                btnFixPutaway.style.display = 'block';
+                simFeedback.innerHTML = '<strong style="color: var(--amber-wip);">Efeito comprovado!</strong> O Packing deixou de ser problema, mas a restrição migrou automaticamente para o Putaway (800 un/h). O WIP acumulou antes dele.';
+            });
+
+            // ESTADO 2: Fix Putaway
+            btnFixPutaway.addEventListener('click', () => {
+                // Atualiza Putaway para 1100
+                stPutaway.querySelector('.sim-val').innerText = '1100';
+                
+                // Remove Estilos de Gargalo do Putaway
+                stPutaway.style.borderBottom = '3px solid var(--text-muted)';
+                stPutaway.style.background = 'rgba(255,255,255,0.05)';
+                stPutaway.style.boxShadow = 'none';
+                stPutaway.querySelector('.sim-val').style.color = 'var(--white-core)';
+                stPutaway.querySelector('.sim-val').style.textShadow = 'none';
+                stPutaway.querySelector('span').style.color = 'var(--text-muted)';
+                
+                // Remove WIP antes do Putaway
+                wipPutaway.style.background = 'transparent';
+                wipPutaway.style.boxShadow = 'none';
+                wipPutaway.style.animation = 'none';
+
+                // Agora o Gargalo é Inbound e Outbound (1000). Vamos deixar o Inbound verde para indicar limite estabilizado
+                simThroughput.innerText = '1000';
+                simThroughput.style.color = 'var(--cyan-tech)';
+                simThroughput.style.textShadow = '0 0 15px var(--cyan-glow)';
+
+                // Altera Botões e Mensagem
+                btnFixPutaway.style.display = 'none';
+                btnResetSim.style.display = 'block';
+                simFeedback.innerHTML = '<strong style="color: var(--cyan-tech);">Fluxo Estabilizado!</strong> A operação inteira agora flui a 1.000 un/h sem WIP estagnado. O sistema atingiu a sua capacidade máxima segura.';
+            });
+
+            // ESTADO 0: Reset
+            btnResetSim.addEventListener('click', () => {
+                location.reload(); // Maneira mais simples e eficaz de resetar todas as animações CSS e estados HTML
+            });
+        });
+    </script>
+</body>
+</html>

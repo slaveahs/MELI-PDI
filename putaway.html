@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meli PDI - Putaway & Stock Allocation System</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ==========================================================================
+           01. SYSTEM CORE VARIABLES - PUTAWAY MODULE v2.0
+           ========================================================================== */
+        :root {
+            /* --- PALETA NEON TÁTICA (STOW) --- */
+            --stow-green: #00FF88;          /* Verde Neon - Sucesso e Alocação */
+            --stow-green-glow: rgba(0, 255, 136, 0.5);
+            --stow-green-dim: rgba(0, 255, 136, 0.15);
+            --stow-green-dark: rgba(0, 255, 136, 0.05);
+            
+            --critical-orange: #FF6D00;     /* Laranja Neon - Problem Solver e Alertas */
+            --critical-orange-glow: rgba(255, 109, 0, 0.5);
+            --critical-orange-dim: rgba(255, 109, 0, 0.15);
+            --critical-orange-dark: rgba(255, 109, 0, 0.05);
+
+            --wms-purple: #B026FF;          /* Roxo Neon - Ações Sistêmicas/WMS */
+            --wms-purple-glow: rgba(176, 38, 255, 0.5);
+            
+            --alert-red: #FF003C;           /* Vermelho - Erros Críticos */
+            --alert-red-glow: rgba(255, 0, 60, 0.5);
+
+            /* --- BACKGROUNDS PROFUNDOS (AZUL PETRÓLEO/GRAFITE) --- */
+            --bg-deep: #03070A;             /* Fundo absoluto do Vazio Logístico */
+            --bg-surface: #070D14;          /* Superfície primária */
+            --bg-layer-2: #0B131D;          /* Elevação de cards */
+            --bg-layer-3: #111C2A;          /* Hover states */
+            
+            /* --- GLASSMORPHISM & BORDAS --- */
+            --glass-base: rgba(7, 13, 20, 0.75);
+            --glass-light: rgba(11, 19, 29, 0.6);
+            --glass-border: rgba(0, 255, 136, 0.2);
+            --glass-border-strong: rgba(0, 255, 136, 0.4);
+            
+            /* --- TIPOGRAFIA --- */
+            --font-display: 'Orbitron', sans-serif;      /* Títulos de Impacto */
+            --font-body: 'Rajdhani', sans-serif;         /* Leitura Fluida */
+            --font-mono: 'Share Tech Mono', monospace;   /* Dados Técnicos e Logs */
+            
+            /* --- CORES DE TEXTO --- */
+            --text-pure: #FFFFFF;
+            --text-main: #E2E8F0;
+            --text-muted: #829AB1;
+            
+            /* --- ESTRUTURA E GRID --- */
+            --sidebar-width: 320px;
+            --topbar-height: 80px;
+            --container-max: 1440px;
+            
+            /* --- BORDAS E SOMBRAS --- */
+            --radius-xl: 16px;
+            --radius-lg: 12px;
+            --radius-md: 8px;
+            --radius-sm: 4px;
+            --shadow-glass: 0 15px 35px rgba(0, 0, 0, 0.8);
+            --shadow-glow: 0 0 20px var(--stow-green-dim);
+            
+            /* --- TRANSIÇÕES FLUIDAS --- */
+            --transition-fast: 0.2s ease;
+            --transition-smooth: 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            
+            /* --- Z-INDEX LAYERS --- */
+            --z-back: -10;
+            --z-base: 1;
+            --z-content: 10;
+            --z-topbar: 40;
+            --z-sidebar: 50;
+            --z-overlay: 999;
+        }
+
+        /* ==========================================================================
+           02. GLOBAL RESET & BASE SETUP
+           ========================================================================== */
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            position: relative;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* CUSTOM SCROLLBAR INDUSTRIAL */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-deep); border-left: 1px solid rgba(0, 255, 136, 0.1); }
+        ::-webkit-scrollbar-thumb { background: rgba(0, 255, 136, 0.3); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--stow-green); box-shadow: 0 0 10px var(--stow-green); }
+
+        /* TEXT UTILITIES */
+        .text-green { color: var(--stow-green); text-shadow: 0 0 8px var(--stow-green-glow); font-weight: 600; }
+        .text-orange { color: var(--critical-orange); text-shadow: 0 0 8px var(--critical-orange-glow); font-weight: 600; }
+        .text-purple { color: var(--wms-purple); text-shadow: 0 0 8px var(--wms-purple-glow); font-weight: 600; }
+        .text-mono { font-family: var(--font-mono); letter-spacing: 1px; text-transform: uppercase; }
+
+        /* ==========================================================================
+           03. ADVANCED BACKGROUND (ISOMETRIC WAREHOUSE GRID)
+           ========================================================================== */
+        #putaway-system-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: var(--z-back);
+            background: radial-gradient(circle at 70% 30%, var(--bg-surface) 0%, var(--bg-deep) 100%);
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        /* Malha Isométrica Simulando Corredores */
+        #putaway-system-bg::before {
+            content: "";
+            position: absolute;
+            width: 250%;
+            height: 250%;
+            top: -75%;
+            left: -75%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 136, 0.03) 2px, transparent 2px),
+                linear-gradient(90deg, rgba(0, 255, 136, 0.03) 2px, transparent 2px);
+            background-size: 60px 60px;
+            transform: perspective(1200px) rotateX(65deg) rotateZ(20deg) translateY(-100px);
+            animation: gridMove Isometric 30s linear infinite;
+        }
+
+        /* Overlay Escuro para Legibilidade */
+        #putaway-system-bg::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(ellipse at center, transparent 10%, var(--bg-deep) 85%);
+        }
+
+        /* Scanline Radar */
+        .radar-scanline {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 15vh;
+            background: linear-gradient(to bottom, transparent, var(--stow-green-dim), transparent);
+            opacity: 0.15;
+            z-index: var(--z-overlay);
+            pointer-events: none;
+            animation: radarSweep 7s linear infinite;
+            border-bottom: 1px solid rgba(0, 255, 136, 0.1);
+        }
+
+        /* --- KEYFRAMES GLOBAIS --- */
+        @keyframes gridMove {
+            0% { transform: perspective(1200px) rotateX(65deg) rotateZ(20deg) translateY(-100px); }
+            100% { transform: perspective(1200px) rotateX(65deg) rotateZ(20deg) translateY(200px); }
+        }
+
+        @keyframes radarSweep {
+            0% { top: -20vh; opacity: 0; }
+            20% { opacity: 0.15; }
+            80% { opacity: 0.15; }
+            100% { top: 120vh; opacity: 0; }
+        }
+
+        @keyframes pulseGlowGreen {
+            0%, 100% { text-shadow: 0 0 10px var(--stow-green), 0 0 20px var(--stow-green-glow); }
+            50% { text-shadow: 0 0 5px var(--stow-green), 0 0 10px var(--stow-green-dim); }
+        }
+
+        @keyframes slideUpFade {
+            0% { opacity: 0; transform: translateY(30px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        /* ==========================================================================
+           04. TYPOGRAPHY & INTERACTIVE ELEMENTS
+           ========================================================================== */
+        h1, h2, h3, h4, h5, h6 {
+            font-family: var(--font-display);
+            font-weight: 700;
+            color: var(--text-pure);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        p {
+            line-height: 1.7;
+            margin-bottom: 1.2rem;
+            font-size: 1.15rem;
+            color: var(--text-main);
+        }
+
+        ul, ol { list-style: none; }
+        a { text-decoration: none; color: inherit; }
+        button { cursor: pointer; border: none; outline: none; background: transparent; font-family: inherit; }
+
+        /* ==========================================================================
+           05. TACTICAL SIDEBAR (MENU DE COMANDO)
+           ========================================================================== */
+        .sys-sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            background: var(--glass-base);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-right: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 10px 0 40px rgba(0,0,0,0.9), inset -2px 0 20px var(--stow-green-dark);
+            z-index: var(--z-sidebar);
+            transition: var(--transition-smooth);
+        }
+
+        .sidebar-header {
+            height: var(--topbar-height);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+            background: linear-gradient(to bottom, rgba(0, 255, 136, 0.05), transparent);
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header::after {
+            content: ''; position: absolute; bottom: -1px; left: 15%; width: 70%; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--stow-green), transparent);
+            box-shadow: 0 0 10px var(--stow-green);
+        }
+
+        .brand-logo-mini {
+            font-family: var(--font-mono);
+            font-size: 1.6rem;
+            font-weight: 900;
+            letter-spacing: -1px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .brand-logo-mini .m { color: var(--text-pure); }
+        .brand-logo-mini .p { color: var(--stow-green); text-shadow: 0 0 15px var(--stow-green-glow); }
+
+        .sidebar-nav {
+            flex-grow: 1;
+            padding: 2.5rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            overflow-y: auto;
+        }
+
+        .nav-category {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin: 1.5rem 0 0.8rem 0.5rem;
+            font-weight: 600;
+        }
+
+        .nav-category:first-child { margin-top: 0; }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.2rem;
+            color: var(--text-muted);
+            font-size: 1.05rem;
+            font-weight: 600;
+            border-radius: var(--radius-md);
+            border: 1px solid transparent;
+            transition: var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        /* Efeito Hover Padrão (Verde) */
+        .nav-item::before {
+            content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 3px;
+            background: var(--stow-green); transform: scaleY(0); transition: transform 0.3s ease;
+            transform-origin: bottom;
+        }
+
+        .nav-item:hover {
+            background: linear-gradient(90deg, var(--stow-green-dark), transparent);
+            border-color: rgba(0, 255, 136, 0.15);
+            color: var(--text-pure);
+            transform: translateX(8px);
+        }
+
+        .nav-item:hover::before { transform: scaleY(1); box-shadow: 0 0 15px var(--stow-green); }
+
+        .nav-item.active {
+            background: var(--stow-green-dark);
+            border: 1px solid var(--glass-border-strong);
+            color: var(--stow-green);
+            box-shadow: inset 0 0 20px var(--stow-green-dim);
+        }
+        .nav-item.active::before { transform: scaleY(1); box-shadow: 0 0 15px var(--stow-green); }
+
+        /* Variação de Link - Problem Solver (Laranja) */
+        .nav-item.ps-link:hover {
+            background: linear-gradient(90deg, var(--critical-orange-dark), transparent);
+            border-color: rgba(255, 109, 0, 0.2);
+            color: var(--critical-orange);
+        }
+        .nav-item.ps-link::before { background: var(--critical-orange); }
+        .nav-item.ps-link:hover::before { box-shadow: 0 0 15px var(--critical-orange); }
+        
+        .nav-item.ps-link.active {
+            background: var(--critical-orange-dark);
+            border-color: rgba(255, 109, 0, 0.4);
+            color: var(--critical-orange);
+            box-shadow: inset 0 0 20px var(--critical-orange-dim);
+        }
+        .nav-item.ps-link.active::before { box-shadow: 0 0 15px var(--critical-orange); }
+
+        /* Variação de Link - Voltar (Roxo) */
+        .nav-item.back-link:hover {
+            border-color: rgba(176, 38, 255, 0.2);
+            color: var(--wms-purple);
+        }
+        .nav-item.back-link::before { background: var(--wms-purple); }
+
+        .nav-icon {
+            width: 20px; height: 20px; margin-right: 15px; fill: none; stroke: currentColor;
+            stroke-width: 2; z-index: 1; transition: transform 0.3s ease;
+        }
+        
+        .nav-item:hover .nav-icon { transform: scale(1.15) rotate(-5deg); }
+
+        /* --- SIDEBAR FOOTER --- */
+        .sidebar-footer {
+            padding: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-shrink: 0;
+        }
+
+        .user-avatar {
+            width: 45px; height: 45px;
+            border: 2px solid var(--stow-green);
+            border-radius: var(--radius-sm);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--stow-green);
+            font-family: var(--font-mono); font-weight: bold; font-size: 1.2rem;
+            box-shadow: 0 0 15px var(--stow-green-dim), inset 0 0 10px var(--stow-green-dark);
+            background: var(--bg-deep);
+        }
+
+        .user-details { display: flex; flex-direction: column; }
+        .user-name { color: var(--text-pure); font-size: 1rem; font-weight: 600; letter-spacing: 1px; }
+        .user-role { color: var(--stow-green); font-size: 0.75rem; font-family: var(--font-mono); letter-spacing: 1px; margin-top: 3px; }
+        /* ==========================================================================
+           06. TOP STATUS BAR (MONITORAMENTO DO WMS)
+           ========================================================================== */
+        .sys-topbar {
+            height: var(--topbar-height);
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: calc(100% - var(--sidebar-width));
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 4rem;
+            border-bottom: 1px solid rgba(0, 255, 136, 0.1);
+            background: rgba(3, 7, 10, 0.85);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            z-index: var(--z-topbar);
+            box-shadow: 0 5px 30px rgba(0,0,0,0.8);
+            transition: var(--transition-smooth);
+        }
+
+        .status-widget {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            display: flex;
+            gap: 25px;
+            align-items: center;
+            letter-spacing: 1.5px;
+            background: rgba(0, 255, 136, 0.02);
+            padding: 8px 20px;
+            border-radius: 30px;
+            border: 1px solid rgba(0, 255, 136, 0.1);
+            box-shadow: inset 0 0 10px rgba(0, 255, 136, 0.02);
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            background: var(--stow-green);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 10px var(--stow-green);
+            animation: pulseGlowGreen 2s infinite;
+        }
+
+        .status-divider {
+            color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* ==========================================================================
+           07. MAIN WORKSPACE (ÁREA DE CONTEÚDO SCROLLÁVEL)
+           ========================================================================== */
+        .main-workspace {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 40px;
+            padding-top: calc(var(--topbar-height) + 50px);
+            z-index: var(--z-base);
+            position: relative;
+        }
+
+        /* ==========================================================================
+           08. HERO SECTION (TÍTULO PRINCIPAL NEON)
+           ========================================================================== */
+        .hero-section {
+            width: 100%;
+            max-width: var(--container-max);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start; /* Alinhamento à esquerda para visual tático */
+            margin: 0 auto 6rem auto;
+            animation: slideUpFade 1.2s ease-out forwards;
+            scroll-margin-top: calc(var(--topbar-height) + 2rem);
+            position: relative;
+            padding-left: 2rem;
+            border-left: 4px solid var(--stow-green);
+        }
+
+        .hero-section::before {
+            content: '[SYS_INIT_STOW]';
+            position: absolute;
+            top: -25px;
+            left: 2rem;
+            font-family: var(--font-mono);
+            color: var(--stow-green);
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            opacity: 0.7;
+        }
+
+        .hero-title {
+            font-family: var(--font-display);
+            font-size: clamp(3.5rem, 5vw, 6rem);
+            font-weight: 900;
+            line-height: 1.1;
+            letter-spacing: 6px;
+            margin-bottom: 1rem;
+            color: transparent;
+            -webkit-text-stroke: 2px var(--stow-green);
+            text-shadow: 0 0 20px var(--stow-green-glow), inset 0 0 10px var(--stow-green-dark);
+            text-transform: uppercase;
+            position: relative;
+        }
+
+        .hero-title::after {
+            content: '_';
+            color: var(--stow-green);
+            animation: blinkCursor 1s infinite step-end;
+        }
+
+        @keyframes blinkCursor {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .hero-subtitle {
+            font-family: var(--font-mono);
+            font-size: 1.4rem;
+            color: var(--text-pure);
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 10px;
+            background: linear-gradient(90deg, var(--stow-green-dim), transparent);
+            padding: 10px 20px;
+            border-left: 2px solid var(--stow-green);
+        }
+
+        .hero-description {
+            font-family: var(--font-body);
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin-top: 1.5rem;
+            font-style: italic;
+        }
+        /* ==========================================================================
+           09. TACTICAL GRIDS E SECTION TITLES
+           ========================================================================== */
+        .content-section {
+            width: 100%;
+            max-width: var(--container-max);
+            margin: 0 auto 6rem auto;
+            scroll-margin-top: calc(var(--topbar-height) + 3rem);
+            position: relative;
+            z-index: var(--z-content);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 3rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 1rem;
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            color: var(--text-pure);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title::before {
+            content: '>>';
+            color: var(--stow-green);
+            font-family: var(--font-mono);
+            margin-right: 15px;
+            text-shadow: 0 0 10px var(--stow-green-glow);
+        }
+
+        /* Variação de Título para o Problem Solver (Laranja) */
+        .section-title.ps-title::before {
+            color: var(--critical-orange);
+            text-shadow: 0 0 10px var(--critical-orange-glow);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2.5rem;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2.5rem;
+        }
+
+        /* ==========================================================================
+           10. TACTICAL CARDS (GLASSMORPHISM AVANÇADO)
+           ========================================================================== */
+        .tactic-card {
+            background: var(--glass-base);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 3rem;
+            box-shadow: var(--shadow-glass), inset 0 0 30px rgba(0, 255, 136, 0.02);
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition-smooth);
+            z-index: 1;
+        }
+
+        /* Efeito de Varredura no Hover (Cyber-scan) */
+        .tactic-card::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(0, 255, 136, 0.05), transparent);
+            transform: rotate(45deg) translateY(100%);
+            transition: transform 0.6s ease;
+            z-index: -1;
+        }
+
+        .tactic-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--glass-border-strong);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9), inset 0 0 40px var(--stow-green-dark);
+        }
+
+        .tactic-card:hover::after {
+            transform: rotate(45deg) translateY(-100%);
+        }
+
+        /* Cantoneiras Técnicas (Crosshairs) */
+        .tactic-card::before {
+            content: ''; position: absolute; top: 15px; right: 15px; width: 20px; height: 20px;
+            border-top: 2px solid var(--stow-green); border-right: 2px solid var(--stow-green);
+            opacity: 0.3; transition: var(--transition-fast);
+        }
+        .tactic-card:hover::before { opacity: 1; box-shadow: 2px -2px 10px var(--stow-green-dim); }
+
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            display: inline-block;
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
+        }
+
+        .tactic-card h3 {
+            font-size: 1.5rem;
+            color: var(--stow-green);
+            margin-bottom: 1rem;
+            font-family: var(--font-display);
+            letter-spacing: 1px;
+        }
+        /* ==========================================================================
+           11. INTERACTIVE TIMELINE (FLUXO DE STOW)
+           ========================================================================== */
+        .timeline-wrapper {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: var(--radius-xl);
+            padding: 4rem 2rem;
+            position: relative;
+        }
+
+        .timeline-track {
+            position: absolute;
+            top: 50%;
+            left: 5%;
+            width: 90%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--wms-purple-glow), var(--stow-green), transparent);
+            transform: translateY(-50%);
+            z-index: 0;
+            box-shadow: 0 0 15px var(--stow-green-dim);
+        }
+
+        .timeline-steps {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stow-step {
+            width: 16%;
+            text-align: center;
+            transition: var(--transition-smooth);
+            cursor: pointer;
+        }
+
+        .stow-step:hover {
+            transform: translateY(-15px);
+        }
+
+        .step-node {
+            width: 70px;
+            height: 70px;
+            background: var(--bg-deep);
+            border: 2px solid var(--wms-purple);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem auto;
+            font-size: 1.8rem;
+            box-shadow: 0 0 15px rgba(176, 38, 255, 0.2), inset 0 0 10px rgba(176, 38, 255, 0.1);
+            color: var(--text-pure);
+            transition: var(--transition-smooth);
+            position: relative;
+        }
+
+        /* Nó final verde (Alocação) */
+        .stow-step.final-step .step-node {
+            border-color: var(--stow-green);
+            box-shadow: 0 0 15px var(--stow-green-glow), inset 0 0 10px var(--stow-green-dim);
+            color: var(--stow-green);
+        }
+
+        .stow-step:hover .step-node {
+            background: rgba(176, 38, 255, 0.1);
+            border-color: var(--wms-purple);
+            box-shadow: 0 0 25px var(--wms-purple), inset 0 0 20px var(--wms-purple-glow);
+            transform: scale(1.1);
+        }
+
+        .stow-step.final-step:hover .step-node {
+            background: var(--stow-green-dark);
+            border-color: var(--stow-green);
+            box-shadow: 0 0 25px var(--stow-green), inset 0 0 20px var(--stow-green-glow);
+        }
+
+        .step-title {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            color: var(--text-pure);
+            margin-bottom: 0.5rem;
+        }
+
+        .step-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        /* ==========================================================================
+           12. PROBLEM SOLVER ZONE (INVENTORY DIVERGENCE)
+           ========================================================================== */
+        .ps-hazard-zone {
+            background: rgba(10, 5, 0, 0.8);
+            border: 2px solid var(--critical-orange);
+            border-radius: var(--radius-xl);
+            padding: 4rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.8), inset 0 0 60px var(--critical-orange-dark);
+        }
+
+        /* Faixas de Isolamento de Risco (Hazard Stripes) */
+        .ps-hazard-zone::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 8px;
+            background: repeating-linear-gradient(
+                45deg,
+                var(--critical-orange),
+                var(--critical-orange) 15px,
+                #000000 15px,
+                #000000 30px
+            );
+            box-shadow: 0 0 15px var(--critical-orange-glow);
+        }
+
+        .ps-card {
+            background: rgba(255, 109, 0, 0.03);
+            border: 1px solid rgba(255, 109, 0, 0.2);
+            border-radius: var(--radius-md);
+            padding: 2.5rem 2rem;
+            transition: var(--transition-smooth);
+            text-align: left;
+        }
+
+        .ps-card:hover {
+            background: rgba(255, 109, 0, 0.08);
+            border-color: var(--critical-orange);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(255, 109, 0, 0.1), inset 0 0 15px rgba(255, 109, 0, 0.05);
+        }
+
+        .ps-card .ps-icon {
+            font-size: 2.5rem;
+            color: var(--critical-orange);
+            margin-bottom: 1.5rem;
+            filter: drop-shadow(0 0 8px var(--critical-orange-glow));
+        }
+
+        .ps-card h4 {
+            color: var(--text-pure);
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+        /* ==========================================================================
+           13. GOLDEN RULES (REGRAS DE OURO - MURAL VISUAL)
+           ========================================================================== */
+        .golden-rule-card {
+            background: var(--bg-layer-2);
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 3rem 2.5rem 2.5rem 2.5rem;
+            border-radius: var(--radius-lg);
+            position: relative;
+            transition: var(--transition-smooth);
+        }
+
+        .golden-rule-card:hover {
+            background: rgba(255,255,255,0.02);
+            transform: translateY(-5px);
+            border-color: rgba(255,255,255,0.1);
+        }
+
+        .rule-badge {
+            position: absolute;
+            top: -15px;
+            left: 20px;
+            padding: 5px 20px;
+            border-radius: 25px;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            background: var(--bg-deep);
+        }
+
+        .rule-badge.allow {
+            border: 1px solid var(--stow-green);
+            color: var(--stow-green);
+            box-shadow: 0 5px 15px rgba(0, 255, 136, 0.1), inset 0 0 10px var(--stow-green-dark);
+        }
+
+        .rule-badge.deny {
+            border: 1px solid var(--alert-red);
+            color: var(--alert-red);
+            box-shadow: 0 5px 15px rgba(255, 0, 60, 0.1), inset 0 0 10px rgba(255, 0, 60, 0.05);
+        }
+
+        /* ==========================================================================
+           14. ABC CURVE HEATMAP E COMPONENTES INTERATIVOS
+           ========================================================================== */
+        .heatmap-panel {
+            background: var(--bg-layer-2);
+            padding: 3rem;
+            border-radius: var(--radius-lg);
+            border: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .heat-bar {
+            display: flex;
+            align-items: center;
+            padding: 1.2rem;
+            border-radius: var(--radius-md);
+            color: var(--text-pure);
+            font-family: var(--font-mono);
+            font-weight: 700;
+            letter-spacing: 1px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+
+        .heat-bar.zone-a { background: linear-gradient(90deg, #FF003C, #FF6D00); width: 100%; text-shadow: 0 0 5px rgba(0,0,0,0.5); }
+        .heat-bar.zone-b { background: linear-gradient(90deg, #FF6D00, #FFD600); width: 65%; color: #000; }
+        .heat-bar.zone-c { background: linear-gradient(90deg, #00FF88, #00b366); width: 35%; color: #000; }
+
+        /* QUIZ SIMULADOR */
+        .quiz-panel {
+            background: rgba(0, 255, 136, 0.02);
+            border: 1px dashed var(--stow-green-glow);
+            padding: 4rem;
+            border-radius: var(--radius-lg);
+            text-align: center;
+        }
+
+        .btn-cyber {
+            background: rgba(0, 255, 136, 0.05);
+            border: 1px solid var(--stow-green-dim);
+            color: var(--text-pure);
+            padding: 12px 25px;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 1rem;
+            transition: var(--transition-fast);
+            position: relative;
+            overflow: hidden;
+            margin: 0 10px;
+        }
+
+        .btn-cyber:hover {
+            background: var(--stow-green-dim);
+            border-color: var(--stow-green);
+            color: var(--stow-green);
+            box-shadow: 0 0 20px var(--stow-green-dim), inset 0 0 10px var(--stow-green-dark);
+        }
+
+        .feedback-display {
+            margin-top: 2rem;
+            font-family: var(--font-mono);
+            font-size: 1.1rem;
+            min-height: 25px;
+        }
+
+        /* ==========================================================================
+           15. PS CHECKLIST & ACCORDIONS (GLOSSÁRIO)
+           ========================================================================== */
+        .ps-checklist {
+            background: var(--bg-layer-3);
+            border-left: 4px solid var(--critical-orange);
+            padding: 3rem;
+            border-radius: var(--radius-md);
+            font-family: var(--font-mono);
+        }
+
+        .check-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: var(--radius-sm);
+            transition: var(--transition-fast);
+        }
+
+        .check-item:hover { background: rgba(255, 255, 255, 0.02); }
+        .check-item:last-child { margin-bottom: 0; }
+
+        .check-box {
+            width: 24px; height: 24px;
+            border: 2px solid var(--text-muted);
+            border-radius: 4px;
+            display: flex; align-items: center; justify-content: center;
+            transition: var(--transition-fast);
+        }
+
+        .check-item.checked .check-box { background: var(--stow-green); border-color: var(--stow-green); box-shadow: 0 0 10px var(--stow-green-glow); }
+        .check-item.checked .check-text { text-decoration: line-through; color: var(--text-muted); opacity: 0.5; }
+
+        .accordion-item {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.05);
+            margin-bottom: 1rem;
+            border-radius: var(--radius-sm);
+            transition: var(--transition-smooth);
+            overflow: hidden;
+        }
+
+        .accordion-title {
+            padding: 1.5rem 2rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            color: var(--text-pure);
+            transition: var(--transition-fast);
+        }
+
+        .accordion-title:hover { background: rgba(255,255,255,0.02); color: var(--stow-green); }
+        .accordion-panel {
+            max-height: 0;
+            padding: 0 2rem;
+            transition: max-height 0.4s ease, padding 0.4s ease;
+            color: var(--text-muted);
+            font-size: 1.05rem;
+        }
+
+        .accordion-item.active {
+            border-color: var(--stow-green-dim);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.02);
+        }
+        .accordion-item.active .accordion-title { color: var(--stow-green); border-bottom: 1px solid rgba(0, 255, 136, 0.1); }
+        .accordion-item.active .accordion-panel { max-height: 250px; padding: 1.5rem 2rem; }
+
+        /* ==========================================================================
+           16. MEDIA QUERIES (DESKTOP E NOTEBOOKS)
+           ========================================================================== */
+        @media (max-width: 1400px) {
+            .hero-title { font-size: 4rem; }
+            .grid-3 { grid-template-columns: repeat(2, 1fr); }
+            .main-workspace { padding: 30px; padding-top: calc(var(--topbar-height) + 30px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="putaway-system-bg"></div>
+    <div class="radar-scanline"></div>
+
+    <aside class="sys-sidebar">
+        <div class="sidebar-header">
+            <div class="brand-logo-mini">
+                <span class="m">MELI_PDI</span><span class="p">/></span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-category">Dashboard de Stow</div>
+            
+            <a href="#hero" class="nav-item active index-link">
+                <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                <span>Visão Geral</span>
+            </a>
+            
+            <a href="#conceito" class="nav-item index-link">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                <span>Conceito & Utilidade</span>
+            </a>
+
+            <a href="#fluxo" class="nav-item index-link">
+                <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 16 16 12 12 8"></polyline><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                <span>Fluxo de Alocação</span>
+            </a>
+
+            <div class="nav-category">Áreas Críticas</div>
+
+            <a href="#problem-solver" class="nav-item ps-link index-link">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                <span>Inventory Divergence</span>
+            </a>
+
+            <a href="#regras" class="nav-item index-link">
+                <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                <span>Regras de Ouro</span>
+            </a>
+
+            <div class="nav-category">Ferramentas & Dados</div>
+
+            <a href="#ferramentas" class="nav-item index-link">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <span>Heatmap & Simulador</span>
+            </a>
+            
+            <div style="margin-top: 2rem;">
+                <a href="hub.html" class="nav-item back-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                    <span>Voltar ao Sistema Central</span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-avatar">TB</div>
+            <div class="user-details">
+                <span class="user-name">Thiago Brito</span>
+                <span class="user-role">WMS: STOW_OPERATOR</span>
+            </div>
+        </div>
+    </aside>
+
+    <header class="sys-topbar">
+        <div class="status-widget">
+            <span><span class="status-dot"></span> WMS CONNECTION: <span class="text-green">SECURE</span></span>
+            <span class="status-divider">|</span> 
+            <span>ZONE: FULL_INBOUND_STOW</span>
+        </div>
+    </header>
+
+    <main class="main-workspace">
+        
+        <section id="hero" class="hero-section content-section">
+            <h1 class="hero-title">PUTAWAY</h1>
+            <div class="hero-subtitle">
+                STOCK ALLOCATION SYSTEM
+            </div>
+            <p class="hero-description">
+                "Cada produto precisa de um endereço físico rastreável.<br>Sem endereço sistêmico, o estoque não existe para a venda."
+            </p>
+        </section>
+        <section id="conceito" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">Conceito & Utilidade</h2>
+            </div>
+            
+            <div class="grid-2">
+                <article class="tactic-card">
+                    <span class="card-icon">🏗️</span>
+                    <h3>O que é o Putaway?</h3>
+                    <p>O <strong>Putaway (Stow)</strong> é a fase crítica onde o produto encerra sua transição do recebimento e ganha um endereço fixo. É o processo de alocar o item em uma célula física (Bin) e vinculá-lo via WMS, transformando "carga" em "estoque disponível".</p>
+                </article>
+
+                <article class="tactic-card">
+                    <span class="card-icon">🎯</span>
+                    <h3>Precisão Sistêmica</h3>
+                    <p>A acuracidade de inventário nasce aqui. Se um produto é guardado sem bipagem ou em local errado, ele se torna um "item fantasma": existe fisicamente, mas é invisível para o sistema de vendas, gerando perdas financeiras.</p>
+                </article>
+            </div>
+
+            <div class="grid-3" style="margin-top: 2.5rem;">
+                <div class="tactic-card" style="padding: 2rem;">
+                    <h4 class="text-green text-mono" style="margin-bottom: 10px;">01. Disponibilidade</h4>
+                    <p style="font-size: 0.95rem; color: var(--text-muted);">Só existe venda se o Picker souber exatamente onde o produto está.</p>
+                </div>
+                <div class="tactic-card" style="padding: 2rem;">
+                    <h4 class="text-green text-mono" style="margin-bottom: 10px;">02. Densidade</h4>
+                    <p style="font-size: 0.95rem; color: var(--text-muted);">Otimização do espaço: itens pequenos em bins pequenos, aproveitando 100% do CD.</p>
+                </div>
+                <div class="tactic-card" style="padding: 2rem;">
+                    <h4 class="text-green text-mono" style="margin-bottom: 10px;">03. Rotação</h4>
+                    <p style="font-size: 0.95rem; color: var(--text-muted);">Produtos de alta rotatividade em locais de fácil acesso (Power Zone).</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="fluxo" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">Fluxo de Alocação (Step-by-Step)</h2>
+            </div>
+
+            <div class="timeline-wrapper">
+                <div class="timeline-track"></div>
+                <div class="timeline-steps">
+                    
+                    <div class="stow-step">
+                        <div class="step-node">🧺</div>
+                        <h4 class="step-title">Coleta</h4>
+                        <p class="step-desc">Stower retira o Tote da esteira ou dropline.</p>
+                    </div>
+
+                    <div class="stow-step">
+                        <div class="step-node">📡</div>
+                        <h4 class="step-title">Scanner</h4>
+                        <p class="step-desc">Bipagem do LPN/EAN para iniciar a tarefa.</p>
+                    </div>
+
+                    <div class="stow-step">
+                        <div class="step-node">🗺️</div>
+                        <h4 class="step-title">WMS Path</h4>
+                        <p class="step-desc">Sistema indica a melhor zona para o item.</p>
+                    </div>
+
+                    <div class="stow-step">
+                        <div class="step-node">🔍</div>
+                        <h4 class="step-title">Bin Match</h4>
+                        <p class="step-desc">Busca visual por espaço e cubagem correta.</p>
+                    </div>
+
+                    <div class="stow-step">
+                        <div class="step-node">📍</div>
+                        <h4 class="step-title">Check-in Bin</h4>
+                        <p class="step-desc">Bipagem do endereço físico para vinculação.</p>
+                    </div>
+
+                    <div class="stow-step final-step">
+                        <div class="step-node">✅</div>
+                        <h4 class="step-title">Allocated</h4>
+                        <p class="step-desc">Item disponível para venda imediata.</p>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+        <section id="problem-solver" class="content-section">
+            <div class="ps-hazard-zone">
+                <div class="section-header">
+                    <h2 class="section-title ps-title">Inventory Divergence Control</h2>
+                </div>
+                <p style="margin-bottom: 3rem; font-size: 1.2rem; color: var(--text-main);">Quando o mundo físico e o sistêmico discordam, o <strong>Problem Solver</strong> entra em cena para restaurar a verdade do estoque.</p>
+
+                <div class="grid-2">
+                    <div class="ps-card">
+                        <div class="ps-icon">📏</div>
+                        <h4>Erro de Cubagem (Master Data)</h4>
+                        <p style="color: var(--text-muted); font-size: 1rem;">O sistema envia um item grande para um bin pequeno. O PS deve medir o produto, atualizar o cadastro mestre e liberar a nova alocação.</p>
+                    </div>
+
+                    <div class="ps-card">
+                        <div class="ps-icon">📊</div>
+                        <h4>Bin Cheio (Físico vs Virtual)</h4>
+                        <p style="color: var(--text-muted); font-size: 1rem;">O WMS indica "Bin Vazio", mas há produtos lá. O PS realiza a auditoria (Cycle Count) para limpar o endereço.</p>
+                    </div>
+
+                    <div class="ps-card">
+                        <div class="ps-icon">📉</div>
+                        <h4>Falta no Tote (Shortage)</h4>
+                        <p style="color: var(--text-muted); font-size: 1rem;">O sistema espera 10 itens, mas só existem 9. Investigação imediata para evitar furos de estoque na entrada.</p>
+                    </div>
+
+                    <div class="ps-card">
+                        <div class="ps-icon">📈</div>
+                        <h4>Sobra no Tote (Overage)</h4>
+                        <p style="color: var(--text-muted); font-size: 1rem;">Item sem registro no tote atual. O PS deve identificar a origem e reintegrar o item ao fluxo correto.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="regras" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">Regras de Ouro do Stower</h2>
+            </div>
+
+            <div class="grid-3">
+                <div class="golden-rule-card">
+                    <div class="rule-badge allow">✔️ Bipou, Guardou</div>
+                    <h4 style="margin-bottom: 10px; color: var(--text-pure);">Sincronismo Total</h4>
+                    <p style="font-size: 0.95rem; color: var(--text-muted);">Nunca bipa o produto e o guarda minutos depois. O registro deve ser em tempo real.</p>
+                </div>
+
+                <div class="golden-rule-card">
+                    <div class="rule-badge allow">✔️ Visibilidade</div>
+                    <h4 style="margin-bottom: 10px; color: var(--text-pure);">Faceamento</h4>
+                    <p style="font-size: 0.95rem; color: var(--text-muted);">O código de barras (EAN) deve estar sempre voltado para a frente do bin.</p>
+                </div>
+
+                <div class="golden-rule-card">
+                    <div class="rule-badge deny">❌ Mistura Semelhante</div>
+                    <h4 style="margin-bottom: 10px; color: var(--text-pure);">Evite Confusão</h4>
+                    <p style="font-size: 0.95rem; color: var(--text-muted);">Nunca coloque SKUs visualmente parecidos no mesmo bin. Risco de erro no Picking.</p>
+                </div>
+
+                <div class="golden-rule-card">
+                    <div class="rule-badge deny">❌ Tetris Forçado</div>
+                    <h4 style="margin-bottom: 10px; color: var(--text-pure);">Integridade</h4>
+                    <p style="font-size: 0.95rem; color: var(--text-muted);">Se o item não entra folgado, o bin está cheio. Forçar causa avarias no produto.</p>
+                </div>
+
+                <div class="golden-rule-card">
+                    <div class="rule-badge allow">✔️ Power Zone</div>
+                    <h4 style="margin-bottom: 10px; color: var(--text-pure);">Ergonomia</h4>
+                    <p style="font-size: 0.95rem; color: var(--text-muted);">Itens pesados e de alta saída devem ficar entre os joelhos e os ombros.</p>
+                </div>
+
+                <div class="golden-rule-card">
+                    <div class="rule-badge deny">❌ Bipagem Cega</div>
+                    <h4 style="margin-bottom: 10px; color: var(--text-pure);">Verdade Física</h4>
+                    <p style="font-size: 0.95rem; color: var(--text-muted);">Nunca bipa um bin e guarda no vizinho só porque o bin alvo estava alto demais.</p>
+                </div>
+            </div>
+        </section>
+        <section id="heatmap" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">Mapa de Calor & Curva ABC</h2>
+            </div>
+            <div class="heatmap-panel">
+                <div class="heat-bar zone-a">ZONA A - ALTA ROTATIVIDADE (POWER ZONE) - 80% DAS VENDAS</div>
+                <div class="heat-bar zone-b">ZONA B - MÉDIA ROTATIVIDADE - 15% DAS VENDAS</div>
+                <div class="heat-bar zone-c">ZONA C - BAIXA ROTATIVIDADE / ITENS PESADOS - 5% DAS VENDAS</div>
+                <p style="margin-top: 20px; color: var(--text-muted); font-size: 1.1rem; border-left: 2px solid var(--wms-purple); padding-left: 20px;">
+                    O algoritmo de alocação do WMS direciona o Stower para a <strong>Power Zone</strong> (níveis entre joelhos e ombros) para maximizar a velocidade de saída dos itens mais vendidos.
+                </p>
+            </div>
+        </section>
+
+        <section id="quiz" class="content-section">
+            <div class="quiz-panel">
+                <h3 id="quiz-question" style="color: var(--text-pure); margin-bottom: 1.5rem; font-size: 2rem;">SIMULADOR: Onde você guardaria uma Garrafa de Azeite?</h3>
+                <p style="color: var(--text-muted); margin-bottom: 2.5rem;">Considere: Produto Líquido, Frágil e de Rotatividade Média.</p>
+                
+                <div class="quiz-actions">
+                    <button class="btn-cyber" onclick="processQuiz('erro', 'Azeite')">Nível H (Alto / Top Bin)</button>
+                    <button class="btn-cyber" onclick="processQuiz('correto', 'Azeite')">Nível A (Baixo / Bottom Bin)</button>
+                    <button class="btn-cyber" onclick="processQuiz('erro', 'Azeite')">Nível D (Power Zone / Central)</button>
+                </div>
+                <div id="quiz-feedback" class="feedback-display"></div>
+            </div>
+        </section>
+
+        <div class="grid-2">
+            <section class="content-section">
+                <h2 class="section-title">Dashboard de Qualidade</h2>
+                <div class="tactic-card">
+                    <p class="text-mono" style="font-size: 0.9rem; color: var(--stow-green); margin-bottom: 15px;">DPMO (Defeitos por Milhão de Oportunidades)</p>
+                    <div style="height: 12px; background: #111; border-radius: 6px; overflow: hidden; display: flex; border: 1px solid rgba(255,255,255,0.1);">
+                        <div style="width: 94%; background: linear-gradient(90deg, var(--stow-green), #00b366);"></div>
+                        <div style="width: 6%; background: var(--alert-red);"></div>
+                    </div>
+                    <p style="margin-top: 15px; font-size: 0.95rem; color: var(--text-muted);">
+                        Precisão Atual: <span class="text-green">99.994%</span>. O equilíbrio entre velocidade e acuracidade define a excelência operacional.
+                    </p>
+                </div>
+            </section>
+
+            <section class="content-section">
+                <h2 class="section-title">Roteirização Sistêmica</h2>
+                <div class="tactic-card">
+                    <p class="text-mono" style="font-size: 0.9rem; color: var(--wms-purple); margin-bottom: 15px;">WMS Pathfinding Algorithm</p>
+                    <p style="font-size: 1rem; color: var(--text-main);">
+                        O sistema calcula a rota em <strong>zigue-zague</strong> para minimizar os passos do Stower, garantindo que o tempo por tarefa (TPT) seja o menor possível.
+                    </p>
+                </div>
+            </section>
+        </div>
+
+        <div class="grid-2">
+            <section id="amnesty" class="content-section">
+                <h2 class="section-title">Caixa de Amnistia (Amnesty)</h2>
+                <div class="tactic-card" style="border-color: var(--wms-purple-glow); background: rgba(176, 38, 255, 0.03);">
+                    <p>Itens encontrados "soltos" no CD devem ser colocados nas caixas de <strong>Amnesty</strong>. O Problem Solver reintegra o item no sistema sem gerar penalização para quem o encontrou. O objetivo é a verdade do estoque.</p>
+                </article>
+            </section>
+
+            <section id="glossario" class="content-section">
+                <h2 class="section-title">Glossário WMS</h2>
+                <div class="accordion-item" onclick="toggleAccordion(this)">
+                    <div class="accordion-title">BIN <span>+</span></div>
+                    <div class="accordion-panel">Endereço físico na prateleira (ex: 12-B-04). É a menor unidade de endereçamento no CD.</div>
+                </div>
+                <div class="accordion-item" onclick="toggleAccordion(this)">
+                    <div class="accordion-title">VNA (Very Narrow Aisle) <span>+</span></div>
+                    <div class="accordion-panel">Corredores ultra-estreitos operados por empilhadeiras trilhadas ou robôs.</div>
+                </div>
+                <div class="accordion-item" onclick="toggleAccordion(this)">
+                    <div class="accordion-title">TOTE <span>+</span></div>
+                    <div class="accordion-panel">Caixa plástica padrão usada para o transporte interno de mercadorias.</div>
+                </div>
+            </section>
+        </div>
+
+        <section id="checklist" class="content-section">
+            <h2 class="section-title" style="color: var(--critical-orange);">PS Checklist: Divergence Resolution</h2>
+            <div class="ps-checklist">
+                <div class="check-item" onclick="toggleCheck(this)">
+                    <div class="check-box"></div> <span class="check-text">Congelar o Bin Virtual (Bloqueio de Picking)</span>
+                </div>
+                <div class="check-item" onclick="toggleCheck(this)">
+                    <div class="check-box"></div> <span class="check-text">Retirar todos os itens físicos do endereço</span>
+                </div>
+                <div class="check-item" onclick="toggleCheck(this)">
+                    <div class="check-box"></div> <span class="check-text">Bipar um a um e identificar o "intruso" sistêmico</span>
+                </div>
+                <div class="check-item" onclick="toggleCheck(this)">
+                    <div class="check-box"></div> <span class="check-text">Corrigir Master Data (Cubagem/Peso) se necessário</span>
+                </div>
+                <div class="check-item" onclick="toggleCheck(this)">
+                    <div class="check-box"></div> <span class="check-text">Atualizar Inventário e Desbloquear Bin</span>
+                </div>
+            </div>
+        </section>
+
+        <footer style="text-align: center; padding: 6rem 0; border-top: 1px dashed rgba(255,255,255,0.1);">
+            <h3 style="font-family: var(--font-display); font-size: 2rem; color: var(--stow-green); margin-bottom: 1.5rem; animation: pulseGlowGreen 3s infinite;">
+                "Putaway não é guardar. É registrar a verdade física do estoque."
+            </h3>
+            <p style="color: var(--text-muted); font-family: var(--font-mono); letter-spacing: 2px;">SISTEMA MELI PDI – MÓDULO STOW CONCLUÍDO</p>
+        </footer>
+
+    </main>
+
+    <script>
+        // 1. Accordion Toggle
+        function toggleAccordion(element) {
+            element.classList.toggle('active');
+        }
+
+        // 2. Checklist Toggle
+        function toggleCheck(element) {
+            element.classList.toggle('checked');
+        }
+
+        // 3. Quiz Logic
+        function processQuiz(status, item) {
+            const feedback = document.getElementById('quiz-feedback');
+            if(status === 'correto') {
+                feedback.innerHTML = `<span style="color: var(--stow-green)">MATCH: Correto! Líquidos devem ficar nos níveis baixos (Nível A) para evitar vazamentos em cascata e por segurança ergonômica.</span>`;
+            } else {
+                feedback.innerHTML = `<span style="color: var(--alert-red)">DIVERGÊNCIA: Risco de Avaria. Guardar líquidos no alto compromete o estoque inferior em caso de quebra.</span>`;
+            }
+        }
+
+        // 4. ScrollSpy: Atualiza o menu lateral baseado na posição da tela
+        const sections = document.querySelectorAll('.content-section');
+        const navLinks = document.querySelectorAll('.index-link');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            const scrollY = window.pageYOffset;
+
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (scrollY >= sectionTop - 200) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // 5. System Boot Log
+        console.log("%c WMS SYSTEM INITIALIZED ", "background: #00FF88; color: #000; font-weight: bold;");
+        console.log("Putaway Module... [SUCCESS]");
+        console.log("Inventory Match... [STABLE]");
+    </script>
+
+</body>
+</html>

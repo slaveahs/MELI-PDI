@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hub de Termos | MeLi PDI Terminal</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ==========================================================================
+           01. ROOT VARIABLES (ACADEMY / HUB THEME)
+           ========================================================================== */
+        :root {
+            /* Palette Base: Deep Space / Academy Dark */
+            --bg-absolute: #03050A; 
+            --bg-panel-deep: rgba(10, 15, 30, 0.85);
+            --bg-card-glass: rgba(15, 25, 45, 0.65);
+            --bg-card-hover: rgba(20, 35, 65, 0.85);
+
+            /* Tema de Cores Hub (Conhecimento e Navegação) */
+            --cyan-hub: #00E5FF;
+            --cyan-glow: rgba(0, 229, 255, 0.5);
+            --cyan-dim: rgba(0, 229, 255, 0.1);
+
+            --purple-academy: #8A2BE2;
+            --purple-glow: rgba(138, 43, 226, 0.5);
+            --purple-dim: rgba(138, 43, 226, 0.1);
+
+            /* Cores de Suporte / Status dos Cursos */
+            --status-done: #00FF66;
+            --status-pending: #FFB300;
+            --white-core: #FFFFFF;
+
+            /* Tipografia */
+            --font-display: 'Orbitron', sans-serif;
+            --font-body: 'Rajdhani', sans-serif;
+            --font-mono: 'Share Tech Mono', monospace;
+            --font-code: 'Fira Code', monospace;
+
+            /* Cores de Texto */
+            --text-title: #FFFFFF;
+            --text-main: #E2E8F0;
+            --text-muted: #8AA6A6;
+
+            /* Bordas e Sombras (Glassmorphism) */
+            --border-hub: rgba(0, 229, 255, 0.3);
+            --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.9);
+            --shadow-neon-cyan: 0 0 15px var(--cyan-glow), inset 0 0 10px var(--cyan-dim);
+            
+            /* Medidas Estruturais (TRAVADAS PARA DESKTOP) */
+            --sidebar-width: 280px;
+            --topbar-height: 80px;
+            --radius-card: 8px;
+            --transition-hud: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        /* ==========================================================================
+           02. CSS RESET & GLOBAL SETUP (FORCED DESKTOP)
+           ========================================================================== */
+        *, *::before, *::after {
+            margin: 0; padding: 0; box-sizing: border-box;
+        }
+
+        html { font-size: 16px; scroll-behavior: smooth; }
+
+        body {
+            background-color: var(--bg-absolute);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            min-height: 100vh;
+            min-width: 1200px; /* <--- TRAVA ABSOLUTA DE DESKTOP */
+            overflow-x: auto;  
+            display: flex;
+            position: relative;
+        }
+
+        /* Custom Scrollbar - Hub Style */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg-absolute); border-left: 1px solid var(--border-hub); }
+        ::-webkit-scrollbar-thumb { background: var(--cyan-dim); border: 1px solid var(--cyan-hub); border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--cyan-hub); box-shadow: 0 0 15px var(--cyan-hub); }
+
+        /* Tipografia Global */
+        h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--text-title); }
+        p { font-size: 1.2rem; line-height: 1.7; margin-bottom: 1.2rem; }
+        strong { color: var(--cyan-hub); font-weight: 600; text-shadow: 0 0 8px var(--cyan-dim); }
+
+        /* ==========================================================================
+           03. BACKGROUND EFFECTS (DATA GRID)
+           ========================================================================== */
+        body::before {
+            content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -3;
+            /* Grid da Central de Comando */
+            background-image: 
+                linear-gradient(rgba(0, 229, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(138, 43, 226, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px; pointer-events: none;
+        }
+
+        body::after {
+            content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2;
+            background: radial-gradient(circle at 50% 0%, rgba(0, 229, 255, 0.05) 0%, transparent 50%),
+                        radial-gradient(circle at 50% 100%, rgba(138, 43, 226, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        /* ==========================================================================
+           04. GLOBAL KEYFRAMES (HUB ANIMATIONS)
+           ========================================================================== */
+        @keyframes scanline-v { 0% { transform: translateY(-100%); } 100% { transform: translateY(100vh); } }
+        
+        @keyframes pulse-hub {
+            0% { box-shadow: 0 0 10px var(--cyan-dim); border-color: rgba(0, 229, 255, 0.3); }
+            50% { box-shadow: 0 0 25px var(--cyan-glow); border-color: var(--cyan-hub); }
+            100% { box-shadow: 0 0 10px var(--cyan-dim); border-color: rgba(0, 229, 255, 0.3); }
+        }
+
+        .hud-scanner {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 2px;
+            background: linear-gradient(to right, transparent, var(--cyan-hub), transparent);
+            opacity: 0.4; z-index: 9999; pointer-events: none; animation: scanline-v 6s linear infinite;
+        }
+        /* ==========================================================================
+           05. GLOBAL LAYOUT (GRID E WRAPPERS)
+           ========================================================================== */
+        .app-wrapper {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+            position: relative;
+            z-index: 10;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background: radial-gradient(circle at top right, rgba(0, 229, 255, 0.02), transparent 60%);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1500px; /* Um pouco mais largo para a grid de cursos */
+            margin: 0 auto;
+            padding: 2rem 4rem 4rem 4rem;
+        }
+
+        /* ==========================================================================
+           06. SIDEBAR (TERMINAL NAVIGATION) - ACOMPANHA A PÁGINA (DESKTOP)
+           ========================================================================== */
+        .sys-sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-panel-deep);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border-hub);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0; 
+            z-index: 100;
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.9);
+        }
+
+        /* Feixe de luz vertical Ciano */
+        .sys-sidebar::after {
+            content: '';
+            position: absolute;
+            top: 0; right: -1px;
+            width: 2px; height: 100%;
+            background: linear-gradient(to bottom, transparent, var(--cyan-hub), transparent);
+            opacity: 0.6;
+        }
+
+        .sidebar-brand {
+            height: var(--topbar-height);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 1px dashed var(--border-hub);
+            background: radial-gradient(circle at top, var(--cyan-dim), transparent);
+            position: relative;
+        }
+
+        .sidebar-brand::before {
+            content: '';
+            position: absolute;
+            bottom: -1px; left: 0; width: 40%; height: 2px;
+            background: var(--cyan-hub);
+            box-shadow: 0 0 10px var(--cyan-hub);
+        }
+
+        .brand-logo {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: var(--text-title);
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+
+        .brand-logo span {
+            color: var(--purple-academy);
+            text-shadow: 0 0 15px rgba(138, 43, 226, 0.5);
+        }
+
+        .brand-sub {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--cyan-hub);
+            letter-spacing: 4px;
+            margin-top: 5px;
+            text-transform: uppercase;
+        }
+
+        /* Menu de Navegação */
+        .nav-menu {
+            flex-grow: 1;
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 20px;
+            color: var(--text-muted);
+            font-family: var(--font-body);
+            font-size: 1.05rem;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-decoration: none;
+            position: relative;
+            transition: var(--transition-hud);
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid transparent;
+            border-radius: var(--radius-card);
+            clip-path: polygon(0 0, 100% 0, 100% 70%, 92% 100%, 0 100%);
+        }
+
+        /* Linha de seleção do menu (Ciano no Hover) */
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0;
+            height: 100%; width: 3px;
+            background: var(--cyan-hub);
+            transform: scaleY(0);
+            transition: 0.3s;
+        }
+
+        .nav-link:hover {
+            color: var(--text-pure);
+            background: rgba(0, 229, 255, 0.05);
+            border-color: rgba(0, 229, 255, 0.2);
+            padding-left: 25px;
+        }
+
+        .nav-link:hover::before {
+            transform: scaleY(1);
+            box-shadow: 0 0 15px var(--cyan-glow);
+        }
+
+        /* Estado ATIVO (Página Atual: HUB) */
+        .nav-link.active {
+            color: var(--bg-absolute);
+            background: var(--cyan-hub);
+            border-color: var(--cyan-hub);
+            font-weight: 900;
+        }
+
+        .nav-link.active::before {
+            background: var(--cyan-hub);
+            transform: scaleY(1);
+            box-shadow: 0 0 15px var(--cyan-glow);
+        }
+
+        .nav-icon {
+            width: 20px; height: 20px;
+            fill: none; stroke: currentColor; stroke-width: 2;
+            transition: 0.3s;
+        }
+
+        .nav-link:hover .nav-icon {
+            transform: scale(1.1);
+            color: var(--cyan-hub);
+        }
+
+        .nav-link.active .nav-icon {
+            color: var(--bg-absolute);
+        }
+
+        /* ==========================================================================
+           07. TOPBAR (SYSTEM HEADER)
+           ========================================================================== */
+        .sys-topbar {
+            height: var(--topbar-height);
+            width: 100%;
+            background: var(--bg-panel-deep);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--border-hub);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 4rem;
+            position: sticky;
+            top: 0;
+            z-index: 90;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+        }
+
+        .topbar-path {
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .topbar-path span {
+            color: var(--purple-academy);
+            text-shadow: 0 0 8px var(--purple-dim);
+        }
+
+        /* Status em Modo "HUB" / Ciano */
+        .topbar-status {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-family: var(--font-code);
+            font-size: 0.8rem;
+            color: var(--cyan-hub);
+            letter-spacing: 1px;
+            border: 1px solid rgba(0, 229, 255, 0.4);
+            padding: 8px 15px;
+            border-radius: 4px;
+            background: rgba(0, 229, 255, 0.05);
+            box-shadow: 0 0 10px var(--cyan-dim);
+        }
+
+        .status-dot-hub {
+            width: 8px; height: 8px;
+            background: var(--cyan-hub);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--cyan-glow);
+            animation: pulse-hub 1.5s infinite alternate;
+        }
+        /* ==========================================================================
+           08. HERO SECTION
+           ========================================================================== */
+        .hero-section {
+            margin-bottom: 3rem;
+            position: relative;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-hub);
+        }
+
+        .hero-section::after {
+            content: '';
+            position: absolute;
+            bottom: -1px; left: 0;
+            width: 250px; height: 3px;
+            background: var(--cyan-hub);
+            box-shadow: 0 0 15px var(--cyan-glow);
+        }
+
+        .hero-title-wrapper {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .hero-title {
+            font-size: 4.5rem;
+            font-weight: 900;
+            color: var(--text-title);
+            letter-spacing: 5px;
+            line-height: 1.1;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .hero-title span {
+            color: var(--purple-academy);
+            text-shadow: 0 0 20px var(--purple-glow);
+        }
+
+        .hero-subtitle {
+            font-family: var(--font-mono);
+            font-size: 1.5rem;
+            color: var(--text-main);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .hero-subtitle::before {
+            content: '[TRAINING_CENTER]';
+            font-size: 1rem;
+            color: var(--bg-absolute);
+            background: var(--cyan-hub);
+            padding: 4px 10px;
+            border: 1px solid var(--cyan-hub);
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .hero-quote {
+            margin-top: 1.5rem;
+            font-family: var(--font-body);
+            font-size: 1.3rem;
+            color: var(--cyan-hub);
+            font-style: italic;
+            border-left: 4px solid var(--cyan-hub);
+            padding-left: 15px;
+            background: linear-gradient(90deg, var(--cyan-dim), transparent);
+            padding: 10px 15px;
+            border-radius: 0 4px 4px 0;
+        }
+
+        /* ==========================================================================
+           09. COURSE GRID & CARDS (O CORAÇÃO DO HUB)
+           ========================================================================== */
+        .course-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 3 colunas perfeitas para Desktop */
+            gap: 30px;
+            margin-top: 2rem;
+        }
+
+        .module-card {
+            background: var(--bg-card-glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 229, 255, 0.15);
+            border-radius: var(--radius-card);
+            padding: 30px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-glass);
+            transition: var(--transition-hud);
+            overflow: hidden;
+            text-decoration: none; /* Para quando enveloparmos em <a> ou usarmos o botão */
+        }
+
+        /* Efeito de Hover Holográfico no Card inteiro */
+        .module-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--cyan-hub);
+            background: var(--bg-card-hover);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.9), inset 0 0 20px var(--cyan-dim);
+        }
+
+        /* Topo do Card (Ícone e Número) */
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            border-bottom: 1px dashed rgba(255,255,255,0.1);
+            padding-bottom: 15px;
+        }
+
+        .card-icon {
+            width: 45px; height: 45px;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(138, 43, 226, 0.1);
+            border: 1px solid var(--purple-academy);
+            border-radius: 4px;
+            color: var(--purple-academy);
+            font-size: 1.5rem;
+            box-shadow: 0 0 15px var(--purple-dim);
+            transition: 0.3s;
+        }
+
+        .module-card:hover .card-icon {
+            background: var(--purple-academy);
+            color: var(--white-core);
+            box-shadow: 0 0 15px var(--purple-glow);
+        }
+
+        .module-number {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            color: rgba(255, 255, 255, 0.05);
+            font-weight: 900;
+            line-height: 1;
+            transition: 0.3s;
+        }
+
+        .module-card:hover .module-number {
+            color: rgba(0, 229, 255, 0.15);
+        }
+
+        /* Título e Descrição */
+        .card-title {
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            color: var(--text-title);
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+            transition: 0.3s;
+        }
+
+        .module-card:hover .card-title {
+            color: var(--cyan-hub);
+        }
+
+        .card-desc {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            flex-grow: 1; /* Empurra o botão para baixo */
+            margin-bottom: 25px;
+        }
+
+        /* Status Badge (Simulação de Progresso do Curso) */
+        .status-badge {
+            display: inline-block;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .status-unlocked { background: rgba(0, 255, 102, 0.1); color: var(--status-done); border: 1px solid var(--status-done); }
+        .status-core { background: rgba(138, 43, 226, 0.1); color: var(--purple-academy); border: 1px solid var(--purple-academy); }
+
+        /* Botão de Acesso */
+        .card-btn {
+            display: inline-block;
+            text-align: center;
+            background: transparent;
+            border: 1px solid var(--cyan-hub);
+            color: var(--cyan-hub);
+            padding: 10px 20px;
+            font-family: var(--font-display);
+            font-size: 0.9rem;
+            border-radius: 4px;
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-decoration: none;
+            width: 100%;
+        }
+
+        .card-btn:hover {
+            background: var(--cyan-hub);
+            color: var(--bg-absolute);
+            box-shadow: 0 0 15px var(--cyan-glow);
+            font-weight: bold;
+        }
+        /* EFEITOS ADICIONAIS HUB */
+        .hub-text {
+            color: var(--cyan-hub);
+            font-family: var(--font-mono);
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hud-scanner"></div>
+
+    <div class="app-wrapper">
+        
+        <aside class="sys-sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">MELI<span>PDI</span></div>
+                <div class="brand-sub">SYS.MODULE // ACTIVE</div>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    <span>Home Dashboard</span>
+                </a>
+                
+                <a href="#" class="nav-link active">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                    <span>Treinamento Tatico</span>
+                </a>
+                
+                <div style="height: 1px; background: var(--border-hub); margin: 15px 0; opacity: 0.5;"></div>
+
+                <a href="glossario.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                    <span>Glossário Técnico</span>
+                </a>
+                
+                <a href="sla.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <span>Deep Dive: SLA</span>
+                </a>
+
+                <a href="backlog-detalhado.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                    <span>Monitor: Backlog</span>
+                </a>
+
+                <a href="kpi-detalhado.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    <span>Analytics: KPIs</span>
+                </a>
+
+                <a href="throughput-detalhado.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="13 19 22 12 13 5 13 19"></polygon><polygon points="2 19 11 12 2 5 2 19"></polygon></svg>
+                    <span>Throughput & Vazão</span>
+                </a>
+
+                <a href="takttime-detalhado.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <span>Takt Time & Ritmo</span>
+                </a>
+
+                <a href="gargalo.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                    <span>Gargalo & Restrições</span>
+                </a>
+
+                <a href="dashboard.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                    <span>Dashboards & Gestão</span>
+                </a>
+
+                <a href="leadtime.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="5" r="3"></circle><line x1="12" y1="22" x2="12" y2="8"></line><path d="M5 12H2a10 10 0 0 0 20 0h-3"></path></svg>
+                    <span>Lead Time (Jornada)</span>
+                </a>
+
+                <a href="forecast.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 3v18h18"></path><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"></path></svg>
+                    <span>Forecast & Previsão</span>
+                </a>
+
+                <a href="otif.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+                    <span>OTIF (A Métrica Final)</span>
+                </a>
+            </nav>
+
+            <div style="padding: 20px; border-top: 1px dashed var(--border-hub); text-align: center;">
+                <div style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--cyan-hub); opacity: 0.5; letter-spacing: 1.5px;">
+                    SECURE CONNECTION<br>OSASCO_CD // 2026
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            
+            <header class="sys-topbar">
+                <div class="topbar-path">
+                    MELI PDI <span>/</span> ACADEMY <span>/</span> HUB_CENTRAL.exe
+                </div>
+                <div class="topbar-status">
+                    STATUS: ACADEMY ONLINE
+                    <div class="status-dot-hub"></div>
+                </div>
+            </header>
+
+            <div class="container">
+                
+                <section class="hero-section">
+                    <div class="hero-title-wrapper">
+                        <h1 class="hero-title">TRAINING HUB <span>_</span></h1>
+                    </div>
+                    <div class="hero-subtitle">Central de Formação Tática</div>
+                    
+                    <div class="hero-quote">
+                        "O conhecimento é a única ferramenta que não se desgasta com o uso. Escolha o seu módulo e inicie a simulação."
+                    </div>
+                </section>
+
+                <div class="course-grid">
+                    
+                    <a href="glossario.html" class="module-card">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                            </div>
+                            <span class="module-number">01</span>
+                        </div>
+                        <span class="status-badge status-unlocked">MÓDULO DESBLOQUEADO</span>
+                        <h3 class="card-title">Glossário Técnico</h3>
+                        <p class="card-desc">A fundação da linguagem logística. Domine os termos de armazém, de Inbound a Last Mile, para comunicar como um engenheiro sénior.</p>
+                        <span class="card-btn">INICIAR MÓDULO</span>
+                    </a>
+
+                    <a href="sla.html" class="module-card">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            </div>
+                            <span class="module-number">02</span>
+                        </div>
+                        <span class="status-badge status-core">NÚCLEO TÁTICO</span>
+                        <h3 class="card-title">SLA & Cut-off</h3>
+                        <p class="card-desc">O contrato implacável do tempo. Entenda a diferença vital entre a duração do SLA e a hora da guilhotina (Cut-off) para proteger a operação.</p>
+                        <span class="card-btn">INICIAR MÓDULO</span>
+                    </a>
+
+                    <a href="backlog-detalhado.html" class="module-card">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                            </div>
+                            <span class="module-number">03</span>
+                        </div>
+                        <span class="status-badge status-core">NÚCLEO TÁTICO</span>
+                        <h3 class="card-title">Gestão de Backlog</h3>
+                        <p class="card-desc">A fila de espera que engole o armazém. Aprenda a visualizar, priorizar e aniquilar o volume pendente antes que a bolha rebente.</p>
+                        <span class="card-btn">INICIAR MÓDULO</span>
+                    </a>
+
+                    <a href="kpi-detalhado.html" class="module-card">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                            </div>
+                            <span class="module-number">04</span>
+                        </div>
+                        <span class="status-badge status-unlocked">MÓDULO DESBLOQUEADO</span>
+                        <h3 class="card-title">Métricas & KPIs</h3>
+                        <p class="card-desc">O raio-X numérico da operação. Saiba como ler CPPU, Absenteísmo, Atrição e outras métricas para diagnosticar a saúde financeira do CD.</p>
+                        <span class="card-btn">INICIAR MÓDULO</span>
+                    </a>
+
+                    <a href="throughput-detalhado.html" class="module-card">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 19 22 12 13 5 13 19"></polygon><polygon points="2 19 11 12 2 5 2 19"></polygon></svg>
+                            </div>
+                            <span class="module-number">05</span>
+                        </div>
+                        <span class="status-badge status-core">NÚCLEO TÁTICO</span>
+                        <h3 class="card-title">Throughput (Vazão)</h3>
+                        <p class="card-desc">A força bruta do fluxo logístico. Aprenda a medir e escalar a quantidade de caixas expedidas por hora para bater recordes de produção.</p>
+                        <span class="card-btn">INICIAR MÓDULO</span>
+                    </a>
+
+                    <a href="takttime-detalhado.html" class="module-card">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            </div>
+                            <span class="module-number">06</span>
+                        </div>
+                        <span class="status-badge status-core">NÚCLEO TÁTICO</span>
+                        <h3 class="card-title">Takt Time & Cycle Time</h3>
+                        <p class="card-desc">O ritmo do coração do cliente. Domine a matemática alemã da Lean Manufacturing para sincronizar a velocidade da esteira com a procura real.</p>
+                        <span class="card-btn">INICIAR MÓDULO</span>
+                    </a>
+                    <a href="gargalo.html" class="module-card">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                            </div>
+                            <span class="module-number">07</span>
+                        </div>
+                        <span class="status-badge status-core">NÚCLEO TÁTICO</span>
+                        <h3 class="card-title">Gargalo & Restrições</h3>
+                        <p class="card-desc">A Teoria das Restrições (TOC) na prática. Descubra como identificar o elo mais fraco que dita a velocidade máxima de toda a operação.</p>
+                        <span class="card-btn">INICIAR MÓDULO</span>
+                    </a>
+
+                    <a href="dashboard.html" class="module-card">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                            </div>
+                            <span class="module-number">08</span>
+                        </div>
+                        <span class="status-badge status-unlocked">MÓDULO DESBLOQUEADO</span>
+                        <h3 class="card-title">Dashboards & Gestão</h3>
+                        <p class="card-desc">A Torre de Controlo Visual. Aprenda a regra dos 3 segundos e como utilizar o código de cores Andon para reagir em tempo real no piso.</p>
+                        <span class="card-btn">INICIAR MÓDULO</span>
+                    </a>
+                    <a href="leadtime.html" class="module-card">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="3"></circle><line x1="12" y1="22" x2="12" y2="8"></line><path d="M5 12H2a10 10 0 0 0 20 0h-3"></path></svg>
+                            </div>
+                            <span class="module-number">09</span>
+                        </div>
+                        <span class="status-badge status-core">NÚCLEO TÁTICO</span>
+                        <h3 class="card-title">Lead Time (Jornada)</h3>
+                        <p class="card-desc">O tempo de atravessamento do pedido. Domine a Lei de Little e descubra a estatística brutal do "Tempo de Espera" vs "Tempo de Toque".</p>
+                        <span class="card-btn">INICIAR MÓDULO</span>
+                    </a>
+
+                    <a href="forecast.html" class="module-card">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"></path><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"></path></svg>
+                            </div>
+                            <span class="module-number">10</span>
+                        </div>
+                        <span class="status-badge status-core">NÚCLEO TÁTICO</span>
+                        <h3 class="card-title">Forecast & Previsão</h3>
+                        <p class="card-desc">Antecipe o caos. A ciência matemática e instintiva de prever o volume de vendas para garantir capacidade, recursos e Headcount.</p>
+                        <span class="card-btn">INICIAR MÓDULO</span>
+                    </a>
+                    <a href="otif.html" class="module-card" style="border-color: rgba(255, 0, 85, 0.3);">
+                        <div class="card-header">
+                            <div class="card-icon" style="color: #FF0055; border-color: #FF0055; background: rgba(255, 0, 85, 0.1); box-shadow: 0 0 15px rgba(255, 0, 85, 0.3);">
+                                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+                            </div>
+                            <span class="module-number" style="color: rgba(255,0,85,0.1);">11</span>
+                        </div>
+                        <span class="status-badge" style="background: rgba(255, 0, 85, 0.1); color: #FF0055; border: 1px solid #FF0055;">MÉTRICA SUPREMA (BOSS)</span>
+                        <h3 class="card-title" style="color: #FFFFFF; text-shadow: 0 0 10px rgba(255,255,255,0.5);">OTIF (On-Time In-Full)</h3>
+                        <p class="card-desc">A avaliação final. Uma métrica binária e implacável onde o "meio certo" não existe. Ou cumpre a promessa a 100% ou falha com o cliente.</p>
+                        <span class="card-btn" style="color: #FFFFFF; border-color: #FF0055; background: rgba(255, 0, 85, 0.1);">INICIAR AVALIAÇÃO FINAL</span>
+                    </a>
+
+                </div>
+                                <div style="margin-top: 5rem; border-top: 1px dashed var(--cyan-hub); padding-top: 4rem; position: relative;">
+                    <div style="position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: var(--bg-absolute); padding: 0 20px; font-family: var(--font-display); color: var(--cyan-hub); font-size: 1.2rem; letter-spacing: 2px;">
+                        [ NOTA DO DESENVOLVEDOR // PROBLEM SOLVER ]
+                    </div>
+                    
+                    <div style="background: rgba(0, 229, 255, 0.05); border-left: 4px solid var(--purple-academy); padding: 3rem; border-radius: 4px; text-align: left; box-shadow: inset 0 0 20px rgba(138, 43, 226, 0.05);">
+                        <h3 style="font-family: var(--font-display); font-size: 1.8rem; color: var(--white-core); margin-bottom: 1.5rem;">Por que decidi documentar e dominar cada um destes termos?</h3>
+                        
+                        <p style="font-size: 1.15rem; color: var(--text-main); line-height: 1.8; margin-bottom: 1.5rem;">
+                            "No piso de um Fulfillment Center de alta performance, o caos é a regra diária. São milhares de pacotes, prazos espremidos e variáveis incontroláveis. Se eu não entendo a diferença técnica entre a duração de um <strong>SLA</strong> e a guilhotina de um <strong>Cut-off</strong>, ou se confundo <strong>Cycle Time</strong> com <strong>Lead Time</strong>, eu deixo de ser um <em>Problem Solver</em> e passo a ser apenas mais uma engrenagem cega a reagir a alarmes que não compreendo."
+                        </p>
+                        
+                        <p style="font-size: 1.15rem; color: var(--text-main); line-height: 1.8; margin-bottom: 1.5rem;">
+                            "Dominar esta linguagem é o que me permite enxergar a verdadeira 'Matrix' da operação. É o que me dá a capacidade de olhar para um <strong>Dashboard</strong> e ver um <strong>Gargalo</strong> a formar-se trinta minutos antes de ele travar a esteira. É entender que o <strong>WIP</strong> é o inimigo silencioso da produtividade e que o tempo de espera destrói o nosso esforço."
+                        </p>
+
+                        <p style="font-size: 1.15rem; color: var(--text-main); line-height: 1.8; margin-bottom: 0;">
+                            "Esta base técnica não é apenas teoria para enfeitar relatórios. É a minha bússola cirúrgica. É a fundação que garante que, independentemente da anomalia que rebentar no meu turno, a promessa sagrada do <strong>OTIF</strong> seja cumprida de ponta a ponta. Foi para isso que criei esta central."
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+            <footer style="margin-top: auto; padding: 2rem 4rem; background: var(--bg-panel-deep); border-top: 1px solid var(--border-hub); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; box-shadow: 0 -10px 30px rgba(0,0,0,0.5);">
+                
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                    <span style="font-family: var(--font-display); font-size: 1.2rem; color: var(--text-pure); letter-spacing: 2px;">
+                        MELI <span style="color: var(--purple-academy); text-shadow: 0 0 10px rgba(138,43,226,0.5);">PDI</span>
+                    </span>
+                    <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); letter-spacing: 2px;">
+                        LOGISTICS DOCUMENTATION // ACADEMY_HUB_V1.0
+                    </span>
+                </div>
+
+                <div style="display: flex; gap: 30px; font-family: var(--font-code); font-size: 0.8rem;">
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <span style="color: var(--cyan-hub); text-shadow: 0 0 8px var(--cyan-dim);">MODULES</span>
+                        <span style="color: var(--text-main);">LOADED</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <span style="color: var(--purple-academy); text-shadow: 0 0 8px rgba(138,43,226,0.4);">DATA GRID</span>
+                        <span style="color: var(--text-main);">SECURE</span>
+                    </div>
+                </div>
+
+                <div style="text-align: right; font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); letter-spacing: 1px;">
+                    <span style="color: var(--cyan-hub);">[ TRAINING CENTER ONLINE ]</span><br>
+                    TERMINAL_ID: OSASCO_CD // 2026
+                </div>
+
+            </footer>
+
+        </main> </div> 
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // 1. SYSTEM BOOT LOG
+            console.log("%c[SYS_BOOT]%c Inicializando Hub de Formação...", "color: #00E5FF; font-weight: bold;", "color: #E2E8F0;");
+            console.log("%c[MODULE]%c Todos os 11 módulos carregados. A aguardar seleção do operador.", "color: #8A2BE2; font-weight: bold;", "color: #E2E8F0;");
+            
+            // 2. STAGGERED CASCADE ANIMATION FOR CARDS
+            const courseCards = document.querySelectorAll('.module-card');
+            
+            // Define o estado invisível inicial para os cartões
+            courseCards.forEach(card => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(50px)';
+            });
+
+            // Intersection Observer para disparar a cascata quando a grid ficar visível
+            const hubObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        
+                        // Dispara a animação com delay escalonado (Cascata)
+                        courseCards.forEach((card, index) => {
+                            setTimeout(() => {
+                                card.style.transition = 'opacity 0.6s ease-out, transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1)';
+                                card.style.opacity = '1';
+                                card.style.transform = 'translateY(0)';
+                                
+                                // Efeito de Flash rápido na borda ao aterrar
+                                setTimeout(() => {
+                                    card.style.borderColor = 'var(--white-core)';
+                                    setTimeout(() => {
+                                        card.style.borderColor = ''; // Volta ao CSS padrão
+                                    }, 150);
+                                }, 600);
+
+                            }, index * 120); // 120ms de diferença entre cada cartão cair
+                        });
+                        
+                        // Desliga o observer após executar uma vez
+                        observer.disconnect();
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            // Observa o contentor pai da Grid
+            const gridContainer = document.querySelector('.course-grid');
+            if (gridContainer) {
+                hubObserver.observe(gridContainer);
+            }
+        });
+    </script>
+</body>
+</html>

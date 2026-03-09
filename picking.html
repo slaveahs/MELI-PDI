@@ -1,0 +1,1508 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meli PDI - Picking & Outbound Intelligence</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ==========================================================================
+           01. PICKING SYSTEM CORE VARIABLES - THE BRAIN OF OUTBOUND
+           ========================================================================== */
+        :root {
+            /* --- PALETA NEON PICKING (CÉREBRO & ENERGIA) --- */
+            --neon-purple: #8A2BE2;         /* Roxo Neon Principal - Inteligência/WMS */
+            --neon-purple-glow: rgba(138, 43, 226, 0.6);
+            --neon-purple-dim: rgba(138, 43, 226, 0.15);
+            --neon-purple-dark: rgba(138, 43, 226, 0.05);
+            
+            --neon-pink: #FF00FF;           /* Rosa Neon - Scanner/Velocidade */
+            --neon-pink-glow: rgba(255, 0, 255, 0.5);
+            --neon-pink-dim: rgba(255, 0, 255, 0.15);
+            
+            --neon-blue: #00FFFF;           /* Azul Cyberspace - Conexão Putwall */
+            --status-green: #00FF66;        /* Sucesso / Batch Completo */
+            --status-red: #FF003C;          /* Exceção Crítica / Shortage / Hazmat */
+            --status-yellow: #FFD600;       /* Atenção / RCA / Problem Solver */
+
+            /* --- BACKGROUNDS PROFUNDOS (SALA DE SERVIDORES / CÉREBRO) --- */
+            --bg-absolute: #05010A;         /* Fundo master ultradeepy purple/black */
+            --bg-surface: #0A0214;          /* Fundo de painéis e cards */
+            --bg-layer-2: #120424;          /* Elevação intermediária */
+            --bg-layer-3: #1B0833;          /* Hover states e destaques */
+            
+            /* --- GLASSMORPHISM & BORDAS TECNOLÓGICAS --- */
+            --glass-bg: rgba(10, 2, 20, 0.75);
+            --glass-border: rgba(138, 43, 226, 0.2);
+            --glass-border-strong: rgba(138, 43, 226, 0.5);
+            --glass-pink-border: rgba(255, 0, 255, 0.3);
+            
+            /* --- TIPOGRAFIA --- */
+            --font-display: 'Orbitron', sans-serif;      /* Títulos de Impacto */
+            --font-main: 'Rajdhani', sans-serif;         /* Leitura Fluida */
+            --font-mono: 'Share Tech Mono', monospace;   /* Códigos, EANs e Bins */
+
+            /* --- CORES DE TEXTO --- */
+            --text-pure: #FFFFFF;
+            --text-main: #E2D9F3;           /* Levemente roxo claro */
+            --text-muted: #8E7AA8;
+            --text-data: #B39DDB;
+
+            /* --- GRID E MEDIDAS ESTRUTURAIS --- */
+            --sidebar-width: 320px;
+            --topbar-height: 80px;
+            --container-max: 1500px;
+            
+            /* --- BORDAS E SOMBRAS --- */
+            --radius-xl: 16px;
+            --radius-lg: 12px;
+            --radius-md: 8px;
+            --radius-sm: 4px;
+            
+            --shadow-glass: 0 10px 40px rgba(0, 0, 0, 0.9);
+            --shadow-neon-purple: 0 0 25px var(--neon-purple-dim);
+            --shadow-neon-pink: 0 0 20px var(--neon-pink-dim);
+
+            /* --- TRANSIÇÕES FLUIDAS E RÁPIDAS (VELOCIDADE DE PICKING) --- */
+            --trans-fast: 0.15s ease-out;
+            --trans-smooth: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            --trans-spring: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+            /* --- Z-INDEX LAYERS --- */
+            --z-bg: -10;
+            --z-circuit: -5;
+            --z-base: 1;
+            --z-content: 10;
+            --z-topbar: 40;
+            --z-sidebar: 50;
+            --z-modal: 100;
+            --z-scanner: 999;
+        }
+
+        /* ==========================================================================
+           02. GLOBAL RESET & BASE SETTINGS
+           ========================================================================== */
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-absolute);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+        }
+
+        /* CUSTOM SCROLLBAR - ESTILO FEIXE DE LUZ */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-absolute);
+            border-left: 1px solid rgba(138, 43, 226, 0.1);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--neon-purple-dim);
+            border-radius: 10px;
+            transition: var(--trans-fast);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--neon-purple);
+            box-shadow: 0 0 15px var(--neon-purple);
+        }
+
+        /* ==========================================================================
+           03. TEXT UTILITIES & GLOW MODIFIERS
+           ========================================================================== */
+        .text-purple { color: var(--neon-purple); text-shadow: 0 0 10px var(--neon-purple-glow); font-weight: 700; }
+        .text-pink { color: var(--neon-pink); text-shadow: 0 0 10px var(--neon-pink-glow); font-weight: 700; }
+        .text-blue { color: var(--neon-blue); text-shadow: 0 0 10px rgba(0,255,255,0.5); font-weight: 700; }
+        .text-green { color: var(--status-green); text-shadow: 0 0 10px var(--status-green); font-weight: 700; }
+        .text-red { color: var(--status-red); text-shadow: 0 0 10px var(--status-red); font-weight: 700; }
+        .text-yellow { color: var(--status-yellow); text-shadow: 0 0 10px var(--status-yellow); font-weight: 700; }
+        
+        .text-mono { font-family: var(--font-mono); letter-spacing: 1.5px; text-transform: uppercase; }
+        .text-muted { color: var(--text-muted); }
+
+        /* ==========================================================================
+           04. ADVANCED BACKGROUND (DIGITAL CIRCUITS & Z-ROUTING)
+           ========================================================================== */
+        /* Fundo Master com Gradiente Radial (Brilho Central) */
+        #picking-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: var(--z-bg);
+            background: radial-gradient(circle at 60% 40%, var(--bg-surface) 0%, var(--bg-absolute) 80%);
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        /* Malha de Circuitos (WMS Brain) */
+        #picking-bg::before {
+            content: "";
+            position: absolute;
+            width: 200%; height: 200%;
+            top: -50%; left: -50%;
+            background-image: 
+                linear-gradient(rgba(138, 43, 226, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(138, 43, 226, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            transform: perspective(1000px) rotateX(60deg) translateY(-100px);
+            animation: gridZPick 20s linear infinite;
+        }
+
+        /* Scanline Horizontal (Feixe do Leitor de EAN) */
+        .scanner-beam {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 3px;
+            background: var(--neon-pink);
+            box-shadow: 0 0 15px var(--neon-pink), 0 0 30px var(--neon-pink-glow), 0 50px 50px rgba(255, 0, 255, 0.1);
+            opacity: 0.15;
+            z-index: var(--z-scanner);
+            pointer-events: none;
+            animation: scannerSweep 6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+
+        /* ==========================================================================
+           05. GLOBAL KEYFRAMES
+           ========================================================================== */
+        @keyframes gridZPick {
+            0% { transform: perspective(1000px) rotateX(60deg) translateY(-100px) translateX(0); }
+            50% { transform: perspective(1000px) rotateX(60deg) translateY(100px) translateX(-50px); }
+            100% { transform: perspective(1000px) rotateX(60deg) translateY(300px) translateX(0); }
+        }
+
+        @keyframes scannerSweep {
+            0% { top: -10%; opacity: 0; }
+            10% { opacity: 0.4; }
+            50% { opacity: 0.6; height: 4px; }
+            90% { opacity: 0.4; }
+            100% { top: 110%; opacity: 0; }
+        }
+
+        @keyframes wmsPulse {
+            0%, 100% { box-shadow: 0 0 15px var(--neon-purple-dim); border-color: var(--glass-border); }
+            50% { box-shadow: 0 0 30px var(--neon-purple-glow); border-color: var(--neon-purple); }
+        }
+
+        @keyframes floatCart {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        /* ==========================================================================
+           06. ANALYTICAL TYPOGRAPHY RULES (READABILITY AT SPEED)
+           ========================================================================== */
+        h1, h2, h3, h4, h5 {
+            font-family: var(--font-display);
+            font-weight: 700;
+            color: var(--text-pure);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        h1 { font-size: 3.5rem; line-height: 1.1; margin-bottom: 1rem; }
+        h2 { font-size: 2.5rem; border-left: 5px solid var(--neon-purple); padding-left: 20px; margin-bottom: 2rem; }
+        h3 { font-size: 1.6rem; color: var(--neon-purple); margin-bottom: 1rem; }
+
+        p {
+            font-family: var(--font-main);
+            font-size: 1.2rem;
+            color: var(--text-main);
+            margin-bottom: 1.2rem;
+            text-align: left;
+            line-height: 1.7;
+        }
+
+        /* Tags de Roteamento e UI */
+        .route-badge {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--neon-pink);
+            background: var(--neon-pink-dim);
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(255, 0, 255, 0.3);
+            margin-right: 8px;
+            display: inline-block;
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.1);
+        }
+
+        a { text-decoration: none; color: inherit; transition: var(--trans-fast); }
+        ul, ol { list-style: none; }
+
+        /* ==========================================================================
+           07. SYS-SIDEBAR: CONSOLE DE SEPARAÇÃO (PICKING)
+           ========================================================================== */
+        .sys-sidebar {
+            position: fixed;
+            top: 0; left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-right: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            z-index: var(--z-sidebar);
+            box-shadow: 15px 0 40px rgba(0, 0, 0, 0.9), inset -2px 0 20px rgba(138, 43, 226, 0.05);
+            transition: var(--trans-spring);
+        }
+
+        /* Header do Logo OUTBOUND */
+        .sidebar-header {
+            height: var(--topbar-height);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+            background: linear-gradient(to bottom, rgba(138, 43, 226, 0.08), transparent);
+            position: relative;
+        }
+
+        .sidebar-header::after {
+            content: "OUTBOUND_BRAIN";
+            position: absolute;
+            bottom: -9px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--neon-pink);
+            letter-spacing: 3px;
+            background: var(--bg-absolute);
+            padding: 2px 15px;
+            border: 1px solid var(--glass-pink-border);
+            border-radius: 10px;
+            box-shadow: 0 0 10px var(--neon-pink-dim);
+        }
+
+        .brand-logo-mini {
+            font-family: var(--font-display);
+            font-size: 1.7rem;
+            font-weight: 900;
+            display: flex;
+            gap: 8px;
+            letter-spacing: 1px;
+        }
+
+        .brand-logo-mini .m { color: var(--text-pure); }
+        .brand-logo-mini .p { color: var(--neon-purple); text-shadow: 0 0 15px var(--neon-purple-glow); }
+
+        /* Menu de Navegação - Rotas */
+        .sidebar-nav {
+            flex-grow: 1;
+            padding: 3rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            overflow-y: auto;
+        }
+
+        .nav-category {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            margin: 1.5rem 0 0.5rem 0.5rem;
+            font-weight: 700;
+        }
+
+        .nav-category:first-child { margin-top: 0; }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.2rem;
+            color: var(--text-data);
+            font-size: 1.05rem;
+            font-weight: 600;
+            border-radius: var(--radius-md);
+            border: 1px solid transparent;
+            transition: var(--trans-smooth);
+            position: relative;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0;
+            height: 100%; width: 3px;
+            background: var(--neon-purple);
+            transform: scaleY(0);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-origin: bottom;
+        }
+
+        .nav-item:hover {
+            border-color: rgba(138, 43, 226, 0.2);
+            color: var(--neon-pink);
+            background: linear-gradient(90deg, rgba(138, 43, 226, 0.1), transparent);
+            transform: translateX(8px);
+        }
+
+        .nav-item:hover::before { transform: scaleY(1); background: var(--neon-pink); box-shadow: 0 0 15px var(--neon-pink); }
+
+        .nav-item.active {
+            border-color: var(--neon-purple);
+            background: var(--neon-purple-dark);
+            color: var(--neon-purple);
+            box-shadow: inset 0 0 20px var(--neon-purple-dim);
+        }
+
+        .nav-item.active::before { transform: scaleY(1); box-shadow: 0 0 15px var(--neon-purple); }
+
+        /* Problem Solver Alert Link */
+        .nav-item.ps-link:hover {
+            border-color: rgba(255, 214, 0, 0.3);
+            color: var(--status-yellow);
+            background: linear-gradient(90deg, rgba(255, 214, 0, 0.1), transparent);
+        }
+        .nav-item.ps-link:hover::before { background: var(--status-yellow); box-shadow: 0 0 15px var(--status-yellow); }
+
+        .nav-icon {
+            width: 22px; height: 22px; margin-right: 15px;
+            stroke: currentColor; stroke-width: 2; fill: none; z-index: 1;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-item:hover .nav-icon { transform: scale(1.1) rotate(5deg); }
+        .nav-item span { z-index: 1; font-family: var(--font-main); letter-spacing: 0.5px; }
+
+        /* Rodapé do Scanner (User ID) */
+        .sidebar-footer {
+            padding: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .picker-avatar {
+            width: 45px; height: 45px;
+            background: var(--bg-layer-2);
+            border: 2px solid var(--neon-purple);
+            border-radius: var(--radius-sm);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--neon-purple);
+            font-family: var(--font-mono); font-weight: 900; font-size: 1.2rem;
+            box-shadow: 0 0 15px var(--neon-purple-dim);
+        }
+
+        .user-info { display: flex; flex-direction: column; }
+        .user-name { color: var(--text-pure); font-size: 0.95rem; font-weight: 700; letter-spacing: 1px; }
+        .user-role { color: var(--neon-pink); font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 2px; }
+        /* ==========================================================================
+           08. TOPBAR: WMS TELEMETRY MONITOR
+           ========================================================================== */
+        .sys-topbar {
+            height: var(--topbar-height);
+            position: fixed;
+            top: 0; right: 0;
+            width: calc(100% - var(--sidebar-width));
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 4rem;
+            border-bottom: 1px solid rgba(138, 43, 226, 0.15);
+            background: rgba(5, 1, 10, 0.85);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            z-index: var(--z-topbar);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            transition: var(--trans-smooth);
+        }
+
+        .telemetry-widget {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            display: flex;
+            gap: 25px;
+            align-items: center;
+            letter-spacing: 2px;
+            background: rgba(138, 43, 226, 0.03);
+            padding: 10px 25px;
+            border-radius: 40px;
+            border: 1px solid rgba(138, 43, 226, 0.2);
+            box-shadow: inset 0 0 15px rgba(138, 43, 226, 0.05);
+        }
+
+        .status-dot {
+            width: 10px; height: 10px;
+            background: var(--neon-pink);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 10px var(--neon-pink);
+            animation: wmsPulse 2s infinite alternate;
+        }
+
+        /* ==========================================================================
+           09. MAIN WORKSPACE (ROTEAMENTO Z-PICK)
+           ========================================================================== */
+        .main-workspace {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 50px 4rem 4rem 4rem;
+            padding-top: calc(var(--topbar-height) + 50px);
+            z-index: var(--z-base);
+            position: relative;
+            min-height: 100vh;
+        }
+
+        /* ==========================================================================
+           10. HERO SECTION (PICKING HEADER)
+           ========================================================================== */
+        .hero-section {
+            width: 100%;
+            max-width: var(--container-max);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            margin: 0 auto 6rem auto;
+            scroll-margin-top: calc(var(--topbar-height) + 3rem);
+            position: relative;
+            padding-left: 3rem;
+            border-left: 5px solid var(--neon-purple);
+            animation: slideInRight 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        .hero-section::before {
+            content: '[WMS_ROUTE_INIT_v3.1]';
+            position: absolute;
+            top: -30px; left: 3rem;
+            font-family: var(--font-mono);
+            color: var(--neon-purple);
+            font-size: 0.85rem;
+            letter-spacing: 3px;
+            opacity: 0.8;
+            text-shadow: 0 0 5px var(--neon-purple-glow);
+        }
+
+        .hero-title {
+            font-family: var(--font-display);
+            font-size: clamp(4rem, 6vw, 7rem);
+            font-weight: 900;
+            line-height: 1;
+            letter-spacing: 8px;
+            margin-bottom: 0.5rem;
+            color: transparent;
+            -webkit-text-stroke: 2px var(--neon-purple);
+            text-shadow: 0 0 25px var(--neon-purple-glow), inset 0 0 10px var(--neon-purple-dark);
+            text-transform: uppercase;
+        }
+
+        .hero-title .highlight {
+            color: var(--text-pure);
+            -webkit-text-stroke: 0;
+            text-shadow: 0 0 20px rgba(255,255,255,0.5), 0 0 30px var(--neon-purple);
+        }
+
+        .hero-subtitle {
+            font-family: var(--font-mono);
+            font-size: 1.6rem;
+            color: var(--neon-pink);
+            text-transform: uppercase;
+            letter-spacing: 6px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-shadow: 0 0 15px var(--neon-pink-glow);
+            margin-top: 15px;
+            background: linear-gradient(90deg, rgba(255, 0, 255, 0.1), transparent);
+            padding: 12px 25px;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            border-left: 3px solid var(--neon-pink);
+            box-shadow: -5px 0 15px rgba(255, 0, 255, 0.1);
+        }
+
+        .hero-desc {
+            font-family: var(--font-main);
+            color: var(--text-muted);
+            font-size: 1.3rem;
+            max-width: 800px;
+            margin-top: 2.5rem;
+            line-height: 1.8;
+            border: 1px dashed rgba(138, 43, 226, 0.3);
+            padding: 2rem;
+            border-radius: var(--radius-md);
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(10px);
+            box-shadow: inset 0 0 20px rgba(138, 43, 226, 0.05);
+        }
+
+        @keyframes slideInRight {
+            0% { opacity: 0; transform: translateX(-50px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+        /* ==========================================================================
+           11. ROUTING GRIDS & SECTION HEADERS
+           ========================================================================== */
+        .content-section {
+            width: 100%;
+            max-width: var(--container-max);
+            margin: 0 auto 7rem auto;
+            scroll-margin-top: calc(var(--topbar-height) + 4rem);
+            position: relative;
+            z-index: var(--z-content);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            margin-bottom: 4rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 1.5rem;
+            position: relative;
+        }
+
+        /* Linha de Conexão Neural no Header */
+        .section-header::after {
+            content: '';
+            position: absolute;
+            bottom: -2px; left: 0;
+            width: 150px; height: 3px;
+            background: linear-gradient(90deg, var(--neon-purple), var(--neon-pink));
+            box-shadow: 0 0 15px var(--neon-purple), 0 0 20px var(--neon-pink-dim);
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 2.8rem;
+            color: var(--text-pure);
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 0;
+            text-shadow: 0 0 20px rgba(138, 43, 226, 0.3);
+        }
+
+        .section-title::before {
+            content: '>>_';
+            color: var(--neon-pink);
+            font-family: var(--font-mono);
+            margin-right: 20px;
+            text-shadow: 0 0 15px var(--neon-pink-glow);
+        }
+
+        /* Variantes de Títulos (Alerta / Inteligência) */
+        .section-title.brain-title::before { color: var(--neon-purple); text-shadow: 0 0 15px var(--neon-purple-glow); }
+        .section-title.alert-title::before { color: var(--status-red); text-shadow: 0 0 15px var(--status-red); }
+        .section-title.alert-title + .section-header::after { background: var(--status-red); box-shadow: 0 0 15px var(--status-red); }
+
+        .picking-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 3rem; }
+        .picking-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.5rem; }
+        .picking-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; }
+
+        /* ==========================================================================
+           12. WMS BRAIN CARDS (GLASSMORPHISM AVANÇADO)
+           ========================================================================== */
+        .wms-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-xl);
+            padding: 3.5rem;
+            box-shadow: var(--shadow-glass), inset 0 0 30px rgba(138, 43, 226, 0.02);
+            position: relative;
+            overflow: hidden;
+            transition: var(--trans-spring);
+            display: flex;
+            flex-direction: column;
+            z-index: 1;
+        }
+
+        /* Efeito Varredura WMS (Scanner Interno) */
+        .wms-card::after {
+            content: '';
+            position: absolute;
+            top: -100%; left: -100%; width: 300%; height: 300%;
+            background: radial-gradient(circle, rgba(138, 43, 226, 0.08) 0%, transparent 60%);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .wms-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: var(--glass-border-strong);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.9), inset 0 0 40px var(--neon-purple-dim);
+        }
+
+        .wms-card:hover::after { opacity: 1; }
+
+        /* Cantoneiras Digitais (Mira de Separação) */
+        .wms-card::before {
+            content: ''; position: absolute; top: 20px; right: 20px; width: 30px; height: 30px;
+            border-top: 3px solid var(--neon-pink); border-right: 3px solid var(--neon-pink);
+            opacity: 0.3; transition: var(--trans-fast);
+        }
+        .wms-card:hover::before { opacity: 1; box-shadow: 3px -3px 15px var(--neon-pink-dim); }
+
+        .wms-icon {
+            font-size: 3.5rem;
+            margin-bottom: 2rem;
+            color: var(--neon-purple);
+            filter: drop-shadow(0 0 10px var(--neon-purple-glow));
+            display: inline-block;
+        }
+
+        .wms-card h3 {
+            font-size: 1.6rem;
+            color: var(--text-pure);
+            margin-bottom: 1.2rem;
+            letter-spacing: 2px;
+            border-bottom: 1px dashed rgba(255,255,255,0.15);
+            padding-bottom: 15px;
+        }
+
+        /* Badge Algoritmo WMS */
+        .algo-badge {
+            position: absolute;
+            top: -15px;
+            left: 30px;
+            background: var(--bg-absolute);
+            color: var(--neon-purple);
+            border: 1px solid var(--neon-purple);
+            padding: 5px 20px;
+            border-radius: 20px;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 700;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.8), 0 0 10px var(--neon-purple-dim);
+            z-index: 2;
+        }
+        /* ==========================================================================
+           13. INTERACTIVE CART TIMELINE (FLUXO DO PICKER)
+           ========================================================================== */
+        .cart-timeline-wrapper {
+            background: rgba(10, 2, 20, 0.6);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: var(--radius-xl);
+            padding: 5rem 3rem;
+            position: relative;
+            margin-top: 3rem;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5);
+        }
+
+        /* Linha de Rota do Carrinho */
+        .cart-track {
+            position: absolute;
+            top: 50%; left: 8%; width: 84%; height: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-50%);
+            z-index: 0;
+            border-radius: 2px;
+        }
+
+        .cart-track-fill {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, var(--neon-purple), var(--neon-pink));
+            box-shadow: 0 0 15px var(--neon-pink-glow);
+            transition: width 1s ease-in-out;
+            border-radius: 2px;
+        }
+
+        .cart-steps {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            z-index: 1;
+        }
+
+        .step-node-container {
+            width: 14%;
+            text-align: center;
+            transition: var(--trans-smooth);
+            cursor: pointer;
+        }
+
+        .step-node-container:hover { transform: translateY(-15px); }
+
+        .cart-node {
+            width: 80px; height: 80px;
+            background: var(--bg-absolute);
+            border: 3px solid var(--glass-border-strong);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 1.5rem auto;
+            font-size: 2rem;
+            box-shadow: 0 0 20px rgba(138, 43, 226, 0.1), inset 0 0 15px rgba(138, 43, 226, 0.1);
+            color: var(--text-pure);
+            transition: var(--trans-smooth);
+            position: relative;
+        }
+
+        .step-node-container:hover .cart-node {
+            background: rgba(138, 43, 226, 0.1);
+            border-color: var(--neon-pink);
+            box-shadow: 0 0 30px var(--neon-pink-dim), inset 0 0 25px var(--neon-pink-glow);
+            transform: scale(1.15);
+            color: var(--neon-pink);
+        }
+
+        /* Nó de Finalização (Dropline) */
+        .step-node-container.final-drop .cart-node {
+            border-color: var(--status-green);
+            box-shadow: 0 0 20px rgba(0, 255, 102, 0.3), inset 0 0 15px rgba(0, 255, 102, 0.2);
+        }
+        .step-node-container.final-drop:hover .cart-node {
+            border-color: var(--status-green);
+            color: var(--status-green);
+            box-shadow: 0 0 30px var(--status-green), inset 0 0 25px rgba(0, 255, 102, 0.5);
+        }
+
+        .node-title { font-family: var(--font-display); font-size: 1.15rem; color: var(--text-pure); margin-bottom: 0.8rem; letter-spacing: 1px; }
+        .node-desc { font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; font-family: var(--font-mono); }
+
+        /* ==========================================================================
+           14. EXCEPTION PANELS (PROBLEM SOLVER & HAZMAT)
+           ========================================================================== */
+        .exception-zone {
+            background: rgba(20, 0, 5, 0.7);
+            border: 2px solid var(--status-red);
+            border-radius: var(--radius-xl);
+            padding: 4rem;
+            position: relative;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.9), inset 0 0 60px rgba(255, 0, 60, 0.1);
+            overflow: hidden;
+        }
+
+        /* Fita de Perigo (Hazard Tape) */
+        .exception-zone::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 8px;
+            background: repeating-linear-gradient(45deg, var(--status-red), var(--status-red) 20px, #000 20px, #000 40px);
+            box-shadow: 0 0 15px var(--status-red-glow);
+        }
+
+        .exception-card {
+            background: rgba(255, 0, 60, 0.03);
+            border: 1px solid rgba(255, 0, 60, 0.2);
+            border-radius: var(--radius-lg);
+            padding: 3rem 2.5rem;
+            transition: var(--trans-smooth);
+            text-align: left;
+            position: relative;
+        }
+
+        .exception-card:hover {
+            background: rgba(255, 0, 60, 0.08);
+            border-color: var(--status-red);
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(255, 0, 60, 0.15), inset 0 0 20px rgba(255, 0, 60, 0.1);
+        }
+
+        .exception-icon {
+            font-size: 3rem; color: var(--status-red); margin-bottom: 1.5rem;
+            filter: drop-shadow(0 0 10px var(--status-red-glow));
+        }
+
+        .exception-card h4 { color: var(--text-pure); font-size: 1.4rem; margin-bottom: 1.2rem; letter-spacing: 1px; }
+        .exception-card p { color: var(--text-main); font-size: 1.05rem; }
+
+        .ps-action-btn {
+            display: inline-block; margin-top: 1.5rem; padding: 10px 20px;
+            background: transparent; border: 1px solid var(--status-red); color: var(--status-red);
+            font-family: var(--font-mono); font-size: 0.9rem; border-radius: var(--radius-sm);
+            text-transform: uppercase; cursor: pointer; transition: var(--trans-fast);
+        }
+        .ps-action-btn:hover { background: var(--status-red); color: #fff; box-shadow: 0 0 15px var(--status-red); }
+        /* ==========================================================================
+           15. METRICS DASHBOARD (UPH, DPMO, SLA)
+           ========================================================================== */
+        .metrics-dashboard {
+            background: var(--bg-layer-2);
+            border: 1px solid rgba(138, 43, 226, 0.15);
+            border-radius: var(--radius-xl);
+            padding: 4rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(138, 43, 226, 0.05);
+        }
+
+        .metric-box {
+            background: rgba(10, 2, 20, 0.5);
+            border: 1px dashed rgba(255, 0, 255, 0.2);
+            padding: 2.5rem;
+            border-radius: var(--radius-lg);
+            text-align: center;
+            transition: var(--trans-smooth);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-box:hover {
+            border-color: var(--neon-pink);
+            background: rgba(255, 0, 255, 0.03);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(255, 0, 255, 0.1);
+        }
+
+        .metric-value {
+            font-family: var(--font-display);
+            font-size: 4.5rem;
+            color: var(--neon-pink);
+            text-shadow: 0 0 20px var(--neon-pink-glow);
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+
+        .metric-label {
+            font-family: var(--font-mono);
+            font-size: 1.1rem;
+            color: var(--text-pure);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .metric-desc {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-top: 15px;
+            line-height: 1.4;
+        }
+
+        /* Progress Bar (SLA/CPT) */
+        .cpt-progress-container {
+            width: 100%; height: 12px;
+            background: var(--bg-absolute);
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.1);
+            overflow: hidden; margin-top: 15px;
+        }
+        .cpt-progress-bar {
+            height: 100%; width: 85%;
+            background: linear-gradient(90deg, var(--neon-purple), var(--neon-pink));
+            box-shadow: 0 0 15px var(--neon-pink-glow);
+            animation: pulseGlow 2s infinite alternate;
+        }
+
+        /* ==========================================================================
+           16. ADVANCED STRATEGIES (FLIP CARDS 3D)
+           ========================================================================== */
+        .strategy-flip-container {
+            perspective: 1200px;
+            width: 100%;
+            height: 380px;
+        }
+
+        .strategy-card {
+            width: 100%; height: 100%;
+            position: relative;
+            transition: transform 0.8s var(--trans-spring);
+            transform-style: preserve-3d;
+            cursor: pointer;
+        }
+
+        .strategy-flip-container:hover .strategy-card { transform: rotateY(180deg); }
+
+        .strategy-front, .strategy-back {
+            width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0;
+            backface-visibility: hidden;
+            border-radius: var(--radius-lg);
+            padding: 3rem;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+            border: 1px solid var(--glass-border);
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+        }
+
+        .strategy-front {
+            background: linear-gradient(135deg, var(--bg-layer-2), var(--bg-surface));
+            z-index: 2;
+        }
+
+        .strategy-back {
+            background: var(--bg-layer-3);
+            transform: rotateY(180deg);
+            border-color: var(--neon-pink);
+            box-shadow: inset 0 0 40px rgba(255, 0, 255, 0.05);
+        }
+
+        .strategy-icon { font-size: 4rem; color: var(--neon-purple); text-shadow: 0 0 20px var(--neon-purple-glow); margin-bottom: 20px; }
+        .strategy-front h4 { font-size: 1.5rem; color: var(--text-pure); margin-bottom: 10px; }
+        .hover-hint { font-family: var(--font-mono); font-size: 0.85rem; color: var(--neon-pink); border: 1px solid var(--neon-pink-dim); padding: 5px 15px; border-radius: 20px; margin-top: 15px; }
+
+        .strategy-back h4 { color: var(--neon-pink); margin-bottom: 20px; font-size: 1.6rem; }
+        .strategy-back p { font-size: 1.1rem; color: var(--text-main); line-height: 1.6; }
+
+        /* ==========================================================================
+           17. MINDSET & GLOSSARY (ACCORDIONS)
+           ========================================================================== */
+        .picking-accordion {
+            background: rgba(18, 4, 36, 0.6);
+            border: 1px solid rgba(138, 43, 226, 0.2);
+            border-radius: var(--radius-md);
+            margin-bottom: 1.2rem;
+            overflow: hidden;
+            transition: var(--trans-smooth);
+        }
+
+        .acc-header {
+            padding: 1.8rem 2.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            color: var(--text-pure);
+            transition: var(--trans-fast);
+        }
+
+        .acc-header:hover { background: rgba(138, 43, 226, 0.1); color: var(--neon-pink); }
+        .acc-icon { font-family: var(--font-mono); font-size: 1.5rem; color: var(--neon-purple); transition: transform 0.3s ease; }
+
+        .acc-panel {
+            max-height: 0;
+            padding: 0 2.5rem;
+            transition: max-height 0.5s ease, padding 0.5s ease;
+            color: var(--text-main);
+            background: var(--bg-layer-2);
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        .picking-accordion.active { border-color: var(--neon-pink); box-shadow: 0 0 25px rgba(255, 0, 255, 0.1); }
+        .picking-accordion.active .acc-header { color: var(--neon-pink); border-bottom: 1px dashed rgba(255, 0, 255, 0.2); }
+        .picking-accordion.active .acc-icon { transform: rotate(45deg); color: var(--neon-pink); }
+        .picking-accordion.active .acc-panel { max-height: 400px; padding: 2rem 2.5rem; }
+
+        /* ==========================================================================
+           18. RESPONSIVE DESIGN (MEDIA QUERIES)
+           ========================================================================== */
+        @media (max-width: 1400px) {
+            .hero-title { font-size: 4.5rem; }
+            .picking-grid-3, .picking-grid-4 { grid-template-columns: repeat(2, 1fr); }
+            .main-workspace { padding: 30px; padding-top: calc(var(--topbar-height) + 30px); }
+            .step-node-container { width: 20%; }
+            .cart-node { width: 60px; height: 60px; font-size: 1.5rem; }
+        }
+
+        @media (max-width: 1100px) {
+            .picking-grid-2 { grid-template-columns: 1fr; }
+            .strategy-flip-container { height: 420px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="picking-bg"></div>
+    <div class="scanner-beam"></div>
+
+    <aside class="sys-sidebar">
+        <div class="sidebar-header">
+            <div class="brand-logo-mini">
+                <span class="m">OUTBOUND</span><span class="p">_SYS</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-category">WMS Brain Routing</div>
+            
+            <a href="#hero" class="nav-item active index-link">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                <span>Visão Global</span>
+            </a>
+            
+            <a href="#conceito" class="nav-item index-link">
+                <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <span>Conceito (O que é)</span>
+            </a>
+
+            <a href="#fluxo" class="nav-item index-link">
+                <svg class="nav-icon" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                <span>Caminho do Picker</span>
+            </a>
+
+            <div class="nav-category">Estratégias & Métricas</div>
+
+            <a href="#estrategias" class="nav-item index-link">
+                <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                <span>Algoritmos Avançados</span>
+            </a>
+
+            <a href="#metricas" class="nav-item index-link">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                <span>Performance (UPH)</span>
+            </a>
+
+            <div class="nav-category">Tratamento de Exceções</div>
+
+            <a href="#problem-solver" class="nav-item ps-link index-link">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                <span>Shortage & Hazmat</span>
+            </a>
+
+            <div class="nav-category">Base de Conhecimento</div>
+
+            <a href="#glossario" class="nav-item index-link">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                <span>Glossário / Mindset</span>
+            </a>
+
+            <div style="margin-top: 2rem;">
+                <a href="hub.html" class="nav-item" style="border-color: rgba(255,255,255,0.05); color: var(--text-muted);">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                    <span>Voltar ao HUB Central</span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="picker-avatar">OP</div>
+            <div class="user-info">
+                <span class="user-name">Outbound Operator</span>
+                <span class="user-role">ROUTE: Z-PICK_ACTIVE</span>
+            </div>
+        </div>
+    </aside>
+
+    <header class="sys-topbar">
+        <div class="telemetry-widget">
+            <span><span class="status-dot"></span> WMS SYNC: <span class="text-pink">CONNECTED</span></span>
+            <span style="opacity: 0.2;">|</span> 
+            <span>BATCHING: <span class="text-purple">OPTIMIZED</span></span>
+            <span style="opacity: 0.2;">|</span> 
+            <span>SLA RISK: <span class="text-green">LOW</span></span>
+        </div>
+    </header>
+
+    <main class="main-workspace">
+        
+        <section id="hero" class="hero-section content-section">
+            <h1 class="hero-title">PICKING <br><span class="highlight">(SEPARAÇÃO)</span></h1>
+            <div class="hero-subtitle">
+                O CÉREBRO DO OUTBOUND
+            </div>
+            <div class="hero-desc">
+                
+                <p>"O Picking é o coração pulsante do fluxo de saída (Outbound). É neste exato momento que a promessa de compra virtual, feita no site do Mercado Livre, começa a ganhar forma física nas mãos do operador."</p>
+                <p style="margin-top: 15px; font-family: var(--font-mono); color: var(--neon-pink); font-size: 1.1rem; border-left: 2px solid var(--neon-pink); padding-left: 15px;">
+                    >> WMS ROUTING PROTOCOL: ENGAGED. PREPARING BATCH.
+                </p>
+            </div>
+        </section>
+        <section id="conceito" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">O que é o Picking?</h2>
+            </div>
+            
+            <div class="picking-grid-2" style="margin-bottom: 3rem; align-items: center;">
+                <div class="wms-card" style="padding: 2.5rem;">
+                    <h3 style="color: var(--neon-purple); border: none; font-size: 1.8rem;">START DO OUTBOUND</h3>
+                    <p style="font-size: 1.15rem; color: var(--text-pure); margin-top: 10px;">
+                        No instante em que o pagamento do cliente é aprovado, o cronômetro (SLA) é disparado. O WMS localiza o produto no gigantesco estoque e convoca o Picker.
+                    </p>
+                    <p style="font-family: var(--font-mono); color: var(--text-muted); font-size: 0.95rem;">
+                        Guiado pelo coletor de dados em seu punho, o operador caminha (ou pilota sua transpaleteira) pelos corredores, coletando exata e fisicamente aquilo que foi vendido no mundo virtual.
+                    </p>
+                </div>
+                <div>
+                    
+                </div>
+            </div>
+
+            <h3 class="text-pink text-mono" style="margin: 4rem 0 2rem 0; font-size: 1.5rem;">>> OBJETIVOS CENTRAIS DA SEPARAÇÃO:</h3>
+            <div class="picking-grid-4">
+                <div class="wms-card" style="padding: 1.5rem; text-align: center;">
+                    <div class="wms-icon" style="font-size: 2.5rem; margin-bottom: 1rem;">⏱️</div>
+                    <h4 style="font-size: 1.1rem; color: #fff;">SLA de Envio</h4>
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">Garantir a coleta a tempo de embarcar no caminhão exato.</p>
+                </div>
+                <div class="wms-card" style="padding: 1.5rem; text-align: center;">
+                    <div class="wms-icon" style="font-size: 2.5rem; margin-bottom: 1rem;">📦</div>
+                    <h4 style="font-size: 1.1rem; color: #fff;">Alimentar o Fluxo</h4>
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">Enviar os itens para o Putwall (consolidação) ou Packing (embalagem).</p>
+                </div>
+                <div class="wms-card" style="padding: 1.5rem; text-align: center;">
+                    <div class="wms-icon" style="font-size: 2.5rem; margin-bottom: 1rem;">🎯</div>
+                    <h4 style="font-size: 1.1rem; color: #fff;">Verdade Física</h4>
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">Validar que o item sistêmico realmente existe e está íntegro.</p>
+                </div>
+                <div class="wms-card" style="padding: 1.5rem; text-align: center;">
+                    <div class="wms-icon" style="font-size: 2.5rem; margin-bottom: 1rem;">🏃</div>
+                    <h4 style="font-size: 1.1rem; color: #fff;">Ergonomia e Tempo</h4>
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">Otimizar a rota para reduzir a fadiga do operador.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="estrategias" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title brain-title">A Ciência do WMS</h2>
+            </div>
+            <p style="font-size: 1.2rem; margin-bottom: 3rem;">Um ser humano caminhando aleatoriamente demoraria horas para achar um pedido. O <strong class="text-purple">WMS (Warehouse Management System)</strong> utiliza algoritmos complexos para transformar o caos em velocidade.</p>
+
+            <div class="picking-grid-3">
+                <div class="wms-card">
+                    <span class="algo-badge">ALGO_01</span>
+                    <div class="wms-icon">🧩</div>
+                    <h3>Batching (Agrupamento)</h3>
+                    <p style="color: var(--text-muted); font-size: 0.95rem;">
+                        O sistema nunca envia um Picker para buscar apenas 1 item. O algoritmo agrupa dezenas de pedidos que estão na mesma rua ou zona, gerando um "Batch" otimizado. Ele coleta para 40 clientes em uma única viagem.
+                    </p>
+                </div>
+
+                <div class="wms-card">
+                    <span class="algo-badge">ALGO_02</span>
+                    <div class="wms-icon">🛤️</div>
+                    <h3>Z-Pick Routing</h3>
+                    <p style="color: var(--text-muted); font-size: 0.95rem;">
+                        O coletor guia o operador em um trajeto matemático. A rota é desenhada em formato de "Z" ou "U" pelos corredores, garantindo que ele sempre avance em direção à saída, sem nunca dar um passo para trás.
+                    </p>
+                </div>
+
+                <div class="wms-card">
+                    <span class="algo-badge">ALGO_03</span>
+                    <div class="wms-icon">⏳</div>
+                    <h3>Priorização por CPT</h3>
+                    <p style="color: var(--text-muted); font-size: 0.95rem;">
+                        CPT (Critical Pull Time) é a hora exata que a carreta parte. O WMS monitora o relógio e eleva a prioridade de pedidos cujo caminhão sairá em breve, empurrando-os para o topo da tela do Picker.
+                    </p>
+                </div>
+            </div>
+
+            <div class="picking-grid-3" style="margin-top: 3rem;">
+                <div style="background: rgba(138, 43, 226, 0.05); padding: 2rem; border-radius: var(--radius-md); border-left: 3px solid var(--neon-purple);">
+                    <span class="route-badge">SINGLE PATH</span>
+                    <p style="margin-top: 15px; font-size: 0.9rem;">O cliente comprou apenas 1 item. O Tote vai direto da esteira do Picker para a estação de Packing (Embalagem rápida).</p>
+                </div>
+                <div style="background: rgba(255, 0, 255, 0.05); padding: 2rem; border-radius: var(--radius-md); border-left: 3px solid var(--neon-pink);">
+                    <span class="route-badge" style="color: var(--neon-blue); border-color: var(--neon-blue); background: rgba(0,255,255,0.1);">MULTI PATH</span>
+                    <p style="margin-top: 15px; font-size: 0.9rem;">O cliente comprou 3 itens diferentes. O Tote é enviado ao Putwall, onde aguardará até que os outros 2 itens de outras áreas do CD cheguem.</p>
+                </div>
+                <div style="background: rgba(255, 214, 0, 0.05); padding: 2rem; border-radius: var(--radius-md); border-left: 3px solid var(--status-yellow);">
+                    <span class="route-badge" style="color: var(--status-yellow); border-color: var(--status-yellow); background: rgba(255,214,0,0.1);">NON-CONVEYABLE</span>
+                    <p style="margin-top: 15px; font-size: 0.9rem;">Geladeiras, TVs, Pneus. Produtos que não cabem nas esteiras (conveyors) e exigem coleta via empilhadeira e rotas exclusivas.</p>
+                </div>
+            </div>
+        </section>
+        <section id="fluxo" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">O Caminho do Carrinho</h2>
+            </div>
+            
+            <div class="cart-timeline-wrapper">
+                <div class="cart-track"><div class="cart-track-fill" id="animated-cart-track"></div></div>
+                
+                <div class="cart-steps">
+                    <div class="step-node-container" onmouseover="fillCartTrack(0)">
+                        <div class="cart-node">🛒</div>
+                        <h4 class="node-title">1. Setup</h4>
+                        <p class="node-desc">Bipa o carrinho e associa totes vazios (LPNs) a ele no sistema.</p>
+                    </div>
+
+                    <div class="step-node-container" onmouseover="fillCartTrack(20)">
+                        <div class="cart-node">🗺️</div>
+                        <h4 class="node-title">2. A Rota</h4>
+                        <p class="node-desc">Coletor indica a rua e o nível do primeiro endereço.</p>
+                    </div>
+
+                    <div class="step-node-container" onmouseover="fillCartTrack(40)">
+                        <div class="cart-node">📍</div>
+                        <h4 class="node-title">3. Validação</h4>
+                        <p class="node-desc">Bipa o código de barras do Bin para garantir que não errou o corredor.</p>
+                    </div>
+
+                    <div class="step-node-container" onmouseover="fillCartTrack(60)">
+                        <div class="cart-node">🔍</div>
+                        <h4 class="node-title">4. EAN Scan</h4>
+                        <p class="node-desc">Identifica o produto físico e bipa para confirmar a coleta da peça correta.</p>
+                    </div>
+
+                    <div class="step-node-container" onmouseover="fillCartTrack(80)">
+                        <div class="cart-node">🧺</div>
+                        <h4 class="node-title">5. Alocação</h4>
+                        <p class="node-desc">O coletor brilha indicando em qual dos totes do carrinho o item deve ser colocado.</p>
+                    </div>
+
+                    <div class="step-node-container final-drop" onmouseover="fillCartTrack(100)">
+                        <div class="cart-node">⚙️</div>
+                        <h4 class="node-title">6. Dropline</h4>
+                        <p class="node-desc">Carrinho cheio! Os totes são empurrados para a esteira e o ciclo reinicia.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="problem-solver" class="content-section">
+            <div class="exception-zone">
+                <div class="section-header">
+                    <h2 class="section-title alert-title">Exceções Críticas & Problem Solver</h2>
+                </div>
+                <p style="font-size: 1.15rem; color: var(--text-pure); margin-bottom: 3rem;">
+                    O Picking opera em extrema velocidade. Quando a engrenagem trava, o <strong>Problem Solver (Investigador)</strong> entra em cena. O PS não foca em volume, foca em resolver anomalias sistêmicas pesadas.
+                </p>
+
+                <div class="picking-grid-2">
+                    <div class="exception-card">
+                        <div class="exception-icon">🔎</div>
+                        <h4>O Falso Faltante (Shortage)</h4>
+                        <p>O WMS mandou o Picker buscar uma cafeteira, mas ele olhou para o Bin e não encontrou. O Picker aperta "Item não encontrado". O SLA corre risco.</p>
+                        
+                        <div style="background: rgba(0,0,0,0.5); padding: 15px; margin-top: 15px; border-left: 3px solid var(--status-red); font-family: var(--font-mono); font-size: 0.85rem;">
+                            <span style="color: var(--status-red); display: block; margin-bottom: 5px;">PROTOCOLO DO PS:</span>
+                            1. Revirar o Bin e esvaziá-lo.<br>
+                            2. Vasculhar os Bins vizinhos (acima, abaixo, lados).<br>
+                            3. Procurar nas caixas de Amnesty do corredor.<br>
+                            4. Apenas após exaustão, autorizar o <strong>Override</strong> sistêmico e cancelar/realocar a venda.
+                        </div>
+                    </div>
+
+                    <div class="exception-card">
+                        <div class="exception-icon" style="color: var(--neon-pink); filter: drop-shadow(0 0 10px var(--neon-pink));">🧪</div>
+                        <h4 style="color: var(--neon-pink);">Risco Hazmat (Químicos)</h4>
+                        <p>Um item líquido ou químico vaza ou quebra durante o Picking. Este item nunca pode ir para a esteira (conveyor), pois contaminaria toda a operação.</p>
+                        <button class="ps-action-btn" style="border-color: var(--neon-pink); color: var(--neon-pink);">Protocolo de Isolamento Spill</button>
+                    </div>
+
+                    <div class="exception-card">
+                        <div class="exception-icon">📏</div>
+                        <h4>SIOC & Dimensões Inesperadas</h4>
+                        <p>O Picker vai coletar o que deveria ser uma caneta, e descobre que o cadastro mestre estava errado: é um pneu de trator. O item trava o carrinho.</p>
+                        <p style="margin-top: 10px; font-size: 0.85rem; color: var(--text-muted); font-family: var(--font-mono);">AÇÃO PS: Bloqueio do Item + Correção de Cubagem Global.</p>
+                    </div>
+
+                    <div class="exception-card">
+                        <div class="exception-icon" style="color: var(--status-yellow);">🗓️</div>
+                        <h4 style="color: var(--status-yellow);">FEFO (Validade / Expired)</h4>
+                        <p>First Expired, First Out. O Picker nota que o lote ordenado pelo sistema já venceu ou vence amanhã. O envio deve ser interceptado imediatamente.</p>
+                        <button class="ps-action-btn" style="border-color: var(--status-yellow); color: var(--status-yellow);">Isolar Lote para Scrap</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section id="metricas" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">Performance & Outbound Metrics</h2>
+            </div>
+            
+            <div class="metrics-dashboard">
+                <div class="picking-grid-3">
+                    <div class="metric-box">
+                        <div class="metric-value">280</div>
+                        <div class="metric-label">UPH (Units Per Hour)</div>
+                        <p class="metric-desc">Velocidade média de coleta. Meta Meli: Estabilidade acima de 250 unidades/hora.</p>
+                    </div>
+
+                    <div class="metric-box">
+                        <div class="metric-value" style="color: var(--status-red);">0.08%</div>
+                        <div class="metric-label">Pick Short Rate</div>
+                        <p class="metric-desc">Taxa de itens não encontrados. Acima de 0.15% gera auditoria imediata no ICQA.</p>
+                    </div>
+
+                    <div class="metric-box">
+                        <div class="metric-value" style="color: var(--neon-blue);">99.8%</div>
+                        <div class="metric-label">SLA Compliance</div>
+                        <p class="metric-desc">Pedidos coletados dentro da janela do CPT (Critical Pull Time).</p>
+                    </div>
+                </div>
+
+                <div class="wms-card" style="padding: 2.5rem; background: rgba(0,0,0,0.4);">
+                    <h4 class="text-mono" style="margin-bottom: 10px;">CPT MONITOR: CARRETA ROTA_SUL_04</h4>
+                    <div class="cpt-progress-container">
+                        <div class="cpt-progress-bar"></div>
+                    </div>
+                    <p style="font-size: 0.85rem; margin-top: 15px; color: var(--text-muted); text-align: right;">
+                        85% DO BATCH COLETADO — 12 MIN PARA O FECHAMENTO DA DOCA.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section id="estrategias" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">Estratégias Avançadas (Modalities)</h2>
+            </div>
+            
+            <div class="picking-grid-3">
+                <div class="strategy-flip-container">
+                    <div class="strategy-card">
+                        <div class="strategy-front">
+                            <div class="strategy-icon">🌊</div>
+                            <h4>Wave Picking</h4>
+                            <div class="hover-hint">DECIFRAR ESTRATÉGIA</div>
+                        </div>
+                        <div class="strategy-back">
+                            <h4>Ondas de Saída</h4>
+                            <p>Liberação massiva de milhares de pedidos simultâneos, agrupados por transportadora ou região geográfica comum.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="strategy-flip-container">
+                    <div class="strategy-card">
+                        <div class="strategy-front">
+                            <div class="strategy-icon">📍</div>
+                            <h4>Zone Picking</h4>
+                            <div class="hover-hint">DECIFRAR ESTRATÉGIA</div>
+                        </div>
+                        <div class="strategy-back">
+                            <h4>Zonas Fixas</h4>
+                            <p>Cada operador é dono de uma rua. O tote percorre o CD via esteira, parando apenas nas zonas onde há itens para aquele pedido.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="strategy-flip-container">
+                    <div class="strategy-card">
+                        <div class="strategy-front">
+                            <div class="strategy-icon">💡</div>
+                            <h4>Pick-to-Light</h4>
+                            <div class="hover-hint">DECIFRAR ESTRATÉGIA</div>
+                        </div>
+                        <div class="strategy-back">
+                            <h4>Guia por LED</h4>
+                            <p>Luzes digitais no Bin indicam exatamente qual local coletar e a quantidade, eliminando a necessidade de ler o coletor o tempo todo.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="grid-2">
+            <section class="content-section">
+                <h2 class="section-title">O Peso Invisível</h2>
+                <div class="wms-card" style="border-left: 5px solid var(--neon-pink);">
+                    <div style="display: flex; gap: 20px; align-items: center;">
+                        <div style="font-size: 3.5rem;">⚖️</div>
+                        <div>
+                            <h4 style="color: var(--neon-pink);">ERGONOMIA & POWER ZONE</h4>
+                            <p style="font-size: 0.95rem; margin-top: 5px;">Um Picker caminha em média <strong>15 a 18 km</strong> por turno. O WMS tenta manter os itens de alto giro na "Power Zone" (entre ombros e joelhos) para evitar agachamentos excessivos.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="content-section">
+                <h2 class="section-title">Qualidade vs Produtividade</h2>
+                <div class="wms-card" style="border-left: 5px solid var(--status-yellow);">
+                    <p style="font-size: 1rem; font-style: italic;">
+                        "Coletar 300 itens por hora e errar o tote de 10 deles destrói toda a cadeia de saída. O erro no Picking se torna um problema de re-sort no Putwall ou reclamação no SAC."
+                    </p>
+                    <p class="text-mono" style="margin-top: 15px; font-size: 0.8rem; color: var(--status-yellow);">>> VELOCIDADE SEM QUALIDADE É APENAS RETRABALHO.</p>
+                </div>
+            </section>
+        </div>
+
+        <section id="glossario" class="content-section">
+            <h2 class="section-title">Glossário Outbound</h2>
+            
+            <div class="picking-accordion" onclick="toggleAccordion(this)">
+                <div class="acc-header">Batching <span class="acc-icon">+</span></div>
+                <div class="acc-panel">Técnica de agrupar múltiplos pedidos em uma única rota de coleta para reduzir o tempo de deslocamento do operador.</div>
+            </div>
+
+            <div class="picking-accordion" onclick="toggleAccordion(this)">
+                <div class="acc-header">Shortage (Item Não Encontrado) <span class="acc-icon">+</span></div>
+                <div class="acc-panel">Quando o sistema indica estoque, mas o Bin está fisicamente vazio. Gera uma tarefa imediata para o Problem Solver e ICQA.</div>
+            </div>
+
+            <div class="picking-accordion" onclick="toggleAccordion(this)">
+                <div class="acc-header">Dropline <span class="acc-icon">+</span></div>
+                <div class="acc-panel">Ponto final da coleta onde os carrinhos são esvaziados e os totes são colocados na esteira principal rumo ao Packing.</div>
+            </div>
+
+            <div class="picking-accordion" onclick="toggleAccordion(this)">
+                <div class="acc-header">DPMO <span class="acc-icon">+</span></div>
+                <div class="acc-panel">Defeitos por Milhão de Oportunidades. Métrica de qualidade que mede a precisão da bipagem e alocação no tote correto.</div>
+            </div>
+
+            <div class="picking-accordion" onclick="toggleAccordion(this)">
+                <div class="acc-header">Water Spider <span class="acc-icon">+</span></div>
+                <div class="acc-panel">Operador de apoio que abastece os Pickers com totes vazios e remove obstáculos, mantendo o fluxo contínuo.</div>
+            </div>
+        </section>
+
+        <footer style="text-align: center; padding: 6rem 0; border-top: 1px dashed rgba(138, 43, 226, 0.2);">
+            <div style="font-family: var(--font-display); font-size: 2.2rem; color: var(--text-pure); margin-bottom: 1rem;">
+                “A promessa do clique termina no bip.” <br>
+                <span class="text-purple">Picking: Onde a venda se torna realidade física.</span>
+            </div>
+            <p class="text-mono" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2rem;">
+                SECURE TERMINAL // MELI PDI – MODULE: PICKING_OUTBOUND_V4 // ACCURACY: 99.9%
+            </p>
+        </footer>
+
+    </main>
+
+    <script>
+        // 1. Controle da Barra de Progresso da Timeline
+        function fillCartTrack(percent) {
+            const track = document.getElementById('animated-cart-track');
+            track.style.width = percent + '%';
+        }
+
+        // 2. Lógica dos Accordions do Glossário
+        function toggleAccordion(element) {
+            const isActive = element.classList.contains('active');
+            
+            // Fecha todos antes de abrir o novo
+            document.querySelectorAll('.picking-accordion').forEach(acc => {
+                acc.classList.remove('active');
+            });
+
+            if (!isActive) {
+                element.classList.add('active');
+            }
+        }
+
+        // 3. ScrollSpy: Atualiza o menu lateral baseado na posição do scroll
+        const sections = document.querySelectorAll('.content-section');
+        const navLinks = document.querySelectorAll('.index-link');
+
+        window.addEventListener('scroll', () => {
+            let current = "";
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (pageYOffset >= sectionTop - 200) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').includes(current)) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // 4. Inicialização do Sistema (Console Log)
+        window.onload = () => {
+            console.log("%c WMS OUTBOUND INTELLIGENCE ONLINE ", "background: #8A2BE2; color: #fff; font-weight: bold; padding: 5px;");
+            console.log("Picking Route... [OPTIMIZED]");
+            console.log("Scanner Beam... [READY]");
+            console.log("Current SLA Risk: LOW");
+        };
+    </script>
+</body>
+</html>

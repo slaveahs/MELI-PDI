@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lead Time & Travessia | MeLi PDI Terminal</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ==========================================================================
+           01. ROOT VARIABLES (LEAD TIME / JOURNEY THEME)
+           ========================================================================== */
+        :root {
+            /* Palette Base: Deep Timeline Dark */
+            --bg-absolute: #010A07; 
+            --bg-panel-deep: rgba(5, 20, 15, 0.85);
+            --bg-card-glass: rgba(10, 35, 25, 0.65);
+            --bg-card-hover: rgba(15, 50, 35, 0.85);
+
+            /* Tema de Cores Lead Time (Fluxo e Espera) */
+            --emerald-time: #00FFAA;
+            --emerald-glow: rgba(0, 255, 170, 0.5);
+            --emerald-dim: rgba(0, 255, 170, 0.1);
+
+            --magenta-transit: #FF00AA;
+            --magenta-glow: rgba(255, 0, 170, 0.5);
+            --magenta-dim: rgba(255, 0, 170, 0.1);
+
+            /* Cores de Suporte / Alertas */
+            --cyan-tech: #00E5FF;
+            --white-core: #FFFFFF;
+
+            /* Tipografia */
+            --font-display: 'Orbitron', sans-serif;
+            --font-body: 'Rajdhani', sans-serif;
+            --font-mono: 'Share Tech Mono', monospace;
+            --font-code: 'Fira Code', monospace;
+
+            /* Cores de Texto */
+            --text-title: #FFFFFF;
+            --text-main: #E2E8F0;
+            --text-muted: #8AA69B;
+
+            /* Bordas e Sombras (Glassmorphism) */
+            --border-lead: rgba(0, 255, 170, 0.3);
+            --border-active: rgba(255, 0, 170, 0.6);
+            --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.9);
+            --shadow-neon-emerald: 0 0 15px var(--emerald-glow), inset 0 0 10px var(--emerald-dim);
+            --shadow-neon-magenta: 0 0 15px var(--magenta-glow), inset 0 0 10px var(--magenta-dim);
+            
+            /* Medidas Estruturais (TRAVADAS PARA DESKTOP) */
+            --sidebar-width: 280px;
+            --topbar-height: 80px;
+            --radius-card: 8px;
+            --transition-hud: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        /* ==========================================================================
+           02. CSS RESET & GLOBAL SETUP (FORCED DESKTOP)
+           ========================================================================== */
+        *, *::before, *::after {
+            margin: 0; padding: 0; box-sizing: border-box;
+        }
+
+        html { font-size: 16px; scroll-behavior: smooth; }
+
+        body {
+            background-color: var(--bg-absolute);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            min-height: 100vh;
+            min-width: 1200px; /* <--- TRAVA ABSOLUTA DE DESKTOP */
+            overflow-x: auto;  
+            display: flex;
+            position: relative;
+        }
+
+        /* Custom Scrollbar - Emerald Style */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg-absolute); border-left: 1px solid var(--border-lead); }
+        ::-webkit-scrollbar-thumb { background: var(--emerald-dim); border: 1px solid var(--emerald-time); border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--emerald-time); box-shadow: 0 0 15px var(--emerald-time); }
+
+        /* Tipografia Global */
+        h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--text-title); }
+        p { font-size: 1.2rem; line-height: 1.7; margin-bottom: 1.2rem; }
+        strong { color: var(--emerald-time); font-weight: 600; text-shadow: 0 0 8px var(--emerald-dim); }
+
+        /* ==========================================================================
+           03. BACKGROUND EFFECTS (TIMELINE GRID)
+           ========================================================================== */
+        body::before {
+            content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -3;
+            /* Grid imitando uma linha do tempo contínua */
+            background-image: 
+                linear-gradient(rgba(0, 255, 170, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 0, 170, 0.02) 1px, transparent 1px);
+            background-size: 60px 40px; pointer-events: none;
+        }
+
+        body::after {
+            content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2;
+            background: radial-gradient(circle at 15% 50%, rgba(0, 255, 170, 0.04) 0%, transparent 40%),
+                        radial-gradient(circle at 85% 50%, rgba(255, 0, 170, 0.03) 0%, transparent 40%);
+            pointer-events: none;
+        }
+
+        /* ==========================================================================
+           04. GLOBAL KEYFRAMES (JOURNEY ANIMATIONS)
+           ========================================================================== */
+        @keyframes scanline-h { 0% { transform: translateX(-100%); } 100% { transform: translateX(100vw); } }
+        
+        @keyframes pulse-journey {
+            0% { box-shadow: 0 0 10px var(--emerald-dim); border-color: rgba(0, 255, 170, 0.3); }
+            50% { box-shadow: 0 0 25px var(--emerald-glow); border-color: var(--emerald-time); }
+            100% { box-shadow: 0 0 10px var(--emerald-dim); border-color: rgba(0, 255, 170, 0.3); }
+        }
+
+        @keyframes flow-dot {
+            0% { left: 0%; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { left: 100%; opacity: 0; }
+        }
+
+        .hud-scanner {
+            position: fixed; top: 0; left: 0; width: 2px; height: 100vh;
+            background: linear-gradient(to bottom, transparent, var(--emerald-time), transparent);
+            opacity: 0.5; z-index: 9999; pointer-events: none; animation: scanline-h 8s linear infinite;
+        }
+        /* ==========================================================================
+           05. GLOBAL LAYOUT (GRID E WRAPPERS)
+           ========================================================================== */
+        .app-wrapper {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+            position: relative;
+            z-index: 10;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background: radial-gradient(circle at top right, rgba(0, 255, 170, 0.02), transparent 60%);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 4rem 4rem 4rem;
+        }
+
+        /* ==========================================================================
+           06. SIDEBAR (TERMINAL NAVIGATION) - ACOMPANHA A PÁGINA (DESKTOP)
+           ========================================================================== */
+        .sys-sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-panel-deep);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border-lead);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0; 
+            z-index: 100;
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.9);
+        }
+
+        /* Feixe de luz vertical Esmeralda */
+        .sys-sidebar::after {
+            content: '';
+            position: absolute;
+            top: 0; right: -1px;
+            width: 2px; height: 100%;
+            background: linear-gradient(to bottom, transparent, var(--emerald-time), transparent);
+            opacity: 0.6;
+        }
+
+        .sidebar-brand {
+            height: var(--topbar-height);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 1px dashed var(--border-lead);
+            background: radial-gradient(circle at top, var(--emerald-dim), transparent);
+            position: relative;
+        }
+
+        .sidebar-brand::before {
+            content: '';
+            position: absolute;
+            bottom: -1px; left: 0; width: 40%; height: 2px;
+            background: var(--emerald-time);
+            box-shadow: 0 0 10px var(--emerald-time);
+        }
+
+        .brand-logo {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: var(--text-title);
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+
+        .brand-logo span {
+            color: var(--magenta-transit);
+            text-shadow: 0 0 15px rgba(255, 0, 170, 0.5);
+        }
+
+        .brand-sub {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--emerald-time);
+            letter-spacing: 4px;
+            margin-top: 5px;
+            text-transform: uppercase;
+        }
+
+        /* Menu de Navegação */
+        .nav-menu {
+            flex-grow: 1;
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 20px;
+            color: var(--text-muted);
+            font-family: var(--font-body);
+            font-size: 1.05rem;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-decoration: none;
+            position: relative;
+            transition: var(--transition-hud);
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid transparent;
+            border-radius: var(--radius-card);
+            clip-path: polygon(0 0, 100% 0, 100% 70%, 92% 100%, 0 100%);
+        }
+
+        /* Linha de seleção do menu (Magenta no Hover) */
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0;
+            height: 100%; width: 3px;
+            background: var(--magenta-transit);
+            transform: scaleY(0);
+            transition: 0.3s;
+        }
+
+        .nav-link:hover {
+            color: var(--text-pure);
+            background: rgba(255, 0, 170, 0.05);
+            border-color: rgba(255, 0, 170, 0.2);
+            padding-left: 25px;
+        }
+
+        .nav-link:hover::before {
+            transform: scaleY(1);
+            box-shadow: 0 0 15px var(--magenta-glow);
+        }
+
+        /* Estado ATIVO (Página Atual: Lead Time) */
+        .nav-link.active {
+            color: var(--emerald-time);
+            background: var(--emerald-dim);
+            border-color: var(--border-lead);
+        }
+
+        .nav-link.active::before {
+            background: var(--emerald-time);
+            transform: scaleY(1);
+            box-shadow: 0 0 15px var(--emerald-glow);
+        }
+
+        .nav-icon {
+            width: 20px; height: 20px;
+            fill: none; stroke: currentColor; stroke-width: 2;
+            transition: 0.3s;
+        }
+
+        .nav-link:hover .nav-icon {
+            transform: scale(1.1);
+            color: var(--magenta-transit);
+        }
+
+        .nav-link.active .nav-icon {
+            color: var(--emerald-time);
+        }
+
+        /* ==========================================================================
+           07. TOPBAR (SYSTEM HEADER)
+           ========================================================================== */
+        .sys-topbar {
+            height: var(--topbar-height);
+            width: 100%;
+            background: var(--bg-panel-deep);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--border-lead);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 4rem;
+            position: sticky;
+            top: 0;
+            z-index: 90;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+        }
+
+        .topbar-path {
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .topbar-path span {
+            color: var(--magenta-transit);
+            text-shadow: 0 0 8px var(--magenta-dim);
+        }
+
+        /* Status em Modo "Journey" / Esmeralda */
+        .topbar-status {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-family: var(--font-code);
+            font-size: 0.8rem;
+            color: var(--emerald-time);
+            letter-spacing: 1px;
+            border: 1px solid rgba(0, 255, 170, 0.4);
+            padding: 8px 15px;
+            border-radius: 4px;
+            background: rgba(0, 255, 170, 0.05);
+            box-shadow: 0 0 10px var(--emerald-dim);
+        }
+
+        .status-dot-journey {
+            width: 8px; height: 8px;
+            background: var(--emerald-time);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--emerald-glow);
+            animation: pulse-journey 1.5s infinite alternate;
+        }
+        /* ==========================================================================
+           08. HERO SECTION
+           ========================================================================== */
+        .hero-section {
+            margin-bottom: 3rem;
+            position: relative;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-lead);
+        }
+
+        .hero-section::after {
+            content: '';
+            position: absolute;
+            bottom: -1px; left: 0;
+            width: 250px; height: 3px;
+            background: var(--emerald-time);
+            box-shadow: 0 0 15px var(--emerald-glow);
+        }
+
+        .hero-title-wrapper {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .hero-title {
+            font-size: 4.5rem;
+            font-weight: 900;
+            color: var(--text-title);
+            letter-spacing: 5px;
+            line-height: 1.1;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+        }
+
+        .hero-title span {
+            color: var(--magenta-transit);
+            text-shadow: 0 0 20px var(--magenta-glow);
+        }
+
+        .hero-subtitle {
+            font-family: var(--font-mono);
+            font-size: 1.5rem;
+            color: var(--text-main);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .hero-subtitle::before {
+            content: '[TOTAL_JOURNEY_TIME]';
+            font-size: 1rem;
+            color: var(--emerald-time);
+            background: var(--emerald-dim);
+            padding: 4px 10px;
+            border: 1px solid rgba(0, 255, 170, 0.3);
+            border-radius: 4px;
+        }
+
+        .hero-quote {
+            margin-top: 1.5rem;
+            font-family: var(--font-body);
+            font-size: 1.3rem;
+            color: var(--magenta-transit);
+            font-style: italic;
+            border-left: 4px solid var(--magenta-transit);
+            padding-left: 15px;
+            background: linear-gradient(90deg, var(--magenta-dim), transparent);
+            padding: 10px 15px;
+            border-radius: 0 4px 4px 0;
+        }
+
+        /* ==========================================================================
+           09. CONTENT PANELS & GLASSMORPHISM
+           ========================================================================== */
+        .tech-panel {
+            background: var(--bg-card-glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 255, 170, 0.2);
+            border-radius: var(--radius-card);
+            padding: 3rem; margin-bottom: 3rem; position: relative;
+            box-shadow: var(--shadow-glass); transition: var(--transition-hud);
+        }
+        
+        .tech-panel:hover {
+            border-color: var(--emerald-time); background: var(--bg-card-hover);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.9), inset 0 0 20px var(--emerald-dim);
+        }
+        
+        /* Cantoneiras HUD Esmeralda */
+        .tech-panel::before, .tech-panel::after {
+            content: ''; position: absolute; width: 30px; height: 30px;
+            border: 2px solid var(--emerald-time); opacity: 0.5; transition: 0.3s;
+        }
+        .tech-panel::before { top: 15px; left: 15px; border-right: none; border-bottom: none; }
+        .tech-panel::after { bottom: 15px; right: 15px; border-left: none; border-top: none; }
+        
+        .panel-header { display: flex; align-items: center; gap: 20px; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 1.5rem; }
+        .panel-title { font-size: 2rem; color: var(--text-title); letter-spacing: 2px; }
+        
+        .panel-icon {
+            width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
+            background: var(--emerald-dim); border: 1px solid var(--border-lead); border-radius: var(--radius-card);
+            color: var(--emerald-time); font-size: 1.8rem; box-shadow: var(--shadow-neon-emerald);
+        }
+        
+        .highlight-box {
+            background: rgba(0, 255, 170, 0.05); border-left: 4px solid var(--emerald-time);
+            padding: 1.5rem; margin: 1.5rem 0; font-family: var(--font-mono); font-size: 1.1rem; color: var(--text-pure);
+        }
+        
+        .cyber-list { list-style: none; margin-top: 1.5rem; }
+        .cyber-list li { position: relative; padding-left: 35px; margin-bottom: 1.5rem; font-size: 1.15rem; line-height: 1.6; }
+        .cyber-list li::before { content: '>'; position: absolute; left: 0; top: 0; font-family: var(--font-mono); color: var(--magenta-transit); font-size: 1.4rem; font-weight: 900; text-shadow: 0 0 10px var(--magenta-glow); }
+        .list-title { display: block; color: var(--text-pure); font-family: var(--font-display); font-size: 1.2rem; margin-bottom: 5px; }
+
+        /* Estilos da Linha do Tempo (Journey Flow) */
+        .timeline-container {
+            display: flex; justify-content: space-between; position: relative; margin: 3rem 0;
+            padding: 20px 0;
+        }
+        .timeline-line {
+            position: absolute; top: 50%; left: 0; width: 100%; height: 4px;
+            background: rgba(255,255,255,0.1); transform: translateY(-50%); z-index: 1;
+        }
+        .timeline-node {
+            position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; text-align: center; width: 120px;
+        }
+        .node-dot {
+            width: 24px; height: 24px; border-radius: 50%; background: var(--bg-absolute); border: 3px solid var(--emerald-time);
+            margin-bottom: 10px; box-shadow: 0 0 10px var(--emerald-glow); transition: 0.3s;
+        }
+        .node-label { font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-muted); }
+        .node-time { font-family: var(--font-display); font-size: 1.1rem; color: var(--white-core); margin-top: 5px; }
+        /* EFEITOS ADICIONAIS LEAD TIME */
+        .lead-text {
+            color: var(--emerald-time);
+            font-family: var(--font-mono);
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(0, 255, 170, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hud-scanner"></div>
+
+    <div class="app-wrapper">
+        
+        <aside class="sys-sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">MELI<span>PDI</span></div>
+                <div class="brand-sub">SYS.MODULE // ACTIVE</div>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    <span>Home Dashboard</span>
+                </a>
+                
+                <a href="hub.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                    <span>Hub de Setores</span>
+                </a>
+                
+                <a href="glossario.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                    <span>Glossário Técnico</span>
+                </a>
+                
+                <a href="sla-detalhado.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <span>Deep Dive: SLA</span>
+                </a>
+
+                <a href="backlog-detalhado.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                    <span>Monitor: Backlog</span>
+                </a>
+
+                <a href="kpi-detalhado.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    <span>Analytics: KPIs</span>
+                </a>
+
+                <a href="throughput-detalhado.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="13 19 22 12 13 5 13 19"></polygon><polygon points="2 19 11 12 2 5 2 19"></polygon></svg>
+                    <span>Throughput & Vazão</span>
+                </a>
+
+                <a href="takttime-detalhado.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <span>Takt Time & Ritmo</span>
+                </a>
+
+                <a href="gargalo.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                    <span>Gargalo & Restrições</span>
+                </a>
+
+                <a href="dashboard.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                    <span>Dashboards & Gestão</span>
+                </a>
+
+                <div style="height: 1px; background: var(--border-lead); margin: 15px 0; opacity: 0.5;"></div>
+
+                <a href="#" class="nav-link active">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="5" r="3"></circle><line x1="12" y1="22" x2="12" y2="8"></line><path d="M5 12H2a10 10 0 0 0 20 0h-3"></path></svg>
+                    <span>Lead Time (Jornada)</span>
+                </a>
+            </nav>
+
+            <div style="padding: 20px; border-top: 1px dashed var(--border-lead); text-align: center;">
+                <div style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--emerald-time); opacity: 0.5; letter-spacing: 1.5px;">
+                    SECURE CONNECTION<br>OSASCO_CD // 2026
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            
+            <header class="sys-topbar">
+                <div class="topbar-path">
+                    MELI PDI <span>/</span> TIME_TRACKING <span>/</span> LEAD_TIME.exe
+                </div>
+                <div class="topbar-status">
+                    STATUS: TRACKING ACTIVE
+                    <div class="status-dot-journey"></div>
+                </div>
+            </header>
+
+            <div class="container">
+                
+                <section class="hero-section">
+                    <div class="hero-title-wrapper">
+                        <h1 class="hero-title">LEAD TIME <span>_</span></h1>
+                    </div>
+                    <div class="hero-subtitle">A Jornada do Pedido</div>
+                    
+                    <div class="hero-quote">
+                        "Enquanto as outras métricas medem o trabalho, o Lead Time mede o que o cliente realmente sente: a espera."
+                    </div>
+                </section>
+
+                <section class="tech-panel" id="section-definition">
+                    <div class="panel-header">
+                        <div class="panel-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        </div>
+                        <h2 class="panel-title">SEÇÃO 1 // O QUE É LEAD TIME?</h2>
+                    </div>
+
+                    <p>
+                        O <strong>Lead Time</strong> (Tempo de Atravessamento ou Tempo de Espera) é o tempo total percorrido desde o momento exato em que um pedido é feito (o clique no "Comprar") até o instante em que a caixa é entregue fisicamente nas mãos do cliente.
+                    </p>
+                    
+                    <div class="highlight-box" style="border-left-color: var(--magenta-transit); background: rgba(255, 0, 170, 0.05); margin: 2rem 0;">
+                        <span style="color: var(--magenta-transit); font-weight: bold; font-family: var(--font-display); font-size: 1.1rem;">A DIFERENÇA VITAL</span><br>
+                        Enquanto o <strong>Takt Time</strong> foca no ritmo exigido pela demanda e o <strong>Cycle Time</strong> no ritmo de uma tarefa específica (como embalar uma caixa), o <strong>Lead Time</strong> engloba absolutamente tudo. Ele é a soma de todos os tempos de processamento e, principalmente, de <em>todos os tempos de espera</em> (filas) entre as etapas da operação.
+                    </div>
+                    
+                    <div style="margin: 2rem 0; text-align: center;">
+                        
+                    </div>
+
+                    <h3 style="font-family: var(--font-display); font-size: 1.5rem; color: var(--emerald-time); margin-top: 3rem; margin-bottom: 1.5rem;">PARA QUE SERVE?</h3>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                        
+                        <div style="background: rgba(0,0,0,0.5); border-left: 3px solid var(--emerald-time); padding: 20px; border-radius: 4px;">
+                            <h4 style="color: var(--emerald-time); font-size: 1.1rem; margin-bottom: 10px; font-family: var(--font-display);">1. DEFINIR O SLA</h4>
+                            <p style="margin: 0; font-size: 1rem; color: var(--text-main);">O Lead Time é a base matemática para a promessa de entrega (ex: "Chega amanhã"). Sem conhecer a travessia real, o SLA vira um chute perigoso.</p>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.5); border-left: 3px solid var(--emerald-time); padding: 20px; border-radius: 4px;">
+                            <h4 style="color: var(--emerald-time); font-size: 1.1rem; margin-bottom: 10px; font-family: var(--font-display);">2. VANTAGEM COMPETITIVA</h4>
+                            <p style="margin: 0; font-size: 1rem; color: var(--text-main);">Em um mercado de fulfillment altamente agressivo (como o do Mercado Livre), reduzir o Lead Time global de dias para horas é o que atrai e retém consumidores.</p>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.5); border-left: 3px solid var(--emerald-time); padding: 20px; border-radius: 4px;">
+                            <h4 style="color: var(--emerald-time); font-size: 1.1rem; margin-bottom: 10px; font-family: var(--font-display);">3. MAPEAMENTO DE INEFICIÊNCIAS</h4>
+                            <p style="margin: 0; font-size: 1rem; color: var(--text-main);">Ele expõe a ociosidade. Destaca impiedosamente o tempo em que o produto fica parado em buffers, gaiolas ou docas esperando a próxima etapa.</p>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.5); border-left: 3px solid var(--emerald-time); padding: 20px; border-radius: 4px;">
+                            <h4 style="color: var(--emerald-time); font-size: 1.1rem; margin-bottom: 10px; font-family: var(--font-display);">4. RESSUPRIMENTO (ESTOQUE)</h4>
+                            <p style="margin: 0; font-size: 1rem; color: var(--text-main);">Para reposição de CD: se o Lead Time do fornecedor é de 10 dias, o <em>Ponto de Pedido</em> deve ser acionado quando o estoque cobrir exatamente esses 10 dias de vendas.</p>
+                        </div>
+
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-stages" style="border-color: rgba(255, 0, 170, 0.4);">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(255, 0, 170, 0.1); border-color: var(--magenta-transit); color: var(--magenta-transit); box-shadow: 0 0 15px var(--magenta-glow);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"></path><path d="M12 5l7 7-7 7"></path></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--text-pure);">SEÇÃO 2 // COMO FUNCIONA NA PRÁTICA</h2>
+                    </div>
+
+                    <p>
+                        Em um cenário de e-commerce, o Lead Time Total do cliente não é um bloco único de tempo. Ele é fragmentado em três grandes macro-etapas que precisam ser monitoradas e otimizadas individualmente pelos gestores:
+                    </p>
+
+                    <div class="timeline-container">
+                        <div class="timeline-line"></div>
+                        
+                        <div class="timeline-node">
+                            <div class="node-dot" style="border-color: var(--cyan-tech); box-shadow: 0 0 10px var(--cyan-tech);"></div>
+                            <span class="node-label" style="color: var(--cyan-tech);">ORDER</span>
+                            <span class="node-time">PEDIDO</span>
+                        </div>
+
+                        <div class="timeline-node">
+                            <div class="node-dot" style="border-color: var(--emerald-time); box-shadow: 0 0 15px var(--emerald-glow); background: rgba(0,255,170,0.2);"></div>
+                            <span class="node-label" style="color: var(--emerald-time);">FULFILLMENT</span>
+                            <span class="node-time">CENTRO (CD)</span>
+                        </div>
+
+                        <div class="timeline-node">
+                            <div class="node-dot" style="border-color: var(--magenta-transit); box-shadow: 0 0 10px var(--magenta-transit);"></div>
+                            <span class="node-label" style="color: var(--magenta-transit);">TRANSIT</span>
+                            <span class="node-time">LAST MILE</span>
+                        </div>
+
+                        <div class="timeline-node">
+                            <div class="node-dot" style="background: var(--white-core); border-color: var(--white-core); box-shadow: 0 0 15px rgba(255,255,255,0.8);"></div>
+                            <span class="node-label" style="color: var(--text-muted);">DELIVERY</span>
+                            <span class="node-time">CLIENTE</span>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 1rem;">
+                        <div style="background: rgba(0,0,0,0.5); padding: 15px; border-top: 3px solid var(--cyan-tech); border-radius: 4px;">
+                            <strong style="color: var(--cyan-tech); font-family: var(--font-display); font-size: 1rem;">1. ORDER LEAD TIME</strong>
+                            <p style="font-size: 0.9rem; color: var(--text-main); margin-top: 5px;">O cliente clica em "comprar", o sistema processa o pagamento, aprova no anti-fraude e envia a ordem para o WMS do armazém.</p>
+                        </div>
+                        <div style="background: rgba(0,255,170,0.05); padding: 15px; border-top: 3px solid var(--emerald-time); border-radius: 4px;">
+                            <strong style="color: var(--emerald-time); font-family: var(--font-display); font-size: 1rem;">2. FULFILLMENT TIME</strong>
+                            <p style="font-size: 0.9rem; color: var(--text-main); margin-top: 5px;">O pedido "cai" no CD. Envolve tempo de Picking, Packing e faturamento até a caixa ser bipada na doca. <em>(Aqui Takt e Gargalos entram em ação!)</em></p>
+                        </div>
+                        <div style="background: rgba(255,0,170,0.05); padding: 15px; border-top: 3px solid var(--magenta-transit); border-radius: 4px;">
+                            <strong style="color: var(--magenta-transit); font-family: var(--font-display); font-size: 1rem;">3. TRANSIT TIME</strong>
+                            <p style="font-size: 0.9rem; color: var(--text-main); margin-top: 5px;">A transportadora coleta na doca, leva até um hub intermediário, e segue para a entrega final (Last Mile) na porta do comprador.</p>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 2rem; background: rgba(255, 255, 255, 0.05); border: 1px dashed var(--text-muted); padding: 15px; text-align: center; border-radius: 4px;">
+                        <span style="font-family: var(--font-mono); color: var(--text-pure); font-size: 1.2rem; letter-spacing: 2px;">LEAD TIME TOTAL = TEMPO DO PEDIDO + TEMPO DE CD + TEMPO DE TRANSPORTE</span>
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-example">
+                    <div class="panel-header">
+                        <div class="panel-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        </div>
+                        <h2 class="panel-title">SEÇÃO 3 // O RELÓGIO NA PRÁTICA</h2>
+                    </div>
+
+                    <p>
+                        Vamos analisar um Cenário de Compra Online e acompanhar as carimbadas de tempo no banco de dados para calcular a travessia real do pedido.
+                    </p>
+
+                    <div style="background: rgba(0,0,0,0.6); padding: 2rem; border-left: 4px solid var(--emerald-time); border-radius: 4px; margin-top: 2rem;">
+                        
+                        <div style="display: flex; flex-direction: column; gap: 15px; font-family: var(--font-mono); font-size: 1.1rem; color: var(--text-main);">
+                            
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <span style="color: var(--cyan-tech); background: rgba(0,229,255,0.1); padding: 5px 10px; border-radius: 4px; width: 150px; text-align: center;">SEG // 20:00</span>
+                                <span>O cliente aprova a compra no aplicativo (Início do Relógio).</span>
+                            </div>
+                            
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <span style="color: var(--emerald-time); background: rgba(0,255,170,0.1); padding: 5px 10px; border-radius: 4px; width: 150px; text-align: center;">SEG // 22:00</span>
+                                <span>O pedido sai da fila virtual e desce para impressão no WMS do CD.</span>
+                            </div>
+
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <span style="color: var(--emerald-time); background: rgba(0,255,170,0.1); padding: 5px 10px; border-radius: 4px; width: 150px; text-align: center;">TER // 02:00</span>
+                                <span>O processo logístico interno (Picking e Packing) termina.</span>
+                            </div>
+
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <span style="color: var(--magenta-transit); background: rgba(255,0,170,0.1); padding: 5px 10px; border-radius: 4px; width: 150px; text-align: center;">TER // 08:00</span>
+                                <span>A transportadora bipa e coleta o pacote na doca.</span>
+                            </div>
+
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <span style="color: var(--white-core); background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 4px; width: 150px; text-align: center;">QUA // 15:00</span>
+                                <span>O pacote é entregue e assinado pelo cliente (Fim do Relógio).</span>
+                            </div>
+
+                        </div>
+
+                        <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px dashed rgba(255,255,255,0.1); text-align: center;">
+                            <span style="font-family: var(--font-display); font-size: 1.2rem; color: var(--text-muted); letter-spacing: 2px;">LEAD TIME TOTAL:</span><br>
+                            <span style="font-family: var(--font-display); font-size: 3.5rem; color: var(--emerald-time); font-weight: 900; text-shadow: 0 0 20px var(--emerald-glow);">43 HORAS</span>
+                        </div>
+
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-golden-rules" style="border-color: rgba(0, 255, 170, 0.4);">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(0, 255, 170, 0.1); border-color: var(--emerald-time); color: var(--emerald-time); box-shadow: 0 0 15px var(--emerald-glow);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--text-pure);">SEÇÃO 4 // REGRAS DE OURO DO LEAD TIME</h2>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 20px; margin-top: 1.5rem;">
+                        
+                        <div style="background: rgba(0,0,0,0.5); padding: 20px; border-left: 4px solid var(--emerald-time); border-radius: 4px;">
+                            <strong style="color: var(--emerald-time); font-family: var(--font-display); font-size: 1.2rem; display: block; margin-bottom: 5px;">01. CONSISTÊNCIA > VELOCIDADE PURA</strong>
+                            <p style="font-size: 1rem; color: var(--text-main); margin: 0;">Entregar um pedido em 2 dias com 99% de certeza é muito melhor do que prometer 1 dia e falhar em 30% das vezes. A variação descontrolada do Lead Time destrói o SLA e a confiança do cliente.</p>
+                        </div>
+
+                        <div style="background: rgba(255, 0, 170, 0.05); padding: 20px; border: 1px solid var(--magenta-transit); border-radius: 4px; box-shadow: inset 0 0 20px rgba(255, 0, 170, 0.1);">
+                            <strong style="color: var(--magenta-transit); font-family: var(--font-display); font-size: 1.2rem; display: block; margin-bottom: 5px; text-shadow: 0 0 10px var(--magenta-glow);">02. A REGRA DOS 95% (WAIT TIME)</strong>
+                            <p style="font-size: 1.05rem; color: var(--text-pure); margin: 0;">A maior parte da travessia não é trabalho, é espera. Na maioria das operações, o tempo em que alguém está ativamente tocando ou processando a caixa (<em>Touch Time / Value-Added Time</em>) representa <strong>menos de 5%</strong> do Lead Time total. Os outros 95% do tempo a caixa está parada em uma fila, em um buffer, em uma gaiola ou na doca esperando um caminhão.</p>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.5); padding: 20px; border-left: 4px solid var(--emerald-time); border-radius: 4px;">
+                            <strong style="color: var(--emerald-time); font-family: var(--font-display); font-size: 1.2rem; display: block; margin-bottom: 5px;">03. REDUZA AS DISTÂNCIAS FÍSICAS</strong>
+                            <p style="font-size: 1rem; color: var(--text-main); margin: 0;">Um dos maiores inimigos do Lead Time dentro do CD é o deslocamento. Otimizar o layout da malha (como colocar itens de Curva A, que saem muito, colados na área de Packing) reduz instantaneamente o tempo morto da travessia.</p>
+                        </div>
+
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-problem-solving" style="border-color: rgba(0, 229, 255, 0.4);">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(0, 229, 255, 0.1); border-color: var(--cyan-tech); color: var(--cyan-tech); box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--text-pure);">SEÇÃO 5 // A VISÃO DO PROBLEM SOLVER</h2>
+                    </div>
+
+                    <p>
+                        Para um analista de elite atuar na redução do Lead Time, ele precisa dominar a lei matemática fundamental das filas operacionais: a <strong>Lei de Little</strong> ($L = \lambda W$). Em termos logísticos, essa equação se traduz de forma implacável:
+                    </p>
+
+                    <div style="background: rgba(0,0,0,0.8); border: 1px solid var(--emerald-time); padding: 2rem; border-radius: 8px; text-align: center; margin: 2rem 0; box-shadow: inset 0 0 20px rgba(0,255,170,0.1);">
+                        <span style="font-family: var(--font-display); color: var(--text-muted); font-size: 1.1rem; letter-spacing: 2px;">FÓRMULA DO LEAD TIME (LEI DE LITTLE)</span><br>
+                        <span style="font-family: var(--font-mono); color: var(--emerald-time); font-size: 2.5rem; display: block; margin-top: 15px; text-shadow: 0 0 15px var(--emerald-glow);">
+                            LEAD TIME = <span style="color: var(--magenta-transit); text-shadow: 0 0 15px var(--magenta-glow);">WIP</span> <span style="color: var(--text-pure);">÷</span> <span style="color: var(--cyan-tech); text-shadow: 0 0 15px rgba(0,229,255,0.5);">THROUGHPUT</span>
+                        </span>
+                    </div>
+                    
+                    
+
+                    <h3 style="font-family: var(--font-display); font-size: 1.3rem; color: var(--text-pure); margin-bottom: 15px; margin-top: 3rem;">COMO REDUZIR A ESPERA?</h3>
+                    <p>A matemática nos diz que se você quer que os pedidos atravessem o seu centro de distribuição mais rápido (Reduzir Lead Time), você tem apenas duas opções:</p>
+
+                    <div style="display: flex; gap: 20px; margin-top: 1.5rem;">
+                        <div style="flex: 1; background: rgba(0,229,255,0.05); padding: 20px; border-left: 4px solid var(--cyan-tech); border-radius: 4px;">
+                            <strong style="color: var(--cyan-tech); font-family: var(--font-display); font-size: 1.1rem; display: block; margin-bottom: 10px;">1. AUMENTAR O THROUGHPUT</strong>
+                            <p style="font-size: 0.95rem; color: var(--text-main); margin: 0;">Aumentar a capacidade de saída do sistema (adicionar mais pessoas no gargalo, arrumar a esteira que quebrou, acelerar a taxa de processamento).</p>
+                        </div>
+                        <div style="flex: 1; background: rgba(255,0,170,0.05); padding: 20px; border-left: 4px solid var(--magenta-transit); border-radius: 4px;">
+                            <strong style="color: var(--magenta-transit); font-family: var(--font-display); font-size: 1.1rem; display: block; margin-bottom: 10px;">2. REDUZIR O WIP (TRABALHO EM PROCESSO)</strong>
+                            <p style="font-size: 0.95rem; color: var(--text-main); margin: 0;">A tática mais negligenciada. Se você "liberar" 5.000 pedidos de uma vez para o Picking, mas o Packing só embala 1.000 por hora, o WIP explodiu. O primeiro pedido vai demorar horas na fila. Controlar a liberação em <strong>"ondas" (Waves)</strong> mantém o WIP baixo e o Lead Time enxuto.</p>
+                        </div>
+                    </div>
+
+                    <div style="background: rgba(0,0,0,0.6); border: 1px dashed var(--text-muted); padding: 2rem; border-radius: 8px; margin-top: 3rem;">
+                        <h4 style="color: var(--emerald-time); font-family: var(--font-display); font-size: 1.2rem; margin-bottom: 15px;">[ CALCULADORA: LEI DE LITTLE ]</h4>
+                        <div style="display: flex; gap: 20px; align-items: flex-end;">
+                            <div style="flex: 1;">
+                                <label style="color: var(--magenta-transit); font-family: var(--font-mono); font-size: 0.9rem;">WIP (ITENS NA FILA):</label>
+                                <input type="number" id="calc-wip" value="5000" class="cyber-input" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.8); border: 1px solid var(--magenta-transit); color: var(--white-core); font-family: var(--font-mono); font-size: 1.2rem; margin-top: 5px;">
+                            </div>
+                            <div style="flex: 1;">
+                                <label style="color: var(--cyan-tech); font-family: var(--font-mono); font-size: 0.9rem;">THROUGHPUT (UN/H):</label>
+                                <input type="number" id="calc-th" value="1000" class="cyber-input" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.8); border: 1px solid var(--cyan-tech); color: var(--white-core); font-family: var(--font-mono); font-size: 1.2rem; margin-top: 5px;">
+                            </div>
+                            <div style="flex: 1; text-align: center; border-left: 1px solid rgba(255,255,255,0.1); padding-left: 20px;">
+                                <span style="font-family: var(--font-mono); color: var(--text-muted); font-size: 0.8rem; letter-spacing: 2px;">LEAD TIME ESTIMADO</span><br>
+                                <strong id="calc-result" style="color: var(--emerald-time); font-family: var(--font-display); font-size: 2.2rem; text-shadow: 0 0 15px var(--emerald-glow);">5.0</strong>
+                                <span style="color: var(--text-muted); font-family: var(--font-mono);"> HORAS</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 3rem;">
+                        <h4 style="color: var(--white-core); font-family: var(--font-display); font-size: 1.2rem; margin-bottom: 15px;">O CHOQUE DE REALIDADE (TOUCH VS WAIT TIME)</h4>
+                        <p style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 15px;">A proporção brutal do tempo logístico. Em uma travessia de 43 horas, veja o que é agregação de valor e o que é pura fila:</p>
+                        
+                        <div style="width: 100%; height: 30px; display: flex; border-radius: 4px; overflow: hidden; box-shadow: inset 0 0 10px rgba(0,0,0,0.8);">
+                            <div id="bar-touch" style="width: 0%; background: var(--emerald-time); display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 0.8rem; font-weight: bold; color: var(--bg-absolute); transition: width 2s cubic-bezier(0.1, 0.7, 0.1, 1);"></div>
+                            <div id="bar-wait" style="width: 100%; background: var(--magenta-transit); display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 0.8rem; font-weight: bold; color: var(--white-core); transition: width 2s cubic-bezier(0.1, 0.7, 0.1, 1);">ESPERA (FILAS)</div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 5px; font-family: var(--font-mono); font-size: 0.8rem;">
+                            <span style="color: var(--emerald-time);">VALOR AGREGADO (TOUCH TIME)</span>
+                            <span style="color: var(--magenta-transit);">DESPERDÍCIO (WAIT TIME)</span>
+                        </div>
+                    </div>
+                </section>
+                <div style="margin-top: 4rem; text-align: center; border-top: 1px solid rgba(0, 255, 170, 0.3); border-bottom: 1px solid rgba(0, 255, 170, 0.3); padding: 3rem 0; background: radial-gradient(circle at center, rgba(0, 255, 170, 0.05), transparent 70%);">
+                    <h2 style="font-family: var(--font-display); font-size: 2.2rem; color: var(--text-title); line-height: 1.4; text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);">
+                        Não confunda movimento físico com velocidade.<br>
+                        A verdadeira engenharia logística é <span style="color: var(--magenta-transit); text-shadow: 0 0 20px var(--magenta-glow);">matar o tempo de espera</span>.<br>
+                        No fim do dia, o Lead Time é a única métrica que <span style="color: var(--emerald-time); border-bottom: 2px solid var(--emerald-time);">o cliente consegue sentir.</span>
+                    </h2>
+                </div>
+
+            </div> <footer style="margin-top: auto; padding: 2rem 4rem; background: var(--bg-panel-deep); border-top: 1px solid var(--border-lead); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; box-shadow: 0 -10px 30px rgba(0,0,0,0.5);">
+                
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                    <span style="font-family: var(--font-display); font-size: 1.2rem; color: var(--text-pure); letter-spacing: 2px;">
+                        MELI <span style="color: var(--emerald-time); text-shadow: 0 0 10px rgba(0,255,170,0.5);">PDI</span>
+                    </span>
+                    <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); letter-spacing: 2px;">
+                        LOGISTICS DOCUMENTATION // LEADTIME_MODULE_V9.0
+                    </span>
+                </div>
+
+                <div style="display: flex; gap: 30px; font-family: var(--font-code); font-size: 0.8rem;">
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <span style="color: var(--cyan-tech); text-shadow: 0 0 8px var(--cyan-dim);">LITTLE'S LAW</span>
+                        <span style="color: var(--text-main);">APPLIED</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <span style="color: var(--magenta-transit); text-shadow: 0 0 8px rgba(255,0,170,0.4);">WAIT TIME</span>
+                        <span style="color: var(--text-main);">MINIMIZED</span>
+                    </div>
+                </div>
+
+                <div style="text-align: right; font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); letter-spacing: 1px;">
+                    <span style="color: var(--emerald-time);">[ JOURNEY ENGINE ONLINE ]</span><br>
+                    TERMINAL_ID: OSASCO_CD // 2026
+                </div>
+
+            </footer>
+
+        </main> </div> 
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // 1. SYSTEM BOOT LOG
+            console.log("%c[SYS_BOOT]%c Inicializando Engine de Lead Time...", "color: #00FFAA; font-weight: bold;", "color: #E2E8F0;");
+            console.log("%c[MODULE]%c Computando Lei de Little e minimizando Wait Time...", "color: #FF00AA; font-weight: bold;", "color: #E2E8F0;");
+            
+            // 2. INTERSECTION OBSERVER (ANIMAÇÃO DOS PAINÉIS)
+            const animatedElements = document.querySelectorAll('.tech-panel');
+            
+            animatedElements.forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(30px)';
+                el.style.transition = 'opacity 0.7s ease-out, transform 0.7s cubic-bezier(0.25, 1, 0.5, 1)';
+            });
+
+            const elementObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                        
+                        const originalBorder = getComputedStyle(entry.target).borderColor;
+                        entry.target.style.borderColor = 'var(--text-pure)';
+                        
+                        setTimeout(() => {
+                            entry.target.style.borderColor = originalBorder;
+                        }, 250);
+
+                        // Animação da Barra de Desperdício quando a Seção 5 aparecer
+                        if(entry.target.id === 'section-problem-solving') {
+                            setTimeout(() => {
+                                document.getElementById('bar-touch').style.width = '5%';
+                                document.getElementById('bar-touch').innerText = '5%';
+                                document.getElementById('bar-wait').style.width = '95%';
+                                document.getElementById('bar-wait').innerText = 'ESPERA (95%)';
+                            }, 500);
+                        }
+
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+
+            animatedElements.forEach(el => {
+                elementObserver.observe(el);
+            });
+
+            // 3. CALCULADORA INTERATIVA DA LEI DE LITTLE
+            const inputWip = document.getElementById('calc-wip');
+            const inputTh = document.getElementById('calc-th');
+            const resultLeadTime = document.getElementById('calc-result');
+
+            function calculateLeadTime() {
+                const wip = parseFloat(inputWip.value);
+                const th = parseFloat(inputTh.value);
+
+                if (isNaN(wip) || isNaN(th) || th <= 0) {
+                    resultLeadTime.innerText = "ERR";
+                    resultLeadTime.style.color = "var(--red-critical)";
+                    return;
+                }
+
+                // Lead Time = WIP / Throughput
+                const leadTime = (wip / th).toFixed(1);
+                resultLeadTime.innerText = leadTime;
+                
+                // Feedback visual de saúde do Lead Time
+                if(leadTime > 12) {
+                    resultLeadTime.style.color = "var(--magenta-transit)";
+                    resultLeadTime.style.textShadow = "0 0 15px var(--magenta-glow)";
+                } else if (leadTime > 5) {
+                    resultLeadTime.style.color = "var(--cyan-tech)";
+                    resultLeadTime.style.textShadow = "0 0 15px rgba(0,229,255,0.5)";
+                } else {
+                    resultLeadTime.style.color = "var(--emerald-time)";
+                    resultLeadTime.style.textShadow = "0 0 15px var(--emerald-glow)";
+                }
+            }
+
+            // Escutadores de eventos para recalcular ao vivo
+            inputWip.addEventListener('input', calculateLeadTime);
+            inputTh.addEventListener('input', calculateLeadTime);
+
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ciclo PDCA & Melhoria Contínua | MeLi PDI Terminal</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ==========================================================================
+           01. ROOT VARIABLES (TECH BLUE / PDCA THEME)
+           ========================================================================== */
+        :root {
+            /* Palette Base: Deep Tech Dark */
+            --bg-absolute: #020610; 
+            --bg-panel-deep: rgba(5, 12, 30, 0.85);
+            --bg-card-glass: rgba(10, 20, 45, 0.65);
+            --bg-card-hover: rgba(15, 30, 60, 0.85);
+
+            /* Tema de Cores PDCA (Azul Análise e Branco Lógico) */
+            --pdca-blue: #00E5FF;
+            --pdca-glow: rgba(0, 229, 255, 0.6);
+            --pdca-dim: rgba(0, 229, 255, 0.15);
+            
+            --pdca-deep-blue: #0055FF;
+
+            --white-clean: #FFFFFF;
+            --white-glow: rgba(255, 255, 255, 0.5);
+
+            /* Cores de Alerta e Hierarquia (Meli) */
+            --meli-yellow: #FFE600;
+            --red-alert: #FF003C;
+            --lean-green: #00FF66; /* Mantido para pequenos links/suporte */
+
+            /* Tipografia */
+            --font-display: 'Orbitron', sans-serif;
+            --font-body: 'Rajdhani', sans-serif;
+            --font-mono: 'Share Tech Mono', monospace;
+            --font-code: 'Fira Code', monospace;
+
+            /* Cores de Texto */
+            --text-title: #FFFFFF;
+            --text-main: #E2E8F0;
+            --text-muted: #7A90A5;
+
+            /* Bordas e Sombras (Advanced Glassmorphism) */
+            --border-pdca: rgba(0, 229, 255, 0.3);
+            --shadow-glass: 0 15px 35px 0 rgba(0, 0, 0, 0.9);
+            --shadow-neon-blue: 0 0 20px var(--pdca-glow), inset 0 0 15px var(--pdca-dim);
+            
+            /* Medidas Estruturais (TRAVADAS PARA DESKTOP) */
+            --sidebar-width: 300px;
+            --topbar-height: 80px;
+            --radius-card: 6px; 
+            --transition-hud: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        /* ==========================================================================
+           02. CSS RESET & GLOBAL SETUP (FORCED DESKTOP)
+           ========================================================================== */
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { font-size: 16px; scroll-behavior: smooth; }
+
+        body {
+            background-color: var(--bg-absolute);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            min-height: 100vh;
+            min-width: 1200px; /* <--- TRAVA ABSOLUTA DE DESKTOP */
+            overflow-x: hidden;  
+            display: flex;
+            position: relative;
+        }
+
+        /* Custom Scrollbar - Tech Blue Style */
+        ::-webkit-scrollbar { width: 12px; height: 12px; }
+        ::-webkit-scrollbar-track { background: var(--bg-absolute); border-left: 1px solid rgba(0, 229, 255, 0.1); }
+        ::-webkit-scrollbar-thumb { background: var(--pdca-dim); border: 1px solid var(--pdca-blue); border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--pdca-blue); box-shadow: 0 0 20px var(--pdca-blue); }
+
+        /* Tipografia Global */
+        h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--text-title); line-height: 1.2; }
+        p { font-size: 1.25rem; line-height: 1.8; margin-bottom: 1.5rem; color: var(--text-main); }
+        strong { color: var(--pdca-blue); font-weight: 700; text-shadow: 0 0 8px var(--pdca-dim); }
+
+        /* ==========================================================================
+           03. ADVANCED BACKGROUND EFFECTS (DATA GRID)
+           ========================================================================== */
+        body::before {
+            content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -3;
+            /* Grid Data Analytics */
+            background-image: 
+                linear-gradient(rgba(0, 229, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 50px 50px; pointer-events: none;
+            mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.1) 100%);
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.1) 100%);
+        }
+
+        body::after {
+            content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2;
+            background: radial-gradient(circle at 10% 20%, rgba(0, 229, 255, 0.06) 0%, transparent 40%),
+                        radial-gradient(circle at 90% 80%, rgba(0, 85, 255, 0.04) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        /* ==========================================================================
+           04. GLOBAL KEYFRAMES (DATA ANIMATIONS)
+           ========================================================================== */
+        @keyframes scanline-v { 0% { transform: translateY(-100%); } 100% { transform: translateY(100vh); } }
+        
+        @keyframes pulse-blue {
+            0% { box-shadow: 0 0 10px var(--pdca-dim); border-color: rgba(0, 229, 255, 0.3); }
+            50% { box-shadow: 0 0 25px var(--pdca-glow); border-color: var(--pdca-blue); }
+            100% { box-shadow: 0 0 10px var(--pdca-dim); border-color: rgba(0, 229, 255, 0.3); }
+        }
+
+        .hud-scanner {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 2px;
+            background: linear-gradient(to right, transparent, var(--pdca-blue), var(--white-clean), var(--pdca-blue), transparent);
+            opacity: 0.3; z-index: 9999; pointer-events: none; animation: scanline-v 5s linear infinite;
+        }
+        /* ==========================================================================
+           05. GLOBAL LAYOUT & SIDEBAR
+           ========================================================================== */
+        .app-wrapper { display: flex; width: 100%; min-height: 100vh; position: relative; z-index: 10; }
+        .main-content { flex-grow: 1; display: flex; flex-direction: column; min-height: 100vh; background: radial-gradient(circle at top left, rgba(0, 229, 255, 0.02), transparent 70%); }
+        .container { width: 100%; max-width: 1400px; margin: 0 auto; padding: 3rem 5rem 5rem 5rem; }
+
+        .sys-sidebar {
+            width: var(--sidebar-width); background: var(--bg-panel-deep);
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border-right: 1px solid rgba(0, 229, 255, 0.2); display: flex;
+            flex-direction: column; flex-shrink: 0; z-index: 100;
+            box-shadow: 15px 0 40px rgba(0, 0, 0, 0.95); position: sticky; top: 0; height: 100vh;
+        }
+
+        .sys-sidebar::after {
+            content: ''; position: absolute; top: 0; right: -1px; width: 2px; height: 100%;
+            background: linear-gradient(to bottom, transparent, var(--pdca-blue), transparent); opacity: 0.8;
+        }
+
+        .sidebar-brand {
+            height: var(--topbar-height); display: flex; flex-direction: column; justify-content: center; align-items: center;
+            border-bottom: 1px dashed var(--border-pdca); background: radial-gradient(circle at top, var(--pdca-dim), transparent); position: relative;
+        }
+        .sidebar-brand::before { content: ''; position: absolute; bottom: -1px; left: 0; width: 50%; height: 2px; background: var(--pdca-blue); box-shadow: 0 0 15px var(--pdca-blue); }
+
+        .brand-logo { font-family: var(--font-display); font-size: 2rem; font-weight: 900; color: var(--white-clean); letter-spacing: 3px; text-shadow: 0 0 10px rgba(255, 255, 255, 0.2); }
+        .brand-logo span { color: var(--meli-yellow); text-shadow: 0 0 15px rgba(255, 230, 0, 0.5); }
+        .brand-sub { font-family: var(--font-mono); font-size: 0.75rem; color: var(--pdca-blue); letter-spacing: 5px; margin-top: 5px; text-transform: uppercase; }
+
+        .nav-menu { flex-grow: 1; padding: 2.5rem 1.5rem; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
+
+        .nav-link {
+            display: flex; align-items: center; gap: 15px; padding: 14px 20px;
+            color: var(--text-muted); font-family: var(--font-body); font-size: 1.1rem;
+            font-weight: 600; letter-spacing: 1.5px; text-decoration: none; position: relative;
+            transition: var(--transition-hud); background: rgba(255, 255, 255, 0.01);
+            border: 1px solid transparent; border-radius: var(--radius-card);
+            clip-path: polygon(0 0, 100% 0, 100% 75%, 95% 100%, 0 100%);
+        }
+
+        .nav-link::before {
+            content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 4px;
+            background: var(--pdca-blue); transform: scaleY(0); transition: 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .nav-link:hover { color: var(--text-pure); background: rgba(0, 229, 255, 0.05); border-color: rgba(0, 229, 255, 0.2); padding-left: 28px; }
+        .nav-link:hover::before { transform: scaleY(1); box-shadow: 0 0 15px var(--pdca-glow); }
+
+        /* ESTADO ATIVO: AZUL TECNOLÓGICO */
+        .nav-link.active { color: var(--bg-absolute); background: var(--pdca-blue); border-color: var(--pdca-blue); font-weight: 900; }
+        .nav-link.active::before { background: var(--white-clean); transform: scaleY(1); box-shadow: 0 0 15px var(--white-glow); }
+
+        .nav-icon { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; transition: 0.3s; }
+        .nav-link:hover .nav-icon { transform: scale(1.15); color: var(--pdca-blue); }
+        .nav-link.active .nav-icon { color: var(--bg-absolute); }
+
+        /* ==========================================================================
+           06. TOPBAR & PANELS CSS BASE
+           ========================================================================== */
+        .sys-topbar {
+            height: var(--topbar-height); width: 100%; background: var(--bg-panel-deep);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-pdca); display: flex; align-items: center;
+            justify-content: space-between; padding: 0 5rem; position: sticky; top: 0; z-index: 90;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8);
+        }
+
+        .topbar-path { font-family: var(--font-mono); font-size: 0.95rem; color: var(--text-muted); letter-spacing: 2px; display: flex; align-items: center; gap: 10px; }
+        .topbar-path span { color: var(--pdca-blue); text-shadow: 0 0 8px var(--pdca-dim); }
+
+        .topbar-status {
+            display: flex; align-items: center; gap: 20px; font-family: var(--font-code);
+            font-size: 0.85rem; color: var(--pdca-blue); letter-spacing: 1.5px;
+            border: 1px solid rgba(0, 229, 255, 0.5); padding: 8px 18px; border-radius: 4px;
+            background: rgba(0, 229, 255, 0.05); box-shadow: 0 0 15px var(--pdca-dim);
+        }
+
+        .status-dot-blue { width: 10px; height: 10px; background: var(--pdca-blue); border-radius: 50%; box-shadow: 0 0 12px var(--pdca-glow); animation: pulse-blue 1.2s infinite alternate; }
+
+        /* PANELS */
+        .tech-panel {
+            background: var(--bg-card-glass); backdrop-filter: blur(15px);
+            border: 1px solid rgba(0, 229, 255, 0.2); border-radius: var(--radius-card);
+            padding: 4rem; margin-bottom: 4rem; position: relative;
+            box-shadow: var(--shadow-glass); transition: var(--transition-hud);
+        }
+        
+        .tech-panel:hover {
+            border-color: var(--pdca-blue); background: var(--bg-card-hover);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.95), inset 0 0 30px var(--pdca-dim);
+            transform: translateY(-3px);
+        }
+        
+        .tech-panel::before, .tech-panel::after { content: ''; position: absolute; width: 40px; height: 40px; border: 3px solid var(--pdca-blue); opacity: 0.7; transition: 0.4s; }
+        .tech-panel::before { top: 20px; left: 20px; border-right: none; border-bottom: none; }
+        .tech-panel::after { bottom: 20px; right: 20px; border-left: none; border-top: none; }
+        
+        .panel-header { display: flex; align-items: center; gap: 25px; margin-bottom: 2.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 1.5rem; }
+        .panel-title { font-size: 2.2rem; color: var(--text-title); letter-spacing: 3px; }
+        
+        .panel-icon {
+            width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;
+            background: rgba(0, 229, 255, 0.05); border: 1px solid var(--pdca-blue); border-radius: var(--radius-card);
+            color: var(--pdca-blue); font-size: 2rem; box-shadow: var(--shadow-neon-blue);
+        }
+
+        .topic-header { font-family: var(--font-display); font-size: 1.4rem; color: var(--white-clean); margin-top: 2.5rem; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 1px; }
+        .cyber-list { list-style: none; margin: 2rem 0; }
+        .cyber-list li { position: relative; padding-left: 35px; margin-bottom: 1.5rem; font-size: 1.2rem; line-height: 1.7; color: var(--text-main); transition: 0.3s; }
+        .cyber-list li::before { content: '>'; position: absolute; left: 0; top: 0; font-family: var(--font-mono); color: var(--pdca-blue); font-size: 1.5rem; font-weight: 900; text-shadow: 0 0 10px var(--pdca-glow); }
+        .highlight-box { background: rgba(255, 255, 255, 0.03); border-left: 5px solid var(--pdca-blue); padding: 2rem; margin: 2rem 0; font-family: var(--font-mono); font-size: 1.2rem; color: var(--text-pure); box-shadow: inset 0 0 20px rgba(255,255,255,0.02); }
+        .cyber-btn-large {
+            display: inline-flex; align-items: center; justify-content: center; gap: 15px;
+            background: rgba(0, 229, 255, 0.1); border: 2px solid var(--pdca-blue);
+            color: var(--pdca-blue); padding: 18px 40px; font-family: var(--font-display);
+            font-size: 1.2rem; font-weight: 700; cursor: pointer; border-radius: 4px; transition: 0.3s;
+            text-transform: uppercase; letter-spacing: 2px; text-decoration: none;
+        }
+        .cyber-btn-large:hover { background: var(--pdca-blue); color: #000; box-shadow: 0 0 30px var(--pdca-glow); transform: translateY(-3px); }
+    </style>
+</head>
+<body>
+
+    <div class="hud-scanner"></div>
+
+    <div class="app-wrapper">
+        <aside class="sys-sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">MELI<span>PDI</span></div>
+                <div class="brand-sub">ANALYTICS // MODULE</div>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    <span>Home Dashboard</span>
+                </a>
+                
+                <a href="termos-detalhados.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                    <span>Hub de Setores</span>
+                </a>
+
+                <a href="5s.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    <span>Metodologia 5S & Lean</span>
+                </a>
+
+                <div style="height: 1px; background: rgba(0, 229, 255, 0.2); margin: 15px 0; opacity: 0.5;"></div>
+
+                <a href="#" class="nav-link active">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21.5 2v6h-6M2.13 15.57a10 10 0 1 0 1.49-8.4L2 12"></path></svg>
+                    <span>Ciclo PDCA & Análise</span>
+                </a>
+
+                <a href="#section-5w2h" class="nav-link" style="color: var(--meli-yellow);">
+                    <svg class="nav-icon" viewBox="0 0 24 24" style="stroke: var(--meli-yellow);"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    <span>Gerador 5W2H (Ação)</span>
+                </a>
+            </nav>
+
+            <div style="padding: 20px; border-top: 1px dashed rgba(0, 229, 255, 0.3); text-align: center;">
+                <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--pdca-blue); opacity: 0.6; letter-spacing: 2px;">
+                    SECURE CONNECTION<br>OSASCO_CD // 2026
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            
+            <header class="sys-topbar">
+                <div class="topbar-path">
+                    MELI PDI <span>/</span> PROBLEM_SOLVING <span>/</span> PDCA_CYCLE.exe
+                </div>
+                <div class="topbar-status">
+                    STATUS: DATA ANALYSIS ACTIVE
+                    <div class="status-dot-blue"></div>
+                </div>
+            </header>
+
+            <div class="container">
+                
+                <section class="hero-section" style="margin-bottom: 4rem; position: relative; padding-bottom: 3rem; border-bottom: 1px solid rgba(0, 229, 255, 0.3); display: flex; flex-direction: column;">
+                    <div style="position: absolute; bottom: -2px; left: 0; width: 300px; height: 4px; background: var(--pdca-blue); box-shadow: 0 0 20px var(--pdca-glow);"></div>
+                    <div class="hero-title-wrapper">
+                        <h1 style="font-size: 4.5rem; font-weight: 900; color: var(--text-title); letter-spacing: 5px; line-height: 1.1; text-shadow: 0 0 30px rgba(255, 255, 255, 0.1);">PDCA <span>_</span>CYCLE</h1>
+                    </div>
+                    <div style="font-family: var(--font-mono); font-size: 1.6rem; color: var(--text-main); letter-spacing: 4px; text-transform: uppercase; margin-top: 10px; display: flex; align-items: center; gap: 15px;">
+                        <span style="font-size: 1rem; color: var(--bg-absolute); background: var(--pdca-blue); padding: 4px 12px; border-radius: 2px; font-weight: bold;">[CONTINUOUS_IMPROVEMENT]</span>
+                        O Motor da Solução de Problemas
+                    </div>
+                </section>
+
+                <section class="tech-panel" id="section-intro">
+                    <div class="panel-header">
+                        <div class="panel-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M16 12l-4-4-4 4M12 8v8"></path></svg>
+                        </div>
+                        <h2 class="panel-title">SEÇÃO 1 // O QUE É O CICLO PDCA?</h2>
+                    </div>
+
+                    <p>No mundo da logística, onde tudo muda rápido e as margens de lucro são apertadas, não dá para trabalhar no improviso. O PDCA é uma ferramenta de gestão dividida em quatro etapas fundamentais que formam um ciclo infinito de melhoria:</p>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 2rem 0;">
+                        <div style="background: rgba(0,0,0,0.5); border: 1px solid rgba(0, 229, 255, 0.3); padding: 25px; border-radius: 6px; border-top: 4px solid var(--pdca-blue);">
+                            <strong style="font-size: 1.5rem; display: block; margin-bottom: 10px;">P (Plan - Planejar):</strong>
+                            <span style="color: var(--text-main); font-size: 1.1rem;">Identificar o problema e traçar a rota.</span>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.5); border: 1px solid rgba(0, 229, 255, 0.3); padding: 25px; border-radius: 6px; border-top: 4px solid var(--pdca-blue);">
+                            <strong style="font-size: 1.5rem; display: block; margin-bottom: 10px;">D (Do - Fazer):</strong>
+                            <span style="color: var(--text-main); font-size: 1.1rem;">Colocar a mão na massa e executar o plano.</span>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.5); border: 1px solid rgba(0, 229, 255, 0.3); padding: 25px; border-radius: 6px; border-top: 4px solid var(--pdca-blue);">
+                            <strong style="font-size: 1.5rem; display: block; margin-bottom: 10px;">C (Check - Checar):</strong>
+                            <span style="color: var(--text-main); font-size: 1.1rem;">Analisar os resultados. Deu certo?</span>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.5); border: 1px solid rgba(0, 229, 255, 0.3); padding: 25px; border-radius: 6px; border-top: 4px solid var(--pdca-blue);">
+                            <strong style="font-size: 1.5rem; display: block; margin-bottom: 10px;">A (Act - Agir):</strong>
+                            <span style="color: var(--text-main); font-size: 1.1rem;">Corrigir o que falhou ou padronizar o que funcionou.</span>
+                        </div>
+                    </div>
+
+                    <h3 class="topic-header">UM POUCO DE HISTÓRIA (SEM TÉDIO)</h3>
+                    <p>Tudo começou na década de 1920 com Walter Shewhart, mas quem levou a fama (merecidamente) foi William Edwards Deming. Nos anos 50, Deming ajudou a reconstruir a indústria do Japão no pós-guerra, ensinando que a qualidade não deve ser checada apenas no final da linha, mas construída em cada detalhe do processo.</p>
+                    <p>Por isso, você também pode ouvir por aí os nomes "Ciclo de Deming" ou "Ciclo de Shewhart".</p>
+                </section>
+                                <section class="tech-panel" id="section-espiral">
+                    <h3 class="topic-header" style="color: var(--pdca-blue);">O CONCEITO FUNDAMENTAL: A "ESPIRAL" DA MELHORIA</h3>
+                    <p>A ideia central aqui é o <strong style="color: var(--lean-green); text-transform: uppercase; text-shadow: 0 0 10px rgba(0,255,102,0.4);">Kaizen</strong> (termo japonês para "mudar para melhor"). Na logística, isso significa que o trabalho nunca termina. Não é um projeto com "início, meio e fim", mas sim uma espiral ascendente.</p>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 15px; margin: 3rem 0;">
+                        <div style="background: rgba(255,255,255,0.02); padding: 25px; border-left: 4px solid var(--text-muted); border-radius: 4px; display: flex; align-items: center; gap: 20px; transition: 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.05)';">
+                            <span style="font-family: var(--font-display); font-size: 1.5rem; color: var(--text-muted); width: 140px; letter-spacing: 2px;">ONTEM:</span>
+                            <span style="font-size: 1.25rem; color: var(--text-main);">Você resolveu um problema de atraso na entrega.</span>
+                        </div>
+                        
+                        <div style="background: rgba(0, 229, 255, 0.05); padding: 25px; border-left: 4px solid var(--pdca-blue); border-radius: 4px; display: flex; align-items: center; gap: 20px; box-shadow: 0 10px 20px rgba(0,229,255,0.1); transform: translateX(20px); transition: 0.3s;" onmouseover="this.style.transform='translateX(30px)';">
+                            <span style="font-family: var(--font-display); font-size: 1.5rem; color: var(--pdca-blue); width: 140px; letter-spacing: 2px;">HOJE:</span>
+                            <span style="font-size: 1.25rem; color: var(--white-clean);">Você estabilizou esse processo.</span>
+                        </div>
+                        
+                        <div style="background: rgba(255, 230, 0, 0.05); padding: 25px; border-left: 4px solid var(--meli-yellow); border-radius: 4px; display: flex; align-items: center; gap: 20px; box-shadow: 0 10px 20px rgba(255,230,0,0.1); transform: translateX(40px); transition: 0.3s;" onmouseover="this.style.transform='translateX(50px)';">
+                            <span style="font-family: var(--font-display); font-size: 1.5rem; color: var(--meli-yellow); width: 140px; letter-spacing: 2px;">AMANHÃ:</span>
+                            <span style="font-size: 1.25rem; color: var(--white-clean);">Você vai planejar como entregar ainda mais rápido.</span>
+                        </div>
+                    </div>
+
+                    <p style="font-size: 1.4rem; color: var(--white-clean); text-align: center; border: 1px dashed var(--border-pdca); padding: 20px; background: rgba(0,229,255,0.02); border-radius: 6px;">
+                        Cada vez que o ciclo se completa, sua empresa sobe um degrau na escada da eficiência.
+                    </p>
+                </section>
+                <section class="tech-panel" id="section-bombeiro">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(255, 0, 60, 0.1); border-color: var(--red-alert); color: var(--red-alert); box-shadow: 0 0 20px rgba(255,0,60,0.4);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--white-clean);">SEÇÃO 3 // SAINDO DO "MODO BOMBEIRO"</h2>
+                    </div>
+
+                    <p>Muitas transportadoras e armazéns vivem no modo reativo: o caminhão quebra, o estoque erra, e o gestor corre para "apagar o incêndio". <strong style="color: var(--pdca-blue);">O PDCA é o antídoto para isso.</strong></p>
+
+                    <div style="margin: 3rem 0; display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; overflow: hidden; box-shadow: 0 15px 30px rgba(0,0,0,0.5);">
+                        
+                        <div style="background: rgba(255, 0, 60, 0.15); padding: 25px; text-align: center; font-family: var(--font-display); font-size: 1.3rem; color: var(--red-alert); letter-spacing: 1px;">
+                            GESTÃO REATIVA<br><span style="font-size: 0.95rem; font-family: var(--font-body); color: var(--text-main); letter-spacing: 0;">(Apagar Incêndios)</span>
+                        </div>
+                        <div style="background: rgba(0, 229, 255, 0.15); padding: 25px; text-align: center; font-family: var(--font-display); font-size: 1.3rem; color: var(--pdca-blue); letter-spacing: 1px;">
+                            GESTÃO COM PDCA<br><span style="font-size: 0.95rem; font-family: var(--font-body); color: var(--text-main); letter-spacing: 0;">(Melhoria Contínua)</span>
+                        </div>
+                        
+                        <div style="background: var(--bg-card-glass); padding: 25px; font-size: 1.15rem; color: var(--text-main); display: flex; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            Baseada na intuição e no "sempre fizemos assim".
+                        </div>
+                        <div style="background: rgba(0, 229, 255, 0.02); padding: 25px; font-size: 1.15rem; color: var(--white-clean); display: flex; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <strong style="color: var(--pdca-blue); margin-right: 15px; font-size: 1.5rem;">></strong> Baseada em dados e fatos reais.
+                        </div>
+                        
+                        <div style="background: var(--bg-card-glass); padding: 25px; font-size: 1.15rem; color: var(--text-main); display: flex; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            Foca em resolver o sintoma imediato.
+                        </div>
+                        <div style="background: rgba(0, 229, 255, 0.02); padding: 25px; font-size: 1.15rem; color: var(--white-clean); display: flex; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <strong style="color: var(--pdca-blue); margin-right: 15px; font-size: 1.5rem;">></strong> Foca em encontrar e eliminar a causa raiz.
+                        </div>
+                        
+                        <div style="background: var(--bg-card-glass); padding: 25px; font-size: 1.15rem; color: var(--text-main); display: flex; align-items: center;">
+                            Gera estresse e retrabalho constante.
+                        </div>
+                        <div style="background: rgba(0, 229, 255, 0.02); padding: 25px; font-size: 1.15rem; color: var(--white-clean); display: flex; align-items: center;">
+                            <strong style="color: var(--pdca-blue); margin-right: 15px; font-size: 1.5rem;">></strong> Gera processos padronizados e previsíveis.
+                        </div>
+                    </div>
+
+                    <div style="background: rgba(255,255,255,0.02); padding: 20px; border-left: 4px solid var(--white-clean); border-radius: 4px;">
+                        <p style="margin: 0; font-size: 1.2rem;">O mais legal é que o PDCA fala uma língua simples. Ele serve tanto para o Diretor de Operações quanto para o operador de empilhadeira. Quando todos entendem que o objetivo é melhorar um pouco a cada dia, a cultura da empresa muda completamente.</p>
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-pratica">
+                    <p style="font-size: 1.35rem; color: var(--white-clean); line-height: 1.8;">A logística moderna não perdoa erros. Com custos altos e margens apertadas, o PDCA funciona como o motor que mantém a engrenagem girando sem desperdícios. <strong style="color: var(--pdca-blue);">Ele transforma a "bagunça" do dia a dia em um processo inteligente e previsível.</strong></p>
+                    <p>Aqui está o resumo de como ele atua na prática:</p>
+
+                    <h3 class="topic-header" style="color: var(--pdca-blue); margin-top: 3.5rem;">1. TIRANDO O CONHECIMENTO DA "CABEÇA DAS PESSOAS"</h3>
+                    <p>Um dos maiores riscos logísticos é a dependência de funcionários antigos. Se o "Seu João" falta, a expedição para porque só ele sabe como organizar as cargas? Isso é um problema.</p>
+                    
+                    <div style="display: flex; gap: 20px; margin: 2rem 0; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 300px; background: rgba(0, 229, 255, 0.05); border: 1px solid rgba(0, 229, 255, 0.2); padding: 25px; border-radius: 6px;">
+                            <span style="font-family: var(--font-mono); color: var(--pdca-blue); font-size: 1rem; display: block; margin-bottom: 10px; letter-spacing: 2px;">O PAPEL DO PDCA:</span>
+                            <p style="margin: 0; font-size: 1.15rem; color: var(--white-clean);">Ele transforma o conhecimento informal em padrões documentados (POPs).</p>
+                        </div>
+                        <div style="flex: 1; min-width: 300px; background: rgba(0, 255, 102, 0.05); border: 1px solid rgba(0, 255, 102, 0.2); padding: 25px; border-radius: 6px;">
+                            <span style="font-family: var(--font-mono); color: var(--lean-green); font-size: 1rem; display: block; margin-bottom: 10px; letter-spacing: 2px;">O BENEFÍCIO:</span>
+                            <p style="margin: 0; font-size: 1.15rem; color: var(--white-clean);">Quando uma melhoria é testada e aprovada, ela vira a "regra do jogo". A operação funciona bem, não importa quem esteja no turno.</p>
+                        </div>
+                    </div>
+
+                    <h3 class="topic-header" style="color: var(--pdca-blue); margin-top: 3.5rem;">2. GUERRA AO DESPERDÍCIO (FILOSOFIA LEAN)</h3>
+                    <p>Na logística, o lucro muitas vezes está no que você deixa de perder. O PDCA ajuda a identificar as chamadas <strong style="color: var(--lean-green); font-style: italic;">Mudas</strong> (desperdícios), como:</p>
+                    
+                    <ul class="cyber-list" style="--pdca-blue: var(--lean-green); --pdca-glow: rgba(0,255,102,0.4);">
+                        <li>Caminhões parados esperando doca.</li>
+                        <li>Empilhadeiras rodando vazias pelo armazém.</li>
+                        <li>Documentação errada que gera retrabalho.</li>
+                        <li>Avarias em produtos por manuseio incorreto.</li>
+                    </ul>
+
+                    <div class="highlight-box" style="border-color: var(--lean-green); background: rgba(0,255,102,0.05); box-shadow: inset 0 0 20px rgba(0,255,102,0.05);">
+                        <strong style="color: var(--lean-green); font-family: var(--font-display); font-size: 1.2rem; display: block; margin-bottom: 10px;">PONTO-CHAVE:</strong> 
+                        <span style="color: var(--white-clean);">O PDCA não apenas "vê" o erro; ele investiga a causa raiz para que o erro não volte a acontecer amanhã.</span>
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-4ms">
+                    <div class="panel-header">
+                        <div class="panel-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                        </div>
+                        <h2 class="panel-title">SEÇÃO 5 // OS 4Ms: O QUE VOCÊ PODE CONTROLAR</h2>
+                    </div>
+
+                    <p>O gestor logístico não controla o preço do diesel ou a chuva que atrasa a carga, mas o PDCA foca no que está sob o seu comando através da matriz dos <strong>4Ms</strong>:</p>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin: 3rem 0;">
+                        <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(0, 229, 255, 0.2); padding: 30px; border-radius: 6px; transition: 0.3s; position: relative; overflow: hidden;" onmouseover="this.style.background='rgba(0, 229, 255, 0.05)'; this.style.borderColor='var(--pdca-blue)'; this.style.transform='translateY(-5px)';">
+                            <div style="position: absolute; top: 10px; right: 15px; font-family: var(--font-display); font-size: 4rem; color: rgba(0,229,255,0.05); font-weight: 900;">M1</div>
+                            <strong style="color: var(--pdca-blue); font-family: var(--font-display); font-size: 1.4rem; display: block; margin-bottom: 10px;">MÃO DE OBRA</strong>
+                            <p style="margin: 0; font-size: 1.15rem; color: var(--text-main);">A sua equipa está treinada e motivada para o desafio diário?</p>
+                        </div>
+
+                        <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(0, 229, 255, 0.2); padding: 30px; border-radius: 6px; transition: 0.3s; position: relative; overflow: hidden;" onmouseover="this.style.background='rgba(0, 229, 255, 0.05)'; this.style.borderColor='var(--pdca-blue)'; this.style.transform='translateY(-5px)';">
+                            <div style="position: absolute; top: 10px; right: 15px; font-family: var(--font-display); font-size: 4rem; color: rgba(0,229,255,0.05); font-weight: 900;">M2</div>
+                            <strong style="color: var(--pdca-blue); font-family: var(--font-display); font-size: 1.4rem; display: block; margin-bottom: 10px;">MÉTODO</strong>
+                            <p style="margin: 0; font-size: 1.15rem; color: var(--text-main);">O passo a passo da tarefa está desenhado para ser eficiente e à prova de erro?</p>
+                        </div>
+
+                        <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(0, 229, 255, 0.2); padding: 30px; border-radius: 6px; transition: 0.3s; position: relative; overflow: hidden;" onmouseover="this.style.background='rgba(0, 229, 255, 0.05)'; this.style.borderColor='var(--pdca-blue)'; this.style.transform='translateY(-5px)';">
+                            <div style="position: absolute; top: 10px; right: 15px; font-family: var(--font-display); font-size: 4rem; color: rgba(0,229,255,0.05); font-weight: 900;">M3</div>
+                            <strong style="color: var(--pdca-blue); font-family: var(--font-display); font-size: 1.4rem; display: block; margin-bottom: 10px;">MÁQUINA</strong>
+                            <p style="margin: 0; font-size: 1.15rem; color: var(--text-main);">As empilhadoras, esteiras e coletores (scanners) estão com a manutenção em dia?</p>
+                        </div>
+
+                        <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(0, 229, 255, 0.2); padding: 30px; border-radius: 6px; transition: 0.3s; position: relative; overflow: hidden;" onmouseover="this.style.background='rgba(0, 229, 255, 0.05)'; this.style.borderColor='var(--pdca-blue)'; this.style.transform='translateY(-5px)';">
+                            <div style="position: absolute; top: 10px; right: 15px; font-family: var(--font-display); font-size: 4rem; color: rgba(0,229,255,0.05); font-weight: 900;">M4</div>
+                            <strong style="color: var(--pdca-blue); font-family: var(--font-display); font-size: 1.4rem; display: block; margin-bottom: 10px;">MATERIAL</strong>
+                            <p style="margin: 0; font-size: 1.15rem; color: var(--text-main);">As embalagens, caixas e consumíveis estão disponíveis e são de qualidade?</p>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; padding: 20px; background: linear-gradient(90deg, transparent, rgba(0,229,255,0.05), transparent);">
+                        <p style="font-family: var(--font-display); font-size: 1.3rem; color: var(--white-clean); margin: 0; letter-spacing: 1px;">Ao estabilizar estes quatro pontos, a operação fica blindada contra as incertezas do mercado.</p>
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-otif">
+                    <h3 class="topic-header" style="color: var(--meli-yellow);">4. O FOCO NO CLIENTE: OTIF E LEAD TIME</h3>
+                    <p>No fim do dia, a logística é o rosto da empresa para o cliente, especialmente no e-commerce. O PDCA serve para melhorar dois indicadores cruciais que definem a excelência operacional:</p>
+
+                    <div style="display: flex; flex-direction: column; gap: 20px; margin: 3rem 0;">
+                        <div style="background: rgba(255,255,255,0.02); border-left: 5px solid var(--white-clean); padding: 25px; display: flex; align-items: center; gap: 25px; border-radius: 4px; box-shadow: 0 10px 20px rgba(0,0,0,0.3);">
+                            <div style="font-family: var(--font-display); font-size: 2rem; color: var(--white-clean); width: 180px; flex-shrink: 0; border-right: 1px solid rgba(255,255,255,0.1); padding-right: 20px;">
+                                LEAD<br><span style="color: var(--pdca-blue);">TIME</span>
+                            </div>
+                            <div>
+                                <p style="font-size: 1.2rem; color: var(--text-main); margin: 0;">Reduzir o tempo total exato entre o clique de "comprar" do utilizador e o momento em que a campainha da casa do cliente toca.</p>
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(255,255,255,0.02); border-left: 5px solid var(--white-clean); padding: 25px; display: flex; align-items: center; gap: 25px; border-radius: 4px; box-shadow: 0 10px 20px rgba(0,0,0,0.3);">
+                            <div style="font-family: var(--font-display); font-size: 2.5rem; color: var(--white-clean); width: 180px; flex-shrink: 0; border-right: 1px solid rgba(255,255,255,0.1); padding-right: 20px; letter-spacing: 2px;">
+                                O.T.I.F.
+                            </div>
+                            <div>
+                                <strong style="color: var(--pdca-blue); font-size: 1.1rem; display: block; margin-bottom: 5px;">(ON-TIME IN-FULL)</strong>
+                                <p style="font-size: 1.2rem; color: var(--text-main); margin: 0;">Garantir que a entrega seja feita estritamente no prazo prometido (On-Time) e de forma completa, sem faltar absolutamente nada (In-Full).</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="background: rgba(0,0,0,0.8); border: 1px solid rgba(255,230,0,0.3); padding: 30px; border-radius: 8px; text-align: center; box-shadow: inset 0 0 30px rgba(255,230,0,0.05);">
+                        <p style="font-size: 1.3rem; color: var(--white-clean); margin-bottom: 10px;">Uma logística que usa PDCA não entrega apenas caixas; <strong>entrega confiança.</strong></p>
+                        <p style="font-size: 1.15rem; color: var(--text-muted); margin: 0;">Isso reduz drasticamente os gastos com o SAC (atendimento ao cliente) e faz com que o consumidor volte a comprar na plataforma.</p>
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-plan">
+                    <p style="font-size: 1.35rem; color: var(--text-main); line-height: 1.8; margin-bottom: 3rem;">Para que o PDCA funcione na logística, não existem atalhos. Tentar pular etapas ou "maquiar" problemas com soluções rápidas só faz o erro voltar depois, muitas vezes mais caro. Vamos "abrir" cada etapa do ciclo para entender como elas funcionam na prática do dia a dia:</p>
+
+                    <div class="panel-header" style="border-bottom-color: var(--pdca-blue);">
+                        <div class="panel-icon" style="background: var(--pdca-blue); color: var(--bg-absolute); border-color: var(--pdca-blue); box-shadow: 0 0 25px var(--pdca-glow);">
+                            <span style="font-family: var(--font-display); font-size: 2.5rem; font-weight: 900;">P</span>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--pdca-blue); text-shadow: 0 0 15px var(--pdca-dim);">1. PLANEJAR (PLAN): O CÉREBRO DA OPERAÇÃO</h2>
+                    </div>
+
+                    <p>Esta é a fase mais importante do ciclo. Se o diagnóstico estiver errado, todo o resto será pura perda de tempo e dinheiro.</p>
+
+                    <div style="display: flex; flex-direction: column; gap: 20px; margin-top: 3rem;">
+                        
+                        <div style="background: rgba(255,255,255,0.03); padding: 25px; border-radius: 6px; border-left: 4px solid var(--pdca-blue);">
+                            <strong style="color: var(--pdca-blue); font-family: var(--font-display); font-size: 1.25rem; display: block; margin-bottom: 10px;">> IDENTIFICANDO O PROBLEMA</strong>
+                            <p style="font-size: 1.15rem; color: var(--text-main); margin: 0;">Não olhe apenas para o sintoma superficial (ex: "o frete está caro"). Use dados duros do seu sistema (WMS ou TMS) para investigar a fundo a anomalia.</p>
+                        </div>
+
+                        <div style="background: rgba(255,255,255,0.03); padding: 25px; border-radius: 6px; border-left: 4px solid var(--pdca-blue);">
+                            <strong style="color: var(--pdca-blue); font-family: var(--font-display); font-size: 1.25rem; display: block; margin-bottom: 10px;">> INVESTIGAÇÃO DE DETETIVE (CAUSA RAIZ)</strong>
+                            <p style="font-size: 1.15rem; color: var(--text-main); margin-bottom: 15px;">Use ferramentas analíticas comprovadas como os <strong>"5 Porquês"</strong> ou o <strong>Diagrama de Ishikawa (Espinha de Peixe)</strong> para achar a verdadeira Causa Raiz.</p>
+                            <p style="font-family: var(--font-mono); font-size: 1.05rem; color: var(--text-muted); margin: 0; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 4px;">Exemplo prático: O frete está caro porque os camiões voltam vazios ao CD (o chamado frete morto)?</p>
+                        </div>
+
+                        <div style="background: rgba(0, 229, 255, 0.05); padding: 25px; border-radius: 6px; border: 1px solid rgba(0,229,255,0.3); box-shadow: inset 0 0 20px rgba(0,229,255,0.05);">
+                            <strong style="color: var(--white-clean); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 15px;">> O MAPA DO TESOURO: A MATRIZ 5W2H</strong>
+                            <p style="font-size: 1.15rem; color: var(--text-main); margin-bottom: 15px;">Com a causa descoberta, monte um plano de ação tático respondendo às 7 perguntas essenciais:</p>
+                            
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+                                <span style="background: rgba(0,0,0,0.6); border: 1px solid var(--pdca-blue); color: var(--pdca-blue); padding: 5px 12px; border-radius: 4px; font-family: var(--font-mono);">O Quê? (What)</span>
+                                <span style="background: rgba(0,0,0,0.6); border: 1px solid var(--pdca-blue); color: var(--pdca-blue); padding: 5px 12px; border-radius: 4px; font-family: var(--font-mono);">Por Quê? (Why)</span>
+                                <span style="background: rgba(0,0,0,0.6); border: 1px solid var(--pdca-blue); color: var(--pdca-blue); padding: 5px 12px; border-radius: 4px; font-family: var(--font-mono);">Onde? (Where)</span>
+                                <span style="background: rgba(0,0,0,0.6); border: 1px solid var(--pdca-blue); color: var(--pdca-blue); padding: 5px 12px; border-radius: 4px; font-family: var(--font-mono);">Quando? (When)</span>
+                                <span style="background: rgba(0,0,0,0.6); border: 1px solid var(--pdca-blue); color: var(--pdca-blue); padding: 5px 12px; border-radius: 4px; font-family: var(--font-mono);">Quem? (Who)</span>
+                                <span style="background: rgba(0,0,0,0.6); border: 1px solid var(--white-clean); color: var(--white-clean); padding: 5px 12px; border-radius: 4px; font-family: var(--font-mono);">Como? (How)</span>
+                                <span style="background: rgba(0,0,0,0.6); border: 1px solid var(--meli-yellow); color: var(--meli-yellow); padding: 5px 12px; border-radius: 4px; font-family: var(--font-mono);">Quanto Custa? (How Much)</span>
+                            </div>
+                            
+                            <p style="font-size: 1.15rem; color: var(--white-clean); margin: 0; font-weight: bold;">E o mais importante: Defina metas claras (KPIs) para saber se você realmente chegou lá.</p>
+                        </div>
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-do">
+                    <div class="panel-header" style="border-bottom-color: var(--pdca-blue);">
+                        <div class="panel-icon" style="background: var(--pdca-blue); color: var(--bg-absolute); border-color: var(--pdca-blue); box-shadow: 0 0 25px var(--pdca-glow);">
+                            <span style="font-family: var(--font-display); font-size: 2.5rem; font-weight: 900;">D</span>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--pdca-blue); text-shadow: 0 0 15px var(--pdca-dim);">2. FAZER (DO): MÃO NA MASSA COM CUIDADO</h2>
+                    </div>
+
+                    <p>Aqui é onde a teoria encontra a realidade dura do armazém ou da estrada. Executar o plano exige controlo e disciplina militar.</p>
+
+                    <div style="display: flex; flex-direction: column; gap: 20px; margin-top: 3rem;">
+                        
+                        <div style="background: rgba(255,255,255,0.03); padding: 25px; border-radius: 6px; border-left: 4px solid var(--white-clean); transition: 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.06)';">
+                            <strong style="color: var(--white-clean); font-family: var(--font-display); font-size: 1.25rem; display: block; margin-bottom: 10px;">> TREINAMENTO É TUDO</strong>
+                            <p style="font-size: 1.15rem; color: var(--text-main); margin: 0;">Antes de mudar qualquer processo, treine a equipa. De nada adianta um software novo se o operador de empilhadora ou o motorista não entenderem como e por que usá-lo.</p>
+                        </div>
+
+                        <div style="background: rgba(255,255,255,0.03); padding: 25px; border-radius: 6px; border-left: 4px solid var(--white-clean); transition: 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.06)';">
+                            <strong style="color: var(--white-clean); font-family: var(--font-display); font-size: 1.25rem; display: block; margin-bottom: 10px;">> O TESTE DO PILOTO</strong>
+                            <p style="font-size: 1.15rem; color: var(--text-main); margin: 0;">Não mude o Centro de Distribuição inteiro de uma vez. Escolha um corredor ou uma única rota de entrega para testar a solução. <strong style="color: var(--pdca-blue);">Isso evita que um erro de planeamento pare a empresa toda.</strong></p>
+                        </div>
+
+                        <div style="background: rgba(255,255,255,0.03); padding: 25px; border-radius: 6px; border-left: 4px solid var(--white-clean); transition: 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.06)';">
+                            <strong style="color: var(--white-clean); font-family: var(--font-display); font-size: 1.25rem; display: block; margin-bottom: 10px;">> DISCIPLINA NA EXECUÇÃO</strong>
+                            <p style="font-size: 1.15rem; color: var(--text-main); margin: 0;">Durante o teste, siga o plano à risca. Não improvise, para que os dados coletados ao final do processo sejam reais e confiáveis.</p>
+                        </div>
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-check">
+                    <div class="panel-header" style="border-bottom-color: var(--pdca-blue);">
+                        <div class="panel-icon" style="background: var(--pdca-blue); color: var(--bg-absolute); border-color: var(--pdca-blue); box-shadow: 0 0 25px var(--pdca-glow);">
+                            <span style="font-family: var(--font-display); font-size: 2.5rem; font-weight: 900;">C</span>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--pdca-blue); text-shadow: 0 0 15px var(--pdca-dim);">3. CHECAR (CHECK): A HORA DA VERDADE</h2>
+                    </div>
+
+                    <p>Agora é o momento de comparar o que foi planeado com o que realmente aconteceu. <strong>É o fim definitivo do "achismo".</strong></p>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 3rem;">
+                        
+                        <div style="background: rgba(0, 229, 255, 0.05); padding: 30px; border-radius: 8px; border: 1px dashed rgba(0, 229, 255, 0.4); text-align: center; box-shadow: inset 0 0 20px rgba(0,229,255,0.05);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 50px; height: 50px; color: var(--pdca-blue); margin-bottom: 15px;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                            <strong style="color: var(--pdca-blue); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 10px;">ANÁLISE DE DADOS</strong>
+                            <p style="font-size: 1.15rem; color: var(--text-main); margin: 0;">Use gráficos de Pareto ou painéis de BI (Business Intelligence) para ver os resultados com clareza matemática.</p>
+                        </div>
+
+                        <div style="background: rgba(0, 229, 255, 0.05); padding: 30px; border-radius: 8px; border: 1px dashed rgba(0, 229, 255, 0.4); text-align: center; box-shadow: inset 0 0 20px rgba(0,229,255,0.05);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 50px; height: 50px; color: var(--pdca-blue); margin-bottom: 15px;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <strong style="color: var(--pdca-blue); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 10px;">OLHAR 360 GRAUS</strong>
+                            <p style="font-size: 1.15rem; color: var(--text-main); margin: 0;">Não olhe apenas para o objetivo principal. Mudou a embalagem para ser mais rápido? Verifique: O custo subiu? Os funcionários cansaram-se mais? O cliente recebeu sem avarias?</p>
+                        </div>
+                    </div>
+
+                    <div style="background: rgba(255, 230, 0, 0.05); padding: 25px; border-left: 5px solid var(--meli-yellow); margin-top: 2rem; border-radius: 4px;">
+                        <strong style="color: var(--meli-yellow); font-family: var(--font-display); font-size: 1.25rem; display: block; margin-bottom: 5px;">> VALIDAR OU APRENDER</strong>
+                        <p style="font-size: 1.15rem; color: var(--text-main); margin: 0;">Se a meta foi batida, ótimo. Se não, os dados vão te mostrar exatamente onde o plano falhou.</p>
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-act">
+                    <div class="panel-header" style="border-bottom-color: var(--pdca-blue);">
+                        <div class="panel-icon" style="background: var(--pdca-blue); color: var(--bg-absolute); border-color: var(--pdca-blue); box-shadow: 0 0 25px var(--pdca-glow);">
+                            <span style="font-family: var(--font-display); font-size: 2.5rem; font-weight: 900;">A</span>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--pdca-blue); text-shadow: 0 0 15px var(--pdca-dim);">4. AGIR / AJUSTAR (ACT): CONSOLIDAR OU CORRIGIR</h2>
+                    </div>
+
+                    <p>O ciclo termina (para começar de novo) com o aprendizado sendo oficializado na estrutura da empresa.</p>
+
+                    <div style="display: flex; flex-direction: column; gap: 20px; margin-top: 3rem;">
+                        
+                        <div style="background: rgba(0, 255, 102, 0.05); padding: 30px; border-radius: 8px; border-left: 5px solid var(--lean-green); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                            <strong style="color: var(--lean-green); font-family: var(--font-display); font-size: 1.4rem; display: block; margin-bottom: 15px;">DEU CERTO? PADRONIZE!</strong>
+                            <p style="font-size: 1.2rem; color: var(--text-main); margin-bottom: 10px;">Se o teste piloto foi um sucesso, expanda para toda a operação. Crie novos POPs (Procedimentos Operacionais Padrão) e documentos de treinamento.</p>
+                            <p style="font-family: var(--font-mono); font-size: 1.1rem; color: var(--white-clean); margin: 0; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 4px; display: inline-block;">[ A MELHORIA AGORA É A "NOVA REGRA" DA CASA ]</p>
+                        </div>
+
+                        <div style="background: rgba(255, 0, 60, 0.05); padding: 30px; border-radius: 8px; border-left: 5px solid var(--red-alert); box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-top: 10px;">
+                            <strong style="color: var(--red-alert); font-family: var(--font-display); font-size: 1.4rem; display: block; margin-bottom: 15px;">DEU ERRADO? AJUSTE A ROTA!</strong>
+                            <p style="font-size: 1.2rem; color: var(--text-main); margin-bottom: 10px;">Se os resultados foram ruins, não desanime. Documente o que não funcionou para não repetir o erro e volte imediatamente para a fase de Planejamento (Plan).</p>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 4rem; padding: 3rem; background: linear-gradient(180deg, rgba(0,229,255,0.05), transparent); border: 1px solid var(--border-pdca); border-radius: 8px;">
+                        <h3 style="font-family: var(--font-display); font-size: 1.8rem; color: var(--white-clean); margin-bottom: 15px;">RESUMO ESTRATÉGICO</h3>
+                        <p style="font-size: 1.3rem; color: var(--text-main); max-width: 800px; margin: 0 auto; line-height: 1.8;">
+                            O PDCA na logística transforma falhas em aprendizado. Ele é uma máquina de gerar eficiência: <strong style="color: var(--lean-green);">se funciona, vira padrão</strong>; <strong style="color: var(--red-alert);">se falha, vira lição para o próximo plano</strong>.
+                        </p>
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-casos-praticos">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(255, 230, 0, 0.1); border-color: var(--meli-yellow); color: var(--meli-yellow); box-shadow: 0 0 25px rgba(255, 230, 0, 0.3);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--white-clean);">SEÇÃO 11 // RESOLVENDO PROBLEMAS REAIS</h2>
+                    </div>
+
+                    <p style="font-size: 1.25rem; color: var(--text-main); line-height: 1.8; margin-bottom: 3rem;">Para tirar o PDCA do papel e levar para o "chão de fábrica", precisamos ver como ele resolve problemas reais. Menos teoria, mais prática: aqui estão dois exemplos clássicos e como o método funciona no cafezinho de cada manhã do gestor.</p>
+
+                    <h3 class="topic-header" style="color: var(--meli-yellow); font-size: 1.6rem; margin-top: 2rem; border-bottom: 1px solid rgba(255,230,0,0.3); padding-bottom: 15px;">ESTUDO DE CASO 1: O FIM DO "CAMINHO QUE EU ACHO MELHOR"</h3>
+                    
+                    <div style="background: rgba(255, 0, 60, 0.05); padding: 25px; border-left: 5px solid var(--red-alert); margin: 2rem 0; border-radius: 4px;">
+                        <strong style="color: var(--red-alert); font-family: var(--font-display); font-size: 1.25rem; display: block; margin-bottom: 5px;">PROBLEMA:</strong>
+                        <p style="font-size: 1.2rem; color: var(--text-main); margin: 0;">Uma distribuidora estava gastando rios de dinheiro com combustível e os clientes reclamavam de atrasos. Os motoristas escolhiam as rotas por conta própria (na base da intuição).</p>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 100px 1fr; gap: 2px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; overflow: hidden; box-shadow: 0 15px 30px rgba(0,0,0,0.5);">
+                        
+                        <div style="background: rgba(0,0,0,0.8); padding: 25px; display: flex; align-items: center; justify-content: center;">
+                            <span style="font-family: var(--font-display); font-size: 2.5rem; color: var(--pdca-blue); font-weight: 900;">P</span>
+                        </div>
+                        <div style="background: var(--bg-card-glass); padding: 25px; font-size: 1.15rem; color: var(--text-main); display: flex; flex-direction: column; justify-content: center;">
+                            <strong style="color: var(--pdca-blue); margin-bottom: 5px;">(Plan)</strong>
+                            A empresa usou dados para ver que as rotas se cruzavam e os caminhões rodavam vazios. Meta: reduzir atrasos em 20% e combustível em 12% usando um software de rotas.
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.8); padding: 25px; display: flex; align-items: center; justify-content: center; border-top: 1px solid rgba(255,255,255,0.05);">
+                            <span style="font-family: var(--font-display); font-size: 2.5rem; color: var(--pdca-blue); font-weight: 900;">D</span>
+                        </div>
+                        <div style="background: var(--bg-card-glass); padding: 25px; font-size: 1.15rem; color: var(--text-main); display: flex; flex-direction: column; justify-content: center; border-top: 1px solid rgba(255,255,255,0.05);">
+                            <strong style="color: var(--pdca-blue); margin-bottom: 5px;">(Do)</strong>
+                            Instalaram o sistema em apenas alguns caminhões (teste piloto). Treinaram os motoristas para seguirem o GPS à risca, sem "atalhos" improvisados.
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.8); padding: 25px; display: flex; align-items: center; justify-content: center; border-top: 1px solid rgba(255,255,255,0.05);">
+                            <span style="font-family: var(--font-display); font-size: 2.5rem; color: var(--pdca-blue); font-weight: 900;">C</span>
+                        </div>
+                        <div style="background: var(--bg-card-glass); padding: 25px; font-size: 1.15rem; color: var(--text-main); display: flex; flex-direction: column; justify-content: center; border-top: 1px solid rgba(255,255,255,0.05);">
+                            <strong style="color: var(--pdca-blue); margin-bottom: 5px;">(Check)</strong>
+                            Após 45 dias, compararam os dados: a quilometragem caiu e as entregas ficaram mais pontuais. A meta foi batida!
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.8); padding: 25px; display: flex; align-items: center; justify-content: center; border-top: 1px solid rgba(255,255,255,0.05);">
+                            <span style="font-family: var(--font-display); font-size: 2.5rem; color: var(--lean-green); font-weight: 900;">A</span>
+                        </div>
+                        <div style="background: var(--bg-card-glass); padding: 25px; font-size: 1.15rem; color: var(--text-main); display: flex; flex-direction: column; justify-content: center; border-top: 1px solid rgba(255,255,255,0.05);">
+                            <strong style="color: var(--lean-green); margin-bottom: 5px;">(Act)</strong>
+                            O software virou regra para toda a frota. Quem desviasse da rota sem motivo agora levava advertência. O sucesso virou o novo padrão.
+                        </div>
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-caso-2">
+                    <h3 class="topic-header" style="color: var(--meli-yellow); font-size: 1.6rem; border-bottom: 1px solid rgba(255,230,0,0.3); padding-bottom: 15px;">ESTUDO DE CASO 2: CHEGA DE ENVIAR O PRODUTO ERRADO!</h3>
+                    
+                    <div style="background: rgba(255, 0, 60, 0.05); padding: 25px; border-left: 5px solid var(--red-alert); margin: 2rem 0; border-radius: 4px;">
+                        <strong style="color: var(--red-alert); font-family: var(--font-display); font-size: 1.25rem; display: block; margin-bottom: 5px;">PROBLEMA:</strong>
+                        <p style="font-size: 1.2rem; color: var(--text-main); margin: 0;">6% das devoluções aconteciam porque o separador (picking) confundia produtos parecidos. Eles usavam listas de papel — o erro humano era inevitável.</p>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 100px 1fr; gap: 2px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; overflow: hidden; box-shadow: 0 15px 30px rgba(0,0,0,0.5);">
+                        
+                        <div style="background: rgba(0,0,0,0.8); padding: 25px; display: flex; align-items: center; justify-content: center;">
+                            <span style="font-family: var(--font-display); font-size: 2.5rem; color: var(--pdca-blue); font-weight: 900;">P</span>
+                        </div>
+                        <div style="background: var(--bg-card-glass); padding: 25px; font-size: 1.15rem; color: var(--text-main); display: flex; flex-direction: column; justify-content: center;">
+                            <strong style="color: var(--pdca-blue); margin-bottom: 5px;">(Plan)</strong>
+                            Meta: erro zero. Planejaram trocar o papel por coletores de dados (scanners de rádio frequência) integrados ao sistema (WMS).
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.8); padding: 25px; display: flex; align-items: center; justify-content: center; border-top: 1px solid rgba(255,255,255,0.05);">
+                            <span style="font-family: var(--font-display); font-size: 2.5rem; color: var(--pdca-blue); font-weight: 900;">D</span>
+                        </div>
+                        <div style="background: var(--bg-card-glass); padding: 25px; font-size: 1.15rem; color: var(--text-main); display: flex; flex-direction: column; justify-content: center; border-top: 1px solid rgba(255,255,255,0.05);">
+                            <strong style="color: var(--pdca-blue); margin-bottom: 5px;">(Do)</strong>
+                            Testaram o scanner só no setor de produtos perecíveis. Agora, o sistema "trava" se o operador tentar bipar o produto errado.
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.8); padding: 25px; display: flex; align-items: center; justify-content: center; border-top: 1px solid rgba(255,255,255,0.05);">
+                            <span style="font-family: var(--font-display); font-size: 2.5rem; color: var(--pdca-blue); font-weight: 900;">C</span>
+                        </div>
+                        <div style="background: var(--bg-card-glass); padding: 25px; font-size: 1.15rem; color: var(--text-main); display: flex; flex-direction: column; justify-content: center; border-top: 1px solid rgba(255,255,255,0.05);">
+                            <strong style="color: var(--pdca-blue); margin-bottom: 5px;">(Check)</strong>
+                            Durante um mês, auditaram as caixas. Resultado: a acurácia (precisão) subiu para 99,8%. O sistema barrou o erro antes dele sair do armazém.
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.8); padding: 25px; display: flex; align-items: center; justify-content: center; border-top: 1px solid rgba(255,255,255,0.05);">
+                            <span style="font-family: var(--font-display); font-size: 2.5rem; color: var(--lean-green); font-weight: 900;">A</span>
+                        </div>
+                        <div style="background: var(--bg-card-glass); padding: 25px; font-size: 1.15rem; color: var(--text-main); display: flex; flex-direction: column; justify-content: center; border-top: 1px solid rgba(255,255,255,0.05);">
+                            <strong style="color: var(--lean-green); margin-bottom: 5px;">(Act)</strong>
+                            Com o ROI (retorno do investimento) provado, compraram coletores para o CD inteiro. O processo agora é 100% digital e documentado.
+                        </div>
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-rotina-diaria" style="border-color: rgba(255, 255, 255, 0.2);">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(255, 255, 255, 0.1); border-color: var(--white-clean); color: var(--white-clean); box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        </div>
+                        <h2 class="panel-title">SEÇÃO 13 // O PDCA NO "CAFÉ COM A EQUIPE" (ROTINA DIÁRIA)</h2>
+                    </div>
+
+                    <p>Você não precisa de um projeto gigante para usar o PDCA. Na logística, ele acontece todo dia através do <strong>DMS (Gerenciamento Diário)</strong>. É a bússola do supervisor:</p>
+
+                    <div style="display: flex; flex-direction: column; gap: 20px; margin-top: 3rem;">
+                        
+                        <div style="background: rgba(0, 229, 255, 0.05); padding: 25px; border-radius: 6px; border-left: 4px solid var(--pdca-blue);">
+                            <strong style="color: var(--pdca-blue); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 10px;">P (PLANEJAR O TURNO):</strong>
+                            <p style="font-size: 1.15rem; color: var(--text-main); margin-bottom: 10px;">Antes da equipe chegar, o líder checa os 4Ms:</p>
+                            <ul style="list-style-type: none; padding-left: 20px; color: var(--text-muted); font-size: 1.1rem; line-height: 1.6;">
+                                <li><strong>Mão de Obra:</strong> Tem gente suficiente hoje?</li>
+                                <li><strong>Método:</strong> O pessoal sabe o que priorizar?</li>
+                                <li><strong>Máquina:</strong> As empilhadeiras estão carregadas?</li>
+                                <li><strong>Material:</strong> Tem caixa e fita para embalar tudo?</li>
+                            </ul>
+                        </div>
+
+                        <div style="background: rgba(0, 229, 255, 0.05); padding: 25px; border-radius: 6px; border-left: 4px solid var(--pdca-blue);">
+                            <strong style="color: var(--pdca-blue); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 10px;">D (EXECUTAR E OBSERVAR):</strong>
+                            <p style="font-size: 1.15rem; color: var(--text-main); margin: 0;">É o famoso <strong style="color: var(--white-clean);">Gemba Walk</strong> — caminhar pelo armazém para ver o trabalho acontecer e identificar onde o fluxo trava.</p>
+                        </div>
+
+                        <div style="background: rgba(0, 229, 255, 0.05); padding: 25px; border-radius: 6px; border-left: 4px solid var(--pdca-blue);">
+                            <strong style="color: var(--pdca-blue); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 10px;">C (CHECAR O PAINEL):</strong>
+                            <p style="font-size: 1.15rem; color: var(--text-main); margin: 0;">Olhar os dashboards (BI) de hora em hora. <em>"Deveríamos ter expedido 500 caixas, mas só saíram 300. Por quê?"</em>.</p>
+                        </div>
+
+                        <div style="background: rgba(0, 229, 255, 0.05); padding: 25px; border-radius: 6px; border-left: 4px solid var(--pdca-blue);">
+                            <strong style="color: var(--pdca-blue); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 10px;">A (AGIR NO DESVIO):</strong>
+                            <p style="font-size: 1.15rem; color: var(--text-main); margin: 0;">Se uma paleteira quebrou, o líder age na hora. Ele não espera o caminhão atrasar; ele chama a manutenção ou troca o equipamento imediatamente.</p>
+                        </div>
+                    </div>
+
+                    <div style="background: rgba(255,255,255,0.02); padding: 30px; border-top: 1px dashed rgba(255,255,255,0.2); border-bottom: 1px dashed rgba(255,255,255,0.2); margin-top: 3rem; text-align: center;">
+                        <strong style="color: var(--meli-yellow); font-family: var(--font-display); font-size: 1.4rem; display: block; margin-bottom: 10px;">MORAL DA HISTÓRIA:</strong>
+                        <p style="font-size: 1.25rem; color: var(--white-clean); margin: 0;">Um parafuso solto ignorado hoje vira um caminhão parado e um cliente bravo amanhã. <strong style="color: var(--lean-green);">O PDCA diário evita que o "pequeno" vire um "problemão".</strong></p>
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-meli-hard">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(255, 230, 0, 0.1); border-color: var(--meli-yellow); color: var(--meli-yellow); box-shadow: 0 0 25px rgba(255, 230, 0, 0.4);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--white-clean);">SEÇÃO 14 // O PDCA EM NÍVEL HARD: MERCADO LIVRE</h2>
+                    </div>
+
+                    <p>Se você quer ver o PDCA funcionando em "nível hard", o melhor exemplo na América Latina é o Mercado Livre. Eles não apenas entregam pacotes; eles operam uma máquina de guerra logística chamada Mercado Envios que desafia estradas ruins e crises econômicas todos os dias.</p>
+                    <p>Aqui está como a "Gigante Amarela" aplica esses conceitos para dominar o mercado:</p>
+
+                    <h3 class="topic-header" style="color: var(--meli-yellow); margin-top: 3rem;">O ECOSSISTEMA E A MELICIDADE</h3>
+                    
+                    <div style="background: rgba(255,255,255,0.02); padding: 30px; border-radius: 8px; border-left: 5px solid var(--meli-yellow); margin: 2rem 0; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                        <strong style="color: var(--white-clean); font-family: var(--font-display); font-size: 1.3rem; display: block; margin-bottom: 15px;">MAIS QUE UM SITE DE VENDAS</strong>
+                        <p style="font-size: 1.15rem; color: var(--text-main); margin-bottom: 15px;">O Mercado Livre criou um círculo onde tudo se conecta: o site de vendas, o banco (Mercado Pago), a publicidade (Ads) e, o coração de tudo, a <strong>Logística</strong>.</p>
+                        <p style="font-size: 1.15rem; color: var(--text-main); margin: 0;">Na "Melicidade" (a sede em Osasco-SP), termos como PDCA e Kaizen não são apenas palavras bonitas em quadros na parede; eles são <strong style="color: var(--pdca-blue);">ferramentas obrigatórias para qualquer engenheiro ou líder.</strong></p>
+                    </div>
+
+                    [attachment_0](attachment)
+
+                </section>
+                <section class="tech-panel" id="section-meli-full">
+                    <h3 class="topic-header" style="color: var(--meli-yellow);">O MODELO "FULL": A MÁGICA DO FULFILLMENT</h3>
+                    <p>Antigamente, o vendedor postava o produto no correio. No modelo Fulfillment (Full), o Mercado Livre faz tudo. Veja como o ciclo gira lá dentro:</p>
+                    
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap; margin: 2rem 0;">
+                        <div style="flex: 1; min-width: 250px; background: rgba(0, 229, 255, 0.05); border: 1px solid rgba(0, 229, 255, 0.2); padding: 25px; border-radius: 6px;">
+                            <strong style="color: var(--pdca-blue); font-family: var(--font-display); font-size: 1.5rem;">P (PLAN):</strong>
+                            <p style="margin: 10px 0 0 0; font-size: 1.1rem; color: var(--text-main);">O ML planeja o estoque do vendedor.</p>
+                        </div>
+                        <div style="flex: 1; min-width: 250px; background: rgba(0, 229, 255, 0.05); border: 1px solid rgba(0, 229, 255, 0.2); padding: 25px; border-radius: 6px;">
+                            <strong style="color: var(--pdca-blue); font-family: var(--font-display); font-size: 1.5rem;">D/C (DO/CHECK):</strong>
+                            <p style="margin: 10px 0 0 0; font-size: 1.1rem; color: var(--text-main);">Eles armazenam, separam, embalam e conferem tudo nos seus próprios CDs.</p>
+                        </div>
+                        <div style="flex: 1; min-width: 250px; background: rgba(0, 255, 102, 0.05); border: 1px solid rgba(0, 255, 102, 0.2); padding: 25px; border-radius: 6px;">
+                            <strong style="color: var(--lean-green); font-family: var(--font-display); font-size: 1.5rem;">A (ACT):</strong>
+                            <p style="margin: 10px 0 0 0; font-size: 1.1rem; color: var(--white-clean);">O resultado é uma entrega absurdamente rápida, muitas vezes em menos de 24h.</p>
+                        </div>
+                    </div>
+
+                    <h3 class="topic-header" style="color: var(--pdca-blue); margin-top: 4rem;">O PDCA NA VEIA DA TECNOLOGIA</h3>
+                    <p>A operação deles é guiada por dados, não por palpites. O planejamento do dia seguinte começa antes mesmo de você clicar em "comprar".</p>
+
+                    <div style="background: rgba(0,0,0,0.8); border-left: 5px solid var(--pdca-blue); padding: 30px; border-radius: 4px; margin-top: 2rem; box-shadow: 10px 10px 30px rgba(0,0,0,0.5);">
+                        <strong style="color: var(--pdca-blue); font-family: var(--font-mono); font-size: 1.2rem; display: block; margin-bottom: 10px; letter-spacing: 2px;">1. PLANEJAMENTO (PLAN) COM INTELIGÊNCIA ARTIFICIAL</strong>
+                        <p style="margin: 0; font-size: 1.15rem; color: var(--text-main); line-height: 1.7;">Algoritmos de IA analisam o que as pessoas estão buscando no site para <strong>prever a demanda</strong>. Assim, eles já sabem quantos caminhões e aviões precisarão mobilizar antes mesmo dos pedidos caírem no sistema.</p>
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-meli-resultados">
+                    
+                    <div style="background: rgba(0,0,0,0.8); border-left: 5px solid var(--pdca-blue); padding: 30px; border-radius: 4px; margin-bottom: 2rem; box-shadow: 10px 10px 30px rgba(0,0,0,0.5);">
+                        <strong style="color: var(--pdca-blue); font-family: var(--font-mono); font-size: 1.2rem; display: block; margin-bottom: 10px; letter-spacing: 2px;">2. EXECUÇÃO E CHECAGEM (DO & CHECK) EM TEMPO REAL</strong>
+                        <p style="margin-bottom: 15px; font-size: 1.15rem; color: var(--text-main); line-height: 1.7;">O Mercado Livre adora testar novidades. Eles usam ferramentas como <strong>Power BI</strong> e <strong>Metodologias Ágeis</strong> para monitorar cada segundo da operação.</p>
+                        <ul style="list-style: none; padding-left: 20px; border-left: 2px dashed rgba(0,229,255,0.3);">
+                            <li style="margin-bottom: 10px; color: var(--white-clean);"><strong style="color: var(--meli-yellow);">O TESTE:</strong> Mudamos o jeito de triar as caixas?</li>
+                            <li style="color: var(--white-clean);"><strong style="color: var(--pdca-blue);">A CHECAGEM:</strong> O sistema avisa na hora se isso aumentou ou diminuiu a velocidade. Se o dado mostra que ficou mais lento, eles ajustam o rumo imediatamente.</li>
+                        </ul>
+                    </div>
+
+                    <div style="background: rgba(0,0,0,0.8); border-left: 5px solid var(--lean-green); padding: 30px; border-radius: 4px; margin-bottom: 3rem; box-shadow: 10px 10px 30px rgba(0,0,0,0.5);">
+                        <strong style="color: var(--lean-green); font-family: var(--font-mono); font-size: 1.2rem; display: block; margin-bottom: 10px; letter-spacing: 2px;">3. AÇÃO E CULTURA (ACT): O ERRO QUE ENSINA</strong>
+                        <p style="margin-bottom: 10px; font-size: 1.15rem; color: var(--text-main); line-height: 1.7;">A etapa "Act" (Agir/Ajustar) no Mercado Livre tem um diferencial: a Cultura.</p>
+                        <ul style="list-style-type: square; padding-left: 20px; color: var(--text-muted); font-size: 1.1rem;">
+                            <li style="margin-bottom: 10px;"><strong style="color: var(--white-clean);">Aprendizado, não punição:</strong> Se uma nova tecnologia falha ou encontra uma "parede de ineficiência", a liderança foca em aprender com o erro.</li>
+                            <li><strong style="color: var(--white-clean);">Pessoas em primeiro lugar:</strong> Eles acreditam que funcionários respeitados e seguros têm mais coragem para sugerir melhorias e otimizar o sistema.</li>
+                        </ul>
+                    </div>
+
+                    <h3 class="topic-header" style="color: var(--meli-yellow); text-align: center; font-size: 1.8rem; margin-top: 4rem;">O RESULTADO EM NÚMEROS</h3>
+                    
+                    <div style="text-align: center; margin-top: 2rem; padding: 4rem 3rem; background: linear-gradient(180deg, rgba(255,230,0,0.05), transparent); border: 1px solid var(--meli-yellow); border-radius: 8px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+                        <p style="font-size: 1.3rem; color: var(--text-main); max-width: 800px; margin: 0 auto 20px auto; line-height: 1.8;">
+                            Essa obsessão pelo ciclo de melhoria contínua não é barata, mas dá lucro. O Mercado Livre cresce mais de 30% ao ano, provando que uma logística enxuta e inteligente é o melhor combustível para o faturamento.
+                        </p>
+                        <strong style="font-family: var(--font-display); font-size: 1.5rem; color: var(--meli-yellow); display: block; letter-spacing: 1px; margin-top: 20px; text-shadow: 0 0 15px rgba(255,230,0,0.5);">
+                            "Eles transformaram a logística de 'gasto necessário' em 'VANTAGEM COMPETITIVA'. O cliente compra porque sabe que chega rápido e chega certo."
+                        </strong>
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-5w2h" style="border-color: var(--pdca-blue); background: rgba(0, 229, 255, 0.02);">
+                    <div class="panel-header" style="border-bottom-color: rgba(0,229,255,0.2);">
+                        <div class="panel-icon" style="background: rgba(0, 229, 255, 0.1); border-color: var(--pdca-blue); color: var(--pdca-blue); box-shadow: 0 0 20px rgba(0,229,255,0.3);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--pdca-blue); text-shadow: 0 0 10px rgba(0,229,255,0.3);">FERRAMENTA TÁTICA // GERADOR DE PLANO 5W2H</h2>
+                    </div>
+
+                    <p style="font-size: 1.2rem; margin-bottom: 2rem;">Todo o Problem Solver precisa de documentar a sua solução. Preencha os campos abaixo com um problema real da sua operação e o sistema irá compilar um <strong>Relatório Tático de Ação (Ticket)</strong> pronto a ser executado.</p>
+
+                    <div style="background: rgba(0,0,0,0.6); padding: 30px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;">
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label style="font-family: var(--font-mono); color: var(--meli-yellow); font-size: 0.9rem; display: block; margin-bottom: 8px;">[ PROBLEMA RAIZ IDENTIFICADO ]</label>
+                            <input type="text" id="input-problema" placeholder="Ex: Alto índice de erro no picking do setor C" style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: var(--white-clean); padding: 12px; font-family: var(--font-body); font-size: 1.1rem; border-radius: 4px; outline: none;">
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                            <div>
+                                <label style="font-family: var(--font-mono); color: var(--pdca-blue); font-size: 0.9rem; display: block; margin-bottom: 8px;">1. WHAT (O que será feito?)</label>
+                                <input type="text" id="input-what" style="width: 100%; background: rgba(0,229,255,0.02); border: 1px solid rgba(0,229,255,0.3); color: var(--white-clean); padding: 12px; font-family: var(--font-body); font-size: 1.1rem; border-radius: 4px; outline: none;">
+                            </div>
+                            <div>
+                                <label style="font-family: var(--font-mono); color: var(--pdca-blue); font-size: 0.9rem; display: block; margin-bottom: 8px;">2. WHY (Por que será feito?)</label>
+                                <input type="text" id="input-why" style="width: 100%; background: rgba(0,229,255,0.02); border: 1px solid rgba(0,229,255,0.3); color: var(--white-clean); padding: 12px; font-family: var(--font-body); font-size: 1.1rem; border-radius: 4px; outline: none;">
+                            </div>
+                            <div>
+                                <label style="font-family: var(--font-mono); color: var(--pdca-blue); font-size: 0.9rem; display: block; margin-bottom: 8px;">3. WHERE (Onde será feito?)</label>
+                                <input type="text" id="input-where" style="width: 100%; background: rgba(0,229,255,0.02); border: 1px solid rgba(0,229,255,0.3); color: var(--white-clean); padding: 12px; font-family: var(--font-body); font-size: 1.1rem; border-radius: 4px; outline: none;">
+                            </div>
+                            <div>
+                                <label style="font-family: var(--font-mono); color: var(--pdca-blue); font-size: 0.9rem; display: block; margin-bottom: 8px;">4. WHEN (Quando será feito? Prazo)</label>
+                                <input type="text" id="input-when" style="width: 100%; background: rgba(0,229,255,0.02); border: 1px solid rgba(0,229,255,0.3); color: var(--white-clean); padding: 12px; font-family: var(--font-body); font-size: 1.1rem; border-radius: 4px; outline: none;">
+                            </div>
+                            <div>
+                                <label style="font-family: var(--font-mono); color: var(--pdca-blue); font-size: 0.9rem; display: block; margin-bottom: 8px;">5. WHO (Quem será o responsável?)</label>
+                                <input type="text" id="input-who" style="width: 100%; background: rgba(0,229,255,0.02); border: 1px solid rgba(0,229,255,0.3); color: var(--white-clean); padding: 12px; font-family: var(--font-body); font-size: 1.1rem; border-radius: 4px; outline: none;">
+                            </div>
+
+                            <div>
+                                <label style="font-family: var(--font-mono); color: var(--lean-green); font-size: 0.9rem; display: block; margin-bottom: 8px;">6. HOW (Como será feito? Método)</label>
+                                <input type="text" id="input-how" style="width: 100%; background: rgba(0,255,102,0.02); border: 1px solid rgba(0,255,102,0.3); color: var(--white-clean); padding: 12px; font-family: var(--font-body); font-size: 1.1rem; border-radius: 4px; outline: none;">
+                            </div>
+                            <div>
+                                <label style="font-family: var(--font-mono); color: var(--lean-green); font-size: 0.9rem; display: block; margin-bottom: 8px;">7. HOW MUCH (Quanto vai custar?)</label>
+                                <input type="text" id="input-howmuch" placeholder="R$, Tempo, ou 'Sem custo extra'" style="width: 100%; background: rgba(0,255,102,0.02); border: 1px solid rgba(0,255,102,0.3); color: var(--white-clean); padding: 12px; font-family: var(--font-body); font-size: 1.1rem; border-radius: 4px; outline: none;">
+                            </div>
+                        </div>
+
+                        <div style="text-align: center; margin-top: 30px;">
+                            <button class="cyber-btn-large" onclick="generateReport()" style="width: 100%; max-width: 400px;">GERAR TICKET DE AÇÃO</button>
+                        </div>
+                    </div>
+
+                    <div id="report-output" style="display: none; margin-top: 3rem; background: var(--bg-absolute); border: 1px solid var(--pdca-blue); padding: 40px; border-radius: 8px; box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 30px rgba(0,229,255,0.05); position: relative;">
+                        </div>
+                </section>
+
+            </div> 
+            <footer style="margin-top: auto; padding: 2rem 5rem; background: var(--bg-panel-deep); border-top: 1px solid var(--border-pdca); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; box-shadow: 0 -15px 40px rgba(0,0,0,0.8);">
+                
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                    <span style="font-family: var(--font-display); font-size: 1.4rem; color: var(--white-clean); letter-spacing: 2px;">
+                        MELI <span style="color: var(--meli-yellow); text-shadow: 0 0 15px rgba(255,230,0,0.5);">PDI</span>
+                    </span>
+                    <span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); letter-spacing: 3px;">
+                        LOGISTICS DOCUMENTATION // PDCA_SYS_V1.0
+                    </span>
+                </div>
+
+                <div style="display: flex; gap: 40px; font-family: var(--font-code); font-size: 0.85rem;">
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <span style="color: var(--pdca-blue); text-shadow: 0 0 10px rgba(0,229,255,0.5);">MODULE STATUS</span>
+                        <span style="color: var(--text-main);">OPTIMIZED</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <span style="color: var(--lean-green); text-shadow: 0 0 10px rgba(0,255,102,0.5);">DATA SOURCE</span>
+                        <span style="color: var(--text-main);">LEAN_MGT_VERIFIED</span>
+                    </div>
+                </div>
+
+                <div style="text-align: right; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); letter-spacing: 2px;">
+                    <span style="color: var(--pdca-blue);">[ PROBLEM SOLVER SECURE CONNECTION ]</span><br>
+                    TERMINAL_ID: OSASCO_CD // 2026
+                </div>
+
+            </footer>
+
+        </main> </div> <script>
+        // 1. ANIMAÇÕES DE ENTRADA (SCROLL REVEAL)
+        document.addEventListener('DOMContentLoaded', () => {
+            const panels = document.querySelectorAll('.tech-panel, .hero-section');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if(entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0) scale(1)';
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            panels.forEach(panel => {
+                panel.style.opacity = '0';
+                panel.style.transform = 'translateY(40px) scale(0.98)';
+                panel.style.transition = 'all 0.7s cubic-bezier(0.2, 0.8, 0.2, 1)';
+                observer.observe(panel);
+            });
+        });
+
+        // 2. LÓGICA DO GERADOR 5W2H
+        function generateReport() {
+            // Captura de Dados
+            const problema = document.getElementById('input-problema').value || 'Não Especificado';
+            const what = document.getElementById('input-what').value || 'N/A';
+            const why = document.getElementById('input-why').value || 'N/A';
+            const where = document.getElementById('input-where').value || 'N/A';
+            const when = document.getElementById('input-when').value || 'N/A';
+            const who = document.getElementById('input-who').value || 'N/A';
+            const how = document.getElementById('input-how').value || 'N/A';
+            const howmuch = document.getElementById('input-howmuch').value || 'N/A';
+
+            // Gera ID Aleatório de Ticket
+            const ticketID = 'TK-' + Math.floor(Math.random() * 9000 + 1000) + '-PDCA';
+            const dateStr = new Date().toLocaleDateString('pt-BR');
+
+            // Constrói o HTML do Relatório
+            const reportHTML = `
+                <div style="position: absolute; top: 0; right: 0; padding: 15px 25px; background: var(--pdca-blue); color: #000; font-family: var(--font-display); font-weight: 900; border-radius: 0 8px 0 8px;">
+                    STATUS: APROVADO PARA EXECUÇÃO (DO)
+                </div>
+                
+                <div style="border-bottom: 1px dashed rgba(0,229,255,0.4); padding-bottom: 20px; margin-bottom: 30px;">
+                    <h3 style="font-family: var(--font-display); color: var(--white-clean); font-size: 2rem; margin-bottom: 5px;">TICKET DE AÇÃO LOGÍSTICA</h3>
+                    <div style="font-family: var(--font-mono); color: var(--pdca-blue); font-size: 1rem; letter-spacing: 2px;">
+                        ID: ${ticketID} // DATA: ${dateStr} // AUTOR: PROBLEM_SOLVER
+                    </div>
+                </div>
+
+                <div style="background: rgba(255,0,60,0.1); border-left: 4px solid var(--red-alert); padding: 15px; margin-bottom: 30px;">
+                    <strong style="color: var(--red-alert); font-family: var(--font-mono); font-size: 1rem; display: block;">[ CAUSA RAIZ / PROBLEMA ]</strong>
+                    <span style="font-size: 1.3rem; color: var(--white-clean);">${problema}</span>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div style="border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 4px; background: rgba(255,255,255,0.02);">
+                        <strong style="color: var(--pdca-blue); font-family: var(--font-mono); display: block; margin-bottom: 5px;">> WHAT (O Quê)</strong>
+                        <span style="color: var(--text-main); font-size: 1.1rem;">${what}</span>
+                    </div>
+                    <div style="border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 4px; background: rgba(255,255,255,0.02);">
+                        <strong style="color: var(--pdca-blue); font-family: var(--font-mono); display: block; margin-bottom: 5px;">> WHY (Por Quê)</strong>
+                        <span style="color: var(--text-main); font-size: 1.1rem;">${why}</span>
+                    </div>
+                    <div style="border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 4px; background: rgba(255,255,255,0.02);">
+                        <strong style="color: var(--pdca-blue); font-family: var(--font-mono); display: block; margin-bottom: 5px;">> WHERE (Onde)</strong>
+                        <span style="color: var(--text-main); font-size: 1.1rem;">${where}</span>
+                    </div>
+                    <div style="border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 4px; background: rgba(255,255,255,0.02);">
+                        <strong style="color: var(--pdca-blue); font-family: var(--font-mono); display: block; margin-bottom: 5px;">> WHEN (Quando)</strong>
+                        <span style="color: var(--text-main); font-size: 1.1rem;">${when}</span>
+                    </div>
+                    <div style="border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 4px; background: rgba(255,255,255,0.02); grid-column: 1 / -1;">
+                        <strong style="color: var(--pdca-blue); font-family: var(--font-mono); display: block; margin-bottom: 5px;">> WHO (Quem)</strong>
+                        <span style="color: var(--meli-yellow); font-size: 1.15rem; font-weight: bold;">${who}</span>
+                    </div>
+                    <div style="border: 1px solid rgba(0,255,102,0.2); padding: 15px; border-radius: 4px; background: rgba(0,255,102,0.05);">
+                        <strong style="color: var(--lean-green); font-family: var(--font-mono); display: block; margin-bottom: 5px;">> HOW (Como/Método)</strong>
+                        <span style="color: var(--white-clean); font-size: 1.1rem;">${how}</span>
+                    </div>
+                    <div style="border: 1px solid rgba(0,255,102,0.2); padding: 15px; border-radius: 4px; background: rgba(0,255,102,0.05);">
+                        <strong style="color: var(--lean-green); font-family: var(--font-mono); display: block; margin-bottom: 5px;">> HOW MUCH (Custo Estimado)</strong>
+                        <span style="color: var(--white-clean); font-size: 1.1rem;">${howmuch}</span>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 30px; text-align: center;">
+                    <button class="cyber-btn-large" onclick="window.print()" style="padding: 10px 30px; font-size: 1rem; border-color: var(--white-clean); color: var(--white-clean); background: transparent;">IMPRIMIR / SALVAR PDF</button>
+                </div>
+            `;
+
+            const outputDiv = document.getElementById('report-output');
+            outputDiv.innerHTML = reportHTML;
+            outputDiv.style.display = 'block';
+            
+            // Scroll suave até ao relatório
+            outputDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    </script>
+</body>
+</html>
+

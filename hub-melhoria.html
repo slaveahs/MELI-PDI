@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hub de Melhoria Contínua | MeLi PDI Academy</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ==========================================================================
+           01. ROOT VARIABLES (ACADEMY HUB THEME)
+           ========================================================================== */
+        :root {
+            /* Palette Base: Deep Space Dark */
+            --bg-absolute: #05080F; 
+            --bg-panel-deep: rgba(10, 15, 25, 0.85);
+            --bg-card-glass: rgba(15, 22, 35, 0.65);
+            --bg-card-hover: rgba(25, 35, 55, 0.85);
+
+            /* Cores dos Módulos (Identidade Visual) */
+            --color-5s: #00FF66;       /* Lean Green */
+            --color-pdca: #00E5FF;     /* PDCA Blue */
+            --color-whys: #B026FF;     /* Root Purple */
+            --color-ishi: #00F0FF;     /* Cyan Analytic */
+            --color-toc: #FF2A2A;      /* Bottleneck Red */
+            
+            --meli-yellow: #FFE600;
+            --white-clean: #FFFFFF;
+
+            /* Tipografia */
+            --font-display: 'Orbitron', sans-serif;
+            --font-body: 'Rajdhani', sans-serif;
+            --font-mono: 'Share Tech Mono', monospace;
+            --font-code: 'Fira Code', monospace;
+
+            /* Cores de Texto */
+            --text-title: #FFFFFF;
+            --text-main: #CBD5E1;
+            --text-muted: #64748B;
+
+            /* Medidas Estruturais (TRAVADAS PARA DESKTOP) */
+            --sidebar-width: 300px;
+            --topbar-height: 80px;
+            --radius-card: 8px; 
+            --transition-hud: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        /* ==========================================================================
+           02. CSS RESET & GLOBAL SETUP
+           ========================================================================== */
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; scroll-behavior: smooth; }
+        body {
+            background-color: var(--bg-absolute); color: var(--text-main);
+            font-family: var(--font-body); min-height: 100vh; min-width: 1200px; 
+            overflow-x: hidden; display: flex; position: relative;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg-absolute); border-left: 1px solid rgba(255, 230, 0, 0.1); }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 230, 0, 0.2); border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--meli-yellow); }
+
+        /* Tipografia Global */
+        h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--text-title); line-height: 1.2; }
+        p { font-size: 1.25rem; line-height: 1.8; margin-bottom: 1.5rem; color: var(--text-main); text-align: justify; }
+
+        /* Background Dinâmico (Network Grid) */
+        body::before {
+            content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -3;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 50px 50px; pointer-events: none;
+            mask-image: radial-gradient(circle at center, rgba(0,0,0,1) 0%, rgba(0,0,0,0.1) 100%);
+            -webkit-mask-image: radial-gradient(circle at center, rgba(0,0,0,1) 0%, rgba(0,0,0,0.1) 100%);
+        }
+        /* ==========================================================================
+           03. GLOBAL LAYOUT & SIDEBAR
+           ========================================================================== */
+        .app-wrapper { display: flex; width: 100%; min-height: 100vh; position: relative; z-index: 10; }
+        .main-content { flex-grow: 1; display: flex; flex-direction: column; min-height: 100vh; background: radial-gradient(circle at top right, rgba(255, 230, 0, 0.03), transparent 60%); }
+        .container { width: 100%; max-width: 1400px; margin: 0 auto; padding: 3rem 5rem 5rem 5rem; }
+
+        .sys-sidebar {
+            width: var(--sidebar-width); background: var(--bg-panel-deep);
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1); display: flex;
+            flex-direction: column; flex-shrink: 0; z-index: 100; position: sticky; top: 0; height: 100vh;
+        }
+
+        .sidebar-brand {
+            height: var(--topbar-height); display: flex; flex-direction: column; justify-content: center; align-items: center;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.1); background: radial-gradient(circle at top, rgba(255,230,0,0.05), transparent); position: relative;
+        }
+        .sidebar-brand::before { content: ''; position: absolute; bottom: -1px; left: 0; width: 50%; height: 2px; background: var(--meli-yellow); box-shadow: 0 0 15px var(--meli-yellow); }
+
+        .brand-logo { font-family: var(--font-display); font-size: 2rem; font-weight: 900; color: var(--white-clean); letter-spacing: 3px; }
+        .brand-logo span { color: var(--meli-yellow); text-shadow: 0 0 15px rgba(255, 230, 0, 0.5); }
+        .brand-sub { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); letter-spacing: 5px; margin-top: 5px; text-transform: uppercase; }
+
+        .nav-menu { flex-grow: 1; padding: 2.5rem 1.5rem; display: flex; flex-direction: column; gap: 15px; }
+        .nav-link {
+            display: flex; align-items: center; gap: 15px; padding: 14px 20px;
+            color: var(--text-muted); font-family: var(--font-body); font-size: 1.1rem;
+            font-weight: 600; letter-spacing: 1.5px; text-decoration: none; position: relative;
+            transition: var(--transition-hud); border: 1px solid transparent; border-radius: 4px;
+        }
+        .nav-link:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.1); padding-left: 28px; }
+        .nav-link.active { color: #000; background: var(--meli-yellow); border-color: var(--meli-yellow); font-weight: 900; }
+        
+        .nav-icon { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; transition: 0.3s; }
+        .nav-link:hover .nav-icon { transform: scale(1.15); color: var(--meli-yellow); }
+        .nav-link.active .nav-icon { color: #000; }
+
+        .sys-topbar {
+            height: var(--topbar-height); width: 100%; background: var(--bg-panel-deep);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center;
+            justify-content: space-between; padding: 0 5rem; position: sticky; top: 0; z-index: 90;
+        }
+
+        /* ==========================================================================
+           04. MODULE CARDS (COURSE GRID)
+           ========================================================================== */
+        .course-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; margin-top: 4rem; }
+        
+        .module-card {
+            background: var(--bg-card-glass); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: var(--radius-card); padding: 30px; position: relative; overflow: hidden;
+            transition: var(--transition-hud); display: flex; flex-direction: column; text-decoration: none;
+        }
+        .module-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.8); }
+        
+        /* Efeito Glow Topo Dinâmico */
+        .module-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; transition: 0.3s; }
+        
+        /* Cores Específicas por Cartão */
+        .card-5s:hover { border-color: var(--color-5s); }
+        .card-5s::before { background: var(--color-5s); box-shadow: 0 0 15px var(--color-5s); }
+        
+        .card-pdca:hover { border-color: var(--color-pdca); }
+        .card-pdca::before { background: var(--color-pdca); box-shadow: 0 0 15px var(--color-pdca); }
+        
+        .card-whys:hover { border-color: var(--color-whys); }
+        .card-whys::before { background: var(--color-whys); box-shadow: 0 0 15px var(--color-whys); }
+        
+        .card-ishi:hover { border-color: var(--color-ishi); }
+        .card-ishi::before { background: var(--color-ishi); box-shadow: 0 0 15px var(--color-ishi); }
+        
+        .card-toc:hover { border-color: var(--color-toc); }
+        .card-toc::before { background: var(--color-toc); box-shadow: 0 0 15px var(--color-toc); }
+
+        .mod-number { font-family: var(--font-mono); font-size: 0.9rem; letter-spacing: 2px; margin-bottom: 15px; opacity: 0.8; }
+        .mod-title { font-family: var(--font-display); font-size: 1.6rem; color: var(--white-clean); margin-bottom: 15px; }
+        .mod-desc { font-size: 1.1rem; color: var(--text-muted); line-height: 1.6; flex-grow: 1; margin-bottom: 25px; }
+        
+        .mod-btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+            padding: 12px 20px; font-family: var(--font-display); font-size: 1rem; font-weight: bold;
+            border-radius: 4px; transition: 0.3s; border: 1px solid transparent; text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-wrapper">
+        
+        <aside class="sys-sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">MELI<span>PDI</span></div>
+                <div class="brand-sub">ACADEMY // HUB</div>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    <span>Home Dashboard</span>
+                </a>
+                
+                <a href="#" class="nav-link active">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                    <span>Hub de Melhoria (Cursos)</span>
+                </a>
+
+                <div style="height: 1px; background: rgba(255, 255, 255, 0.1); margin: 15px 0;"></div>
+                <div style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); padding-left: 20px; margin-bottom: 5px;">ACESSO RÁPIDO:</div>
+                
+                <a href="5s.html" class="nav-link" style="padding-left: 30px; font-size: 1rem;"><span style="color: var(--color-5s);">■</span> 5S & Lean</a>
+                <a href="pdca.html" class="nav-link" style="padding-left: 30px; font-size: 1rem;"><span style="color: var(--color-pdca);">■</span> PDCA</a>
+                <a href="5-porques.html" class="nav-link" style="padding-left: 30px; font-size: 1rem;"><span style="color: var(--color-whys);">■</span> 5 Porquês</a>
+                <a href="ishikawa.html" class="nav-link" style="padding-left: 30px; font-size: 1rem;"><span style="color: var(--color-ishi);">■</span> Ishikawa</a>
+                <a href="toc.html" class="nav-link" style="padding-left: 30px; font-size: 1rem;"><span style="color: var(--color-toc);">■</span> TOC (Gargalos)</a>
+            </nav>
+            <div style="padding: 20px; text-align: center; font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); opacity: 0.6; margin-top: auto;">
+                KNOWLEDGE BASE<br>OSASCO_CD // 2026
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="sys-topbar">
+                <div style="font-family: var(--font-mono); font-size: 0.95rem; color: var(--text-muted); letter-spacing: 2px;">
+                    MELI PDI <span>/</span> ACADEMY <span>/</span> MELHORIA_CONTINUA_HUB
+                </div>
+            </header>
+
+            <div class="container">
+                <section style="margin-bottom: 4rem; padding-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    <h1 style="font-size: 4rem; font-weight: 900; letter-spacing: 3px; line-height: 1.1;">HUB DE MELHORIA<br><span style="color: var(--meli-yellow);">CONTÍNUA</span></h1>
+                    <div style="font-family: var(--font-mono); font-size: 1.4rem; color: var(--text-main); letter-spacing: 2px; margin-top: 15px;">
+                        Desenvolva a mentalidade de um verdadeiro Problem Solver.
+                    </div>
+                </section>
+
+                <section style="background: var(--bg-card-glass); border: 1px solid rgba(255,255,255,0.05); padding: 50px; border-radius: 8px; box-shadow: 0 15px 40px rgba(0,0,0,0.5); position: relative;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--meli-yellow)" stroke-width="1" style="width: 80px; height: 80px; position: absolute; top: 40px; right: 40px; opacity: 0.1;"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                    
+                    <h2 style="color: var(--meli-yellow); font-size: 2.2rem; margin-bottom: 30px;">A importância de aprender técnicas de melhoria na logística</h2>
+                    
+                    <p style="font-size: 1.3rem; color: var(--white-clean);">Trabalhar com logística é lidar com pressão, volume alto de trabalho e necessidade constante de eficiência. No dia a dia da operação, não basta apenas executar tarefas — é fundamental entender como melhorar os processos. Por isso, aprender algumas metodologias e ferramentas de gestão faz toda a diferença para quem quer evoluir na área.</p>
+                    
+                    <p>Eu acredito que conhecer técnicas como <strong>PDCA, 5S, Diagrama de Ishikawa e TOC (Teoria das Restrições)</strong> ajuda a desenvolver uma visão mais analítica da operação. Em vez de apenas enxergar o problema, começamos a entender por que ele acontece e como resolver de forma estruturada.</p>
+
+                    <div style="display: flex; flex-direction: column; gap: 20px; margin: 2rem 0;">
+                        <div style="border-left: 3px solid var(--color-pdca); padding-left: 20px;">
+                            <p style="margin: 0;">O <strong style="color: var(--color-pdca);">PDCA</strong> é uma das bases da melhoria contínua. Ele ensina a planejar, executar, verificar os resultados e agir para corrigir ou padronizar melhorias. Na prática da logística, isso ajuda muito quando estamos tentando resolver gargalos, reduzir atrasos ou melhorar o fluxo de trabalho.</p>
+                        </div>
+                        <div style="border-left: 3px solid var(--color-5s); padding-left: 20px;">
+                            <p style="margin: 0;">Já o <strong style="color: var(--color-5s);">5S</strong> está diretamente ligado à organização e padronização do ambiente de trabalho. Em operações logísticas, onde existem milhares de itens, equipamentos e pessoas trabalhando ao mesmo tempo, manter organização, limpeza e disciplina operacional aumenta a produtividade e reduz erros.</p>
+                        </div>
+                        <div style="border-left: 3px solid var(--color-ishi); padding-left: 20px;">
+                            <p style="margin: 0;">O <strong style="color: var(--color-ishi);">Diagrama de Ishikawa</strong>, também conhecido como diagrama de causa e efeito, é uma ferramenta muito útil para análise de problemas. Em vez de apenas tratar o sintoma, ele ajuda a identificar as possíveis causas de um problema, seja em processos, pessoas, equipamentos ou métodos.</p>
+                        </div>
+                        <div style="border-left: 3px solid var(--color-toc); padding-left: 20px;">
+                            <p style="margin: 0;">Por fim, a <strong style="color: var(--color-toc);">TOC (Teoria das Restrições)</strong> traz um conceito muito poderoso: toda operação possui um gargalo que limita o desempenho do sistema. Quando aprendemos a identificar e trabalhar sobre essa restrição, conseguimos melhorar significativamente o fluxo da operação e aumentar a eficiência.</p>
+                        </div>
+                    </div>
+
+                    <p style="font-size: 1.3rem; color: var(--white-clean); margin-top: 2rem;">Na logística moderna, especialmente em operações de grande escala, quem entende essas metodologias passa a ter uma visão diferente do trabalho. Não é apenas sobre fazer mais rápido, mas sobre fazer melhor, com inteligência operacional.</p>
+                    
+                    <div style="background: rgba(255,230,0,0.05); padding: 25px; border-radius: 6px; border: 1px dashed rgba(255,230,0,0.3); text-align: center; margin-top: 3rem;">
+                        <p style="font-size: 1.35rem; color: var(--meli-yellow); margin: 0; font-weight: bold; font-family: var(--font-display);">Por isso, aprender essas técnicas não é apenas conhecimento teórico. É uma forma de desenvolver mentalidade de melhoria contínua, pensamento crítico e capacidade de resolver problemas reais dentro da operação. É isso que transforma um operador em alguém que realmente entende o sistema e contribui para evoluir a logística.</p>
+                    </div>
+                </section>
+                <section style="margin-top: 5rem;">
+                    <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 3rem;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="var(--white-clean)" stroke-width="2" style="width: 40px; height: 40px;"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                        <h3 style="font-family: var(--font-display); font-size: 2rem; color: var(--white-clean); letter-spacing: 2px; margin: 0;">MÓDULOS TÁTICOS <span style="color: var(--text-muted); font-size: 1.5rem;">// ACADEMY</span></h3>
+                    </div>
+
+                    <div class="course-grid">
+                        
+                        <a href="5s.html" class="module-card card-5s">
+                            <div class="mod-number" style="color: var(--color-5s);">[ MÓDULO 01 ]</div>
+                            <h4 class="mod-title">Metodologia 5S & Lean Logistics</h4>
+                            <p class="mod-desc">Aprenda a implementar o Seiri, Seiton, Seiso, Seiketsu e Shitsuke. Domine a organização extrema, a gestão visual e a base da Manufatura Enxuta aplicada a armazéns e CDs.</p>
+                            <div class="mod-btn" style="color: var(--color-5s); border-color: rgba(0, 255, 102, 0.3); background: rgba(0, 255, 102, 0.05);">
+                                Iniciar Módulo
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                            </div>
+                        </a>
+                        <a href="pdca.html" class="module-card card-pdca">
+                            <div class="mod-number" style="color: var(--color-pdca);">[ MÓDULO 02 ]</div>
+                            <h4 class="mod-title">Ciclo PDCA (Deming)</h4>
+                            <p class="mod-desc">Planeie, Execute, Verifique e Aja. Saiba como estruturar a melhoria contínua e garantir que os gargalos logísticos resolvidos hoje não voltem a assombrar a operação amanhã.</p>
+                            <div class="mod-btn" style="color: var(--color-pdca); border-color: rgba(0, 229, 255, 0.3); background: rgba(0, 229, 255, 0.05);">
+                                Iniciar Módulo
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                            </div>
+                        </a>
+
+                        <a href="5-porques.html" class="module-card card-whys">
+                            <div class="mod-number" style="color: var(--color-whys);">[ MÓDULO 03 ]</div>
+                            <h4 class="mod-title">Análise dos 5 Porquês</h4>
+                            <p class="mod-desc">A psicologia da investigação no "chão de fábrica". Descubra como despersonalizar a culpa e mergulhar até à verdadeira Causa Raiz através da cascata de perguntas investigativas.</p>
+                            <div class="mod-btn" style="color: var(--color-whys); border-color: rgba(176, 38, 255, 0.3); background: rgba(176, 38, 255, 0.05);">
+                                Iniciar Módulo
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                            </div>
+                        </a>
+                        <a href="ishikawa.html" class="module-card card-ishi">
+                            <div class="mod-number" style="color: var(--color-ishi);">[ MÓDULO 04 ]</div>
+                            <h4 class="mod-title">Diagrama de Ishikawa</h4>
+                            <p class="mod-desc">O Mapeamento da Espinha de Peixe adaptado ao Fulfillment. Organize as falhas categorizando-as nos 6Ms (Máquina, Método, Mão de Obra, Material, Meio Ambiente e Medida).</p>
+                            <div class="mod-btn" style="color: var(--color-ishi); border-color: rgba(0, 240, 255, 0.3); background: rgba(0, 240, 255, 0.05);">
+                                Iniciar Módulo
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                            </div>
+                        </a>
+
+                        <a href="toc.html" class="module-card card-toc">
+                            <div class="mod-number" style="color: var(--color-toc);">[ MÓDULO 05 ]</div>
+                            <h4 class="mod-title">Teoria das Restrições (TOC)</h4>
+                            <p class="mod-desc">Eficiência Global vs. Local. Domine o sistema Tambor-Pulmão-Corda e os 5 Passos de Focalização de Goldratt para identificar e quebrar gargalos operacionais críticos.</p>
+                            <div class="mod-btn" style="color: var(--color-toc); border-color: rgba(255, 42, 42, 0.3); background: rgba(255, 42, 42, 0.05);">
+                                Iniciar Módulo
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                            </div>
+                        </a>
+
+                    </div> </section>
+                <div style="margin-top: 5rem; text-align: center; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 3rem;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" style="width: 50px; height: 50px; margin-bottom: 15px;"><path d="M12 15V3m0 12l-4-4m4 4l4-4M2 17l.621 2.485A2 2 0 0 0 4.561 21h14.878a2 2 0 0 0 1.94-1.515L22 17"></path></svg>
+                    <p style="font-family: var(--font-mono); font-size: 1rem; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase;">
+                        Complete todos os módulos táticos acima para desbloquear a certificação de Problem Solver Sênior na matriz corporativa.
+                    </p>
+                </div>
+
+            </div> ```
+
+---
+
+### Parte 8 de 9: Rodapé do Terminal (Footer)
+
+Cole o bloco abaixo **imediatamente após** a Parte 7:
+
+```html
+            <footer style="margin-top: auto; padding: 2rem 5rem; background: var(--bg-panel-deep); border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; box-shadow: 0 -15px 40px rgba(0,0,0,0.8);">
+                
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                    <span style="font-family: var(--font-display); font-size: 1.4rem; color: var(--white-clean); letter-spacing: 2px;">
+                        MELI <span style="color: var(--meli-yellow); text-shadow: 0 0 15px rgba(255,230,0,0.5);">PDI</span>
+                    </span>
+                    <span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); letter-spacing: 3px;">
+                        LOGISTICS DOCUMENTATION // ACADEMY_HUB_V1.0
+                    </span>
+                </div>
+
+                <div style="display: flex; gap: 40px; font-family: var(--font-code); font-size: 0.85rem;">
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <span style="color: var(--color-5s); text-shadow: 0 0 10px rgba(0,255,102,0.5);">MODULE_SYNC</span>
+                        <span style="color: var(--white-clean);">ONLINE</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <span style="color: var(--meli-yellow); text-shadow: 0 0 10px rgba(255,230,0,0.5);">ACADEMY CORE</span>
+                        <span style="color: var(--white-clean);">OPTIMIZED</span>
+                    </div>
+                </div>
+
+                <div style="text-align: right; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); letter-spacing: 2px;">
+                    <span style="color: var(--meli-yellow);">[ PROBLEM SOLVER SECURE CONNECTION ]</span><br>
+                    TERMINAL_ID: SAO_PAULO_CD // 2026
+                </div>
+
+            </footer>
+        </main> </div> <script>
+        // Animações de Entrada (Scroll Reveal) dinâmicas para os cartões
+        document.addEventListener('DOMContentLoaded', () => {
+            const cards = document.querySelectorAll('.module-card');
+            
+            // Define o estado inicial dos cartões
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(50px)';
+                card.style.transition = `all 0.6s cubic-bezier(0.25, 1, 0.5, 1) ${index * 0.15}s`;
+            });
+
+            // Cria o observador
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if(entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            // Inicia a observação
+            cards.forEach(card => {
+                observer.observe(card);
+            });
+        });
+    </script>
+</body>
+</html>

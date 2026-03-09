@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Takt Time & Ritmo | MeLi PDI Terminal</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ==========================================================================
+           01. ROOT VARIABLES (TAKT TIME / RHYTHM THEME)
+           ========================================================================== */
+        :root {
+            /* Palette Base: Deep Metronome Dark */
+            --bg-absolute: #06020A; 
+            --bg-panel-deep: rgba(18, 5, 30, 0.85);
+            --bg-card-glass: rgba(30, 10, 50, 0.65);
+            --bg-card-hover: rgba(45, 15, 75, 0.85);
+
+            /* Tema de Cores Takt Time (Ritmo e Precisão) */
+            --violet-rhythm: #B900FF;
+            --violet-glow: rgba(185, 0, 255, 0.5);
+            --violet-dim: rgba(185, 0, 255, 0.1);
+
+            --lime-beat: #CCFF00;
+            --lime-glow: rgba(204, 255, 0, 0.5);
+            --lime-dim: rgba(204, 255, 0, 0.1);
+
+            /* Cores de Suporte / Alertas */
+            --cyan-tech: #00F3FF;
+            --red-critical: #FF003C;
+            --white-core: #FFFFFF;
+
+            /* Tipografia */
+            --font-display: 'Orbitron', sans-serif;
+            --font-body: 'Rajdhani', sans-serif;
+            --font-mono: 'Share Tech Mono', monospace;
+            --font-code: 'Fira Code', monospace;
+
+            /* Cores de Texto */
+            --text-title: #FFFFFF;
+            --text-main: #E2E8F0;
+            --text-muted: #A396B5;
+
+            /* Bordas e Sombras (Glassmorphism) */
+            --border-rhythm: rgba(185, 0, 255, 0.3);
+            --border-active: rgba(204, 255, 0, 0.6);
+            --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.9);
+            --shadow-neon-violet: 0 0 15px var(--violet-glow), inset 0 0 10px var(--violet-dim);
+            --shadow-neon-lime: 0 0 15px var(--lime-glow), inset 0 0 10px var(--lime-dim);
+            
+            /* Medidas Estruturais (TRAVADAS PARA DESKTOP) */
+            --sidebar-width: 280px;
+            --topbar-height: 80px;
+            --radius-card: 8px;
+            --transition-hud: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        /* ==========================================================================
+           02. CSS RESET & GLOBAL SETUP (FORCED DESKTOP)
+           ========================================================================== */
+        *, *::before, *::after {
+            margin: 0; padding: 0; box-sizing: border-box;
+        }
+
+        html { font-size: 16px; scroll-behavior: smooth; }
+
+        body {
+            background-color: var(--bg-absolute);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            min-height: 100vh;
+            min-width: 1200px; /* <--- TRAVA ABSOLUTA DE DESKTOP */
+            overflow-x: auto;  
+            display: flex;
+            position: relative;
+        }
+
+        /* Custom Scrollbar - Violet Rhythm Style */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg-absolute); border-left: 1px solid var(--border-rhythm); }
+        ::-webkit-scrollbar-thumb { background: var(--violet-dim); border: 1px solid var(--violet-rhythm); border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--violet-rhythm); box-shadow: 0 0 15px var(--violet-rhythm); }
+
+        /* Tipografia Global */
+        h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--text-title); }
+        p { font-size: 1.2rem; line-height: 1.7; margin-bottom: 1.2rem; }
+        strong { color: var(--violet-rhythm); font-weight: 600; text-shadow: 0 0 8px var(--violet-dim); }
+
+        /* ==========================================================================
+           03. BACKGROUND EFFECTS (TIMING GRID & RADIALS)
+           ========================================================================== */
+        body::before {
+            content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -3;
+            /* Grid imitando marcações de tempo/metrônomo */
+            background-image: 
+                linear-gradient(rgba(185, 0, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(204, 255, 0, 0.02) 1px, transparent 1px);
+            background-size: 50px 50px; pointer-events: none;
+        }
+
+        body::after {
+            content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2;
+            background: radial-gradient(circle at 20% 80%, rgba(185, 0, 255, 0.05) 0%, transparent 40%),
+                        radial-gradient(circle at 80% 20%, rgba(204, 255, 0, 0.03) 0%, transparent 40%);
+            pointer-events: none;
+        }
+
+        /* ==========================================================================
+           04. GLOBAL KEYFRAMES (RHYTHM ANIMATIONS)
+           ========================================================================== */
+        @keyframes scanline-v { 0% { transform: translateY(-100%); } 100% { transform: translateY(100vh); } }
+        
+        @keyframes pulse-beat {
+            0% { box-shadow: 0 0 10px var(--lime-dim); border-color: rgba(204, 255, 0, 0.3); }
+            50% { box-shadow: 0 0 25px var(--lime-glow); border-color: var(--lime-beat); }
+            100% { box-shadow: 0 0 10px var(--lime-dim); border-color: rgba(204, 255, 0, 0.3); }
+        }
+
+        @keyframes metronome-swing {
+            0% { transform: rotate(-15deg); }
+            50% { transform: rotate(15deg); }
+            100% { transform: rotate(-15deg); }
+        }
+
+        @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(30px); } 100% { opacity: 1; transform: translateY(0); } }
+
+        .hud-scanner {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 2px;
+            background: linear-gradient(to right, transparent, var(--violet-rhythm), transparent);
+            opacity: 0.4; z-index: 9999; pointer-events: none; animation: scanline-v 6s linear infinite;
+        }
+        /* ==========================================================================
+           05. GLOBAL LAYOUT (GRID E WRAPPERS)
+           ========================================================================== */
+        .app-wrapper {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+            position: relative;
+            z-index: 10;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background: radial-gradient(circle at top right, rgba(185, 0, 255, 0.02), transparent 60%);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 4rem 4rem 4rem;
+        }
+
+        /* ==========================================================================
+           06. SIDEBAR (TERMINAL NAVIGATION) - ACOMPANHA A PÁGINA (DESKTOP)
+           ========================================================================== */
+        .sys-sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-panel-deep);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border-rhythm);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0; 
+            z-index: 100;
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.9);
+        }
+
+        /* Feixe de luz vertical violeta simbolizando ritmo constante */
+        .sys-sidebar::after {
+            content: '';
+            position: absolute;
+            top: 0; right: -1px;
+            width: 2px; height: 100%;
+            background: linear-gradient(to bottom, transparent, var(--violet-rhythm), transparent);
+            opacity: 0.6;
+        }
+
+        .sidebar-brand {
+            height: var(--topbar-height);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 1px dashed var(--border-rhythm);
+            background: radial-gradient(circle at top, var(--violet-dim), transparent);
+            position: relative;
+        }
+
+        .sidebar-brand::before {
+            content: '';
+            position: absolute;
+            bottom: -1px; left: 0; width: 40%; height: 2px;
+            background: var(--violet-rhythm);
+            box-shadow: 0 0 10px var(--violet-rhythm);
+        }
+
+        .brand-logo {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: var(--text-title);
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+
+        .brand-logo span {
+            color: var(--lime-beat);
+            text-shadow: 0 0 15px rgba(204, 255, 0, 0.5);
+        }
+
+        .brand-sub {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--violet-rhythm);
+            letter-spacing: 4px;
+            margin-top: 5px;
+            text-transform: uppercase;
+        }
+
+        /* Menu de Navegação */
+        .nav-menu {
+            flex-grow: 1;
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 20px;
+            color: var(--text-muted);
+            font-family: var(--font-body);
+            font-size: 1.05rem;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-decoration: none;
+            position: relative;
+            transition: var(--transition-hud);
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid transparent;
+            border-radius: var(--radius-card);
+            clip-path: polygon(0 0, 100% 0, 100% 70%, 92% 100%, 0 100%);
+        }
+
+        /* Linha de seleção do menu (Lime no Hover) */
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0;
+            height: 100%; width: 3px;
+            background: var(--lime-beat);
+            transform: scaleY(0);
+            transition: 0.3s;
+        }
+
+        .nav-link:hover {
+            color: var(--text-pure);
+            background: rgba(204, 255, 0, 0.05);
+            border-color: rgba(204, 255, 0, 0.2);
+            padding-left: 25px;
+        }
+
+        .nav-link:hover::before {
+            transform: scaleY(1);
+            box-shadow: 0 0 15px var(--lime-glow);
+        }
+
+        /* Estado ATIVO (Página Atual: Takt Time) */
+        .nav-link.active {
+            color: var(--violet-rhythm);
+            background: var(--violet-dim);
+            border-color: var(--border-rhythm);
+        }
+
+        .nav-link.active::before {
+            background: var(--violet-rhythm);
+            transform: scaleY(1);
+            box-shadow: 0 0 15px var(--violet-glow);
+        }
+
+        .nav-icon {
+            width: 20px; height: 20px;
+            fill: none; stroke: currentColor; stroke-width: 2;
+            transition: 0.3s;
+        }
+
+        .nav-link:hover .nav-icon {
+            transform: scale(1.1);
+            color: var(--lime-beat);
+        }
+
+        .nav-link.active .nav-icon {
+            color: var(--violet-rhythm);
+        }
+
+        /* ==========================================================================
+           07. TOPBAR (SYSTEM HEADER)
+           ========================================================================== */
+        .sys-topbar {
+            height: var(--topbar-height);
+            width: 100%;
+            background: var(--bg-panel-deep);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--border-rhythm);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 4rem;
+            position: sticky;
+            top: 0;
+            z-index: 90;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+        }
+
+        .topbar-path {
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .topbar-path span {
+            color: var(--lime-beat);
+            text-shadow: 0 0 8px var(--lime-dim);
+        }
+
+        /* Status em Modo "Rhythm" / Lime Beat */
+        .topbar-status {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-family: var(--font-code);
+            font-size: 0.8rem;
+            color: var(--lime-beat);
+            letter-spacing: 1px;
+            border: 1px solid rgba(204, 255, 0, 0.4);
+            padding: 8px 15px;
+            border-radius: 4px;
+            background: rgba(204, 255, 0, 0.05);
+            box-shadow: 0 0 10px var(--lime-dim);
+        }
+
+        .status-dot-beat {
+            width: 8px; height: 8px;
+            background: var(--lime-beat);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--lime-glow);
+            animation: pulse-beat 1s infinite alternate;
+        }
+        /* ==========================================================================
+           08. HERO SECTION
+           ========================================================================== */
+        .hero-section {
+            margin-bottom: 3rem;
+            position: relative;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-rhythm);
+        }
+
+        .hero-section::after {
+            content: '';
+            position: absolute;
+            bottom: -1px; left: 0;
+            width: 250px; height: 3px;
+            background: var(--violet-rhythm);
+            box-shadow: 0 0 15px var(--violet-glow);
+        }
+
+        .hero-title-wrapper {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .hero-title {
+            font-size: 4.5rem;
+            font-weight: 900;
+            color: var(--text-title);
+            letter-spacing: 5px;
+            line-height: 1.1;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+        }
+
+        .hero-title span {
+            color: var(--lime-beat);
+            text-shadow: 0 0 20px var(--lime-glow);
+        }
+
+        .hero-subtitle {
+            font-family: var(--font-mono);
+            font-size: 1.5rem;
+            color: var(--text-main);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .hero-subtitle::before {
+            content: '[SYSTEM_RHYTHM]';
+            font-size: 1rem;
+            color: var(--violet-rhythm);
+            background: var(--violet-dim);
+            padding: 4px 10px;
+            border: 1px solid rgba(185, 0, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        .hero-quote {
+            margin-top: 1.5rem;
+            font-family: var(--font-body);
+            font-size: 1.3rem;
+            color: var(--lime-beat);
+            font-style: italic;
+            border-left: 4px solid var(--lime-beat);
+            padding-left: 15px;
+            background: linear-gradient(90deg, var(--lime-dim), transparent);
+            padding: 10px 15px;
+            border-radius: 0 4px 4px 0;
+        }
+
+        /* ==========================================================================
+           09. CONTENT PANELS & GLASSMORPHISM
+           ========================================================================== */
+        .tech-panel {
+            background: var(--bg-card-glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(204, 255, 0, 0.2);
+            border-radius: var(--radius-card);
+            padding: 3rem; margin-bottom: 3rem; position: relative;
+            box-shadow: var(--shadow-glass); transition: var(--transition-hud);
+        }
+        
+        .tech-panel:hover {
+            border-color: var(--lime-beat); background: var(--bg-card-hover);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.9), inset 0 0 20px var(--lime-dim);
+        }
+        
+        /* Cantoneiras HUD Lime */
+        .tech-panel::before, .tech-panel::after {
+            content: ''; position: absolute; width: 30px; height: 30px;
+            border: 2px solid var(--lime-beat); opacity: 0.5; transition: 0.3s;
+        }
+        .tech-panel::before { top: 15px; left: 15px; border-right: none; border-bottom: none; }
+        .tech-panel::after { bottom: 15px; right: 15px; border-left: none; border-top: none; }
+        
+        .panel-header { display: flex; align-items: center; gap: 20px; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 1.5rem; }
+        .panel-title { font-size: 2rem; color: var(--text-title); letter-spacing: 2px; }
+        
+        .panel-icon {
+            width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
+            background: var(--violet-dim); border: 1px solid var(--border-rhythm); border-radius: var(--radius-card);
+            color: var(--violet-rhythm); font-size: 1.8rem; box-shadow: var(--shadow-neon-violet);
+        }
+        
+        .highlight-box {
+            background: rgba(185, 0, 255, 0.05); border-left: 4px solid var(--violet-rhythm);
+            padding: 1.5rem; margin: 1.5rem 0; font-family: var(--font-mono); font-size: 1.1rem; color: var(--text-pure);
+        }
+        
+        .cyber-list { list-style: none; margin-top: 1.5rem; }
+        .cyber-list li { position: relative; padding-left: 35px; margin-bottom: 1.5rem; font-size: 1.15rem; line-height: 1.6; }
+        .cyber-list li::before { content: '>'; position: absolute; left: 0; top: 0; font-family: var(--font-mono); color: var(--lime-beat); font-size: 1.4rem; font-weight: 900; text-shadow: 0 0 10px var(--lime-glow); }
+        .list-title { display: block; color: var(--text-pure); font-family: var(--font-display); font-size: 1.2rem; margin-bottom: 5px; }
+
+        /* Estilos Base para as Caixas de Comparação (Takt vs Cycle) */
+        .rhythm-box {
+            background: rgba(0,0,0,0.5); border: 1px solid var(--border-rhythm);
+            padding: 20px; border-radius: 8px; flex: 1; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+        }
+        
+        .rhythm-value {
+            font-family: var(--font-mono); font-size: 2.5rem; font-weight: 700;
+            color: var(--violet-rhythm); text-shadow: 0 0 15px var(--violet-glow); margin: 10px 0;
+        }
+        /* EFEITOS ADICIONAIS RHYTHM */
+        .rhythm-text {
+            color: var(--violet-rhythm);
+            font-family: var(--font-mono);
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(185, 0, 255, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hud-scanner"></div>
+
+    <div class="app-wrapper">
+        
+        <aside class="sys-sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">MELI<span>PDI</span></div>
+                <div class="brand-sub">SYS.MODULE // ACTIVE</div>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    <span>Home Dashboard</span>
+                </a>
+                
+                <a href="hub.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                    <span>Hub de Setores</span>
+                </a>
+                
+                <a href="glossario.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                    <span>Glossário Técnico</span>
+                </a>
+                
+                <a href="sla-detalhado.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <span>Deep Dive: SLA</span>
+                </a>
+
+                <a href="backlog-detalhado.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                    <span>Monitor: Backlog</span>
+                </a>
+
+                <a href="kpi-detalhado.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    <span>Analytics: KPIs</span>
+                </a>
+
+                <a href="throughput-detalhado.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="13 19 22 12 13 5 13 19"></polygon><polygon points="2 19 11 12 2 5 2 19"></polygon></svg>
+                    <span>Throughput & Vazão</span>
+                </a>
+
+                <div style="height: 1px; background: var(--border-rhythm); margin: 15px 0; opacity: 0.5;"></div>
+
+                <a href="#" class="nav-link active">
+                    <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <span>Takt Time & Ritmo</span>
+                </a>
+            </nav>
+
+            <div style="padding: 20px; border-top: 1px dashed var(--border-rhythm); text-align: center;">
+                <div style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--violet-rhythm); opacity: 0.5; letter-spacing: 1.5px;">
+                    SECURE CONNECTION<br>OSASCO_CD // 2026
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            
+            <header class="sys-topbar">
+                <div class="topbar-path">
+                    MELI PDI <span>/</span> TIMING_CONTROL <span>/</span> TAKT_TIME_SYNC.exe
+                </div>
+                <div class="topbar-status">
+                    STATUS: BEAT SYNCED
+                    <div class="status-dot-beat"></div>
+                </div>
+            </header>
+
+            <div class="container">
+                
+                <section class="hero-section">
+                    <div class="hero-title-wrapper">
+                        <h1 class="hero-title">TAKT TIME <span>_</span></h1>
+                    </div>
+                    <div class="hero-subtitle">O Compasso da Operação</div>
+                    
+                    <div class="hero-quote">
+                        "A velocidade exata para atender a demanda sem gerar ociosidade ou caos."
+                    </div>
+                </section>
+
+                <section class="tech-panel" id="section-definition">
+                    <div class="panel-header">
+                        <div class="panel-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+                        </div>
+                        <h2 class="panel-title">SEÇÃO 1 // O QUE É TAKT TIME?</h2>
+                    </div>
+
+                    <p>
+                        Takt Time é um conceito derivado da palavra alemã <em>Takt</em>, que significa <strong>ritmo ou compasso</strong> (como o tique-taque de um metrônomo musical). Na logística, especialmente em centros de distribuição e operações de fulfillment, é o ritmo exato em que os pedidos devem ser processados (separados, embalados e expedidos) para atender à demanda do cliente dentro do prazo estabelecido. 
+                    </p>
+                    <p>
+                        Ele define a velocidade ideal da operação para garantir a fluidez, <strong>sem gerar atrasos ou ociosidade na cadeia</strong>.
+                    </p>
+
+                    <h3 style="font-family: var(--font-display); font-size: 1.5rem; color: var(--lime-beat); margin-top: 3rem; margin-bottom: 1.5rem;">PARA QUE SERVE?</h3>
+                    <ul class="cyber-list">
+                        <li><strong class="list-title" style="color: var(--lime-beat);">Sincronizar a operação:</strong> Alinha o ritmo de trabalho de todo o centro de distribuição (inbound, picking, packing, outbound) com o volume real de pedidos do dia.</li>
+                        <li><strong class="list-title" style="color: var(--lime-beat);">Dimensionamento de equipe:</strong> Ajuda a calcular com precisão matemática quantos operadores ou estações de trabalho são necessários para cumprir a meta do turno.</li>
+                        <li><strong class="list-title" style="color: var(--lime-beat);">Identificação de gargalos:</strong> Permite comparar o ritmo necessário (Takt Time) com o tempo real de execução da equipe (Cycle Time), facilitando a identificação imediata de anomalias.</li>
+                        <li><strong class="list-title" style="color: var(--lime-beat);">Prevenção de desperdícios:</strong> Evita a superprodução (processar pedidos muito antes do cut-off, gerando acúmulo e confusão nas docas) e minimiza tempos de espera entre as áreas.</li>
+                    </ul>
+                </section>
+
+                <section class="tech-panel" id="section-example" style="border-color: rgba(204, 255, 0, 0.4);">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(204, 255, 0, 0.1); border-color: var(--lime-beat); color: var(--lime-beat); box-shadow: 0 0 15px rgba(204, 255, 0, 0.3);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--text-pure);">SEÇÃO 2 // A MATEMÁTICA NA PRÁTICA</h2>
+                    </div>
+
+                    <p>Vamos aplicar a fórmula no cenário real de uma Estação de Packing (Embalagem) em um Centro de Fulfillment.</p>
+
+                    <div style="background: rgba(0,0,0,0.6); border: 1px dashed var(--lime-beat); padding: 2rem; border-radius: 8px; margin-top: 2rem;">
+                        <h4 style="color: var(--lime-beat); font-family: var(--font-mono); font-size: 1.1rem; margin-bottom: 20px;">[CENÁRIO OPERACIONAL]</h4>
+                        
+                        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 250px; background: rgba(255,255,255,0.05); padding: 15px; border-left: 3px solid var(--violet-rhythm);">
+                                <span style="font-family: var(--font-mono); color: var(--text-muted); font-size: 0.9rem;">1. TEMPO DO TURNO</span><br>
+                                <span style="font-size: 1.1rem; color: var(--text-pure);">8 horas totais. <br>1 hora dedicada a pausas/refeições. <br><strong style="color: var(--violet-rhythm);">Líquido: 7 horas (25.200 segundos).</strong></span>
+                            </div>
+                            
+                            <div style="flex: 1; min-width: 250px; background: rgba(255,255,255,0.05); padding: 15px; border-left: 3px solid var(--violet-rhythm);">
+                                <span style="font-family: var(--font-mono); color: var(--text-muted); font-size: 0.9rem;">2. DEMANDA (META)</span><br>
+                                <span style="font-size: 1.1rem; color: var(--text-pure);">A meta do turno a ser despachada para as transportadoras é de <strong style="color: var(--violet-rhythm);">1.260 pacotes</strong>.</span>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 2rem; background: rgba(204, 255, 0, 0.05); border: 1px solid var(--lime-beat); padding: 20px; text-align: center; border-radius: 4px; box-shadow: inset 0 0 20px rgba(204,255,0,0.1);">
+                            <span style="font-family: var(--font-mono); color: var(--text-muted); font-size: 0.9rem; letter-spacing: 2px;">CÁLCULO DO TAKT TIME</span><br>
+                            <div style="font-family: var(--font-mono); font-size: 2.2rem; color: var(--lime-beat); margin: 10px 0; text-shadow: 0 0 15px var(--lime-glow);">
+                                25.200s / 1.260 = <span style="color: var(--text-pure);">20s</span>
+                            </div>
+                            <span style="font-family: var(--font-body); font-size: 1.1rem; color: var(--text-main);">O Takt Time da área é de <strong>20 segundos</strong>. Isso significa que, a cada 20 segundos exatos, um pacote embalado deve entrar na esteira sorter para garantir que a meta de expedição seja atingida sem risco de rompimento de prazo.</span>
+                        </div>
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-golden-rules">
+                    <div class="panel-header">
+                        <div class="panel-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 6.91 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        </div>
+                        <h2 class="panel-title">SEÇÃO 3 // REGRAS DE OURO</h2>
+                    </div>
+
+                    <p>
+                        Calcular o Takt Time errado é pior do que não ter indicador nenhum, pois forçará a operação a seguir um ritmo irreal. Para que o seu painel de controle seja absoluto, estas 4 regras são inegociáveis:
+                    </p>
+
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 2rem;">
+                        <div style="background: rgba(0,0,0,0.4); border-left: 4px solid var(--violet-rhythm); padding: 20px;">
+                            <strong style="color: var(--violet-rhythm); font-family: var(--font-display); font-size: 1.1rem; display: block; margin-bottom: 10px;">01. TEMPO LÍQUIDO É ABSOLUTO</strong>
+                            <p style="font-size: 0.95rem; color: var(--text-main); margin: 0;">Nunca utilize o tempo bruto do turno no cálculo. A base de dados deve contemplar apenas o tempo em que a operação está efetivamente ativa (descontando almoço, Dds, pausas e ginástica laboral).</p>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.4); border-left: 4px solid var(--lime-beat); padding: 20px;">
+                            <strong style="color: var(--lime-beat); font-family: var(--font-display); font-size: 1.1rem; display: block; margin-bottom: 10px;">02. CYCLE TIME &le; TAKT TIME</strong>
+                            <p style="font-size: 0.95rem; color: var(--text-main); margin: 0;">O Tempo de Ciclo (o tempo real que o operador leva para finalizar um item) deve ser levemente inferior ou igual ao Takt Time. Se o Cycle Time ultrapassar o Takt, a operação <strong>já está gerando atraso</strong> estrutural.</p>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.4); border-left: 4px solid var(--violet-rhythm); padding: 20px;">
+                            <strong style="color: var(--violet-rhythm); font-family: var(--font-display); font-size: 1.1rem; display: block; margin-bottom: 10px;">03. AJUSTE AOS CUT-OFFS</strong>
+                            <p style="font-size: 0.95rem; color: var(--text-main); margin: 0;">A demanda flutua. O Takt Time não é estático para sempre; ele deve ser recalculado para lidar com picos de volume (como Black Friday) ou para priorizar horários críticos de corte das transportadoras.</p>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.4); border-left: 4px solid var(--lime-beat); padding: 20px;">
+                            <strong style="color: var(--lime-beat); font-family: var(--font-display); font-size: 1.1rem; display: block; margin-bottom: 10px;">04. FOCO NO PROCESSO, NÃO NA EXAUSTÃO</strong>
+                            <p style="font-size: 0.95rem; color: var(--text-main); margin: 0;">Se o Takt Time exige 15s, mas o processo só consegue ser feito com qualidade em 25s, a solução primária não é chicotear a equipe, mas sim otimizar o fluxo de trabalho (Kaizen) ou adicionar mais estações.</p>
+                        </div>
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-analysis" style="border-color: rgba(185, 0, 255, 0.4);">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(185, 0, 255, 0.1); border-color: var(--violet-rhythm); color: var(--violet-rhythm); box-shadow: 0 0 15px var(--violet-glow);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--text-pure);">SEÇÃO 4 // ANÁLISE: RESOLUÇÃO DE PROBLEMAS</h2>
+                    </div>
+
+                    <p>
+                        Acompanhar o Takt Time é uma das ferramentas mais letais para a análise de performance. O verdadeiro <em>Problem Solver</em> não apenas lê os números; ele diagnostica o piso operacional com base nos seguintes cenários:
+                    </p>
+
+                    <div style="display: flex; flex-direction: column; gap: 20px; margin-top: 2rem;">
+                        
+                        <div style="background: rgba(255, 0, 60, 0.05); border: 1px solid var(--red-critical); padding: 20px; border-radius: 8px;">
+                            <h4 style="color: var(--red-critical); font-family: var(--font-display); font-size: 1.2rem; margin-bottom: 5px;">CENÁRIO 1: CYCLE TIME > TAKT TIME (OPERAÇÃO LENTA)</h4>
+                            <p style="font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px;">[ Risco: Atrasos na expedição e acúmulo de pedidos no sistema. ]</p>
+                            <p style="margin: 0; font-size: 1.05rem; color: var(--text-main);"><strong style="color: var(--red-critical);">ANÁLISE:</strong> É preciso investigar o gargalo imediatamente. Pode haver falta de insumos (caixas, fita, etiquetas), falhas de leitura sistêmica, esteira travada ou necessidade urgente de redirecionar operadores de áreas ociosas para suportar essa etapa.</p>
+                        </div>
+
+                        <div style="background: rgba(0, 243, 255, 0.05); border: 1px solid var(--cyan-tech); padding: 20px; border-radius: 8px;">
+                            <h4 style="color: var(--cyan-tech); font-family: var(--font-display); font-size: 1.2rem; margin-bottom: 5px;">CENÁRIO 2: CYCLE TIME < TAKT TIME (OPERAÇÃO MUITO RÁPIDA)</h4>
+                            <p style="font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px;">[ Risco: Ociosidade e aumento de custos operacionais (hora-extra atoa). ]</p>
+                            <p style="margin: 0; font-size: 1.05rem; color: var(--text-main);"><strong style="color: var(--cyan-tech);">ANÁLISE:</strong> Os operadores estão processando rápido demais e provavelmente vão acabar esperando por itens do picking que não chegam a tempo. Essa é uma excelente oportunidade de <em>Line Balancing</em>, realocando parte da equipe para outras etapas que precisem de suporte.</p>
+                        </div>
+
+                        <div style="background: rgba(185, 0, 255, 0.05); border: 1px solid var(--violet-rhythm); padding: 20px; border-radius: 8px;">
+                            <h4 style="color: var(--violet-rhythm); font-family: var(--font-display); font-size: 1.2rem; margin-bottom: 5px;">CENÁRIO 3: DESVIOS BRUSCOS NO TURNO</h4>
+                            <p style="font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px;">[ Risco: Instabilidade operacional sistêmica. ]</p>
+                            <p style="margin: 0; font-size: 1.05rem; color: var(--text-main);"><strong style="color: var(--violet-rhythm);">ANÁLISE:</strong> O ritmo vinha sendo cumprido, mas caiu drasticamente no meio do turno. É necessário conduzir uma análise de Causa Raiz nas anomalias: indisponibilidade de sistema de 10 minutos (microparada massiva), quebra de equipamentos de movimentação ou deficiência no abastecimento de inventário (Shortage).</p>
+                        </div>
+
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-triad" style="border-color: rgba(204, 255, 0, 0.4);">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(204, 255, 0, 0.1); border-color: var(--lime-beat); color: var(--lime-beat); box-shadow: 0 0 15px rgba(204, 255, 0, 0.3);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"></polygon><line x1="12" y1="22" x2="12" y2="15.5"></line><polyline points="22 8.5 12 15.5 2 8.5"></polyline><polyline points="2 15.5 12 8.5 22 15.5"></polyline><line x1="12" y1="2" x2="12" y2="8.5"></line></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--text-pure);">SEÇÃO 5 // A TRÍADE DO TEMPO</h2>
+                    </div>
+
+                    <p>
+                        É muito comum confundir esses três conceitos no piso operacional. Uma documentação de excelência precisa separá-los claramente. Cada um tem um "dono" e uma função na cadeia:
+                    </p>
+
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 2.5rem; text-align: center;">
+                        
+                        <div class="rhythm-box" style="border-color: var(--violet-rhythm); background: rgba(185, 0, 255, 0.05);">
+                            <span style="font-family: var(--font-display); font-size: 1.2rem; color: var(--violet-rhythm); margin-bottom: 10px; display: block;">TAKT TIME</span>
+                            <div class="rhythm-value" style="font-size: 1.5rem; text-shadow: 0 0 10px rgba(185, 0, 255, 0.5);">"O Ritmo do Cliente"</div>
+                            <p style="font-size: 0.95rem; color: var(--text-main); margin-bottom: 15px;">É a velocidade que o cliente (ou o cut-off da transportadora) <strong>exige</strong>.</p>
+                            <span style="background: rgba(185, 0, 255, 0.2); padding: 5px 15px; border-radius: 4px; font-family: var(--font-mono); font-size: 0.85rem; color: var(--white-core);">VISÃO DE FORA PARA DENTRO</span>
+                        </div>
+
+                        <div class="rhythm-box" style="border-color: var(--lime-beat); background: rgba(204, 255, 0, 0.05);">
+                            <span style="font-family: var(--font-display); font-size: 1.2rem; color: var(--lime-beat); margin-bottom: 10px; display: block;">CYCLE TIME</span>
+                            <div class="rhythm-value" style="font-size: 1.5rem; color: var(--lime-beat); text-shadow: 0 0 10px rgba(204, 255, 0, 0.5);">"O Ritmo da Equipe"</div>
+                            <p style="font-size: 0.95rem; color: var(--text-main); margin-bottom: 15px;">É o tempo real que um operador <strong>consegue</strong> executar a tarefa (ex: bipar e embalar).</p>
+                            <span style="background: rgba(204, 255, 0, 0.2); padding: 5px 15px; border-radius: 4px; font-family: var(--font-mono); font-size: 0.85rem; color: var(--white-core);">VISÃO DE DENTRO PARA FORA</span>
+                        </div>
+
+                        <div class="rhythm-box" style="border-color: var(--cyan-tech); background: rgba(0, 243, 255, 0.05);">
+                            <span style="font-family: var(--font-display); font-size: 1.2rem; color: var(--cyan-tech); margin-bottom: 10px; display: block;">LEAD TIME</span>
+                            <div class="rhythm-value" style="font-size: 1.5rem; color: var(--cyan-tech); text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);">"O Tempo de Travessia"</div>
+                            <p style="font-size: 0.95rem; color: var(--text-main); margin-bottom: 15px;">O relógio começa no clique em "comprar" e só para na entrega. <strong>O Takt e o Cycle acontecem dentro dele.</strong></p>
+                            <span style="background: rgba(0, 243, 255, 0.2); padding: 5px 15px; border-radius: 4px; font-family: var(--font-mono); font-size: 0.85rem; color: var(--white-core);">O RELÓGIO GLOBAL</span>
+                        </div>
+
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-balancing" style="border-color: rgba(185, 0, 255, 0.4);">
+                    <div class="panel-header">
+                        <div class="panel-icon" style="background: rgba(185, 0, 255, 0.1); border-color: var(--violet-rhythm); color: var(--violet-rhythm); box-shadow: 0 0 15px var(--violet-glow);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                        </div>
+                        <h2 class="panel-title" style="color: var(--text-pure);">SEÇÃO 6 // BALANCEAMENTO DE LINHA (LINE BALANCING)</h2>
+                    </div>
+
+                    <p>
+                        O Takt Time é a base matemática absoluta para decidir <strong>quantas pessoas precisam estar logadas</strong> em cada processo do fulfillment (Inbound, Picking, Packing, Expedição).
+                    </p>
+
+                    <div style="background: rgba(0,0,0,0.6); padding: 2rem; border: 1px dashed var(--violet-rhythm); border-radius: 8px; margin: 2rem 0;">
+                        <h3 style="font-family: var(--font-display); font-size: 1.2rem; color: var(--violet-rhythm); margin-bottom: 15px;">A MATEMÁTICA DAS ESTAÇÕES</h3>
+                        <p style="font-size: 1.05rem; color: var(--text-main);">Se o Takt Time do turno exige a liberação de 1 pacote a cada <strong style="color: var(--lime-beat);">10 segundos</strong>, mas o Cycle Time (tempo de execução) da sua melhor estação de Packing é de <strong style="color: var(--lime-beat);">30 segundos</strong>, um único operador jamais dará conta. Ele sempre gerará 20 segundos de atraso por item.</p>
+                        
+                        
+
+                        <div style="margin-top: 1.5rem; background: rgba(185, 0, 255, 0.1); border-left: 4px solid var(--violet-rhythm); padding: 15px;">
+                            <span style="font-family: var(--font-mono); color: var(--white-core); font-size: 1rem;"><strong>A SOLUÇÃO:</strong> Você precisa de, no mínimo, <strong>3 estações de Packing operando simultaneamente</strong> <span style="color: var(--lime-beat);">(30s / 10s = 3)</span> para "empatar" com o Takt Time global e não estourar o SLA.</span>
+                        </div>
+                    </div>
+
+                    <h3 style="font-family: var(--font-display); font-size: 1.5rem; color: var(--lime-beat); margin-bottom: 1rem; margin-top: 3rem;">O CONCEITO DE "PITCH" (GESTÃO EM BLOCOS DE TEMPO)</h3>
+                    <p>
+                        Acompanhar um Takt Time de, por exemplo, 8 segundos por pacote é impossível para a mente humana de um líder de turno. Ninguém consegue ficar com um cronômetro validando 8 segundos o dia todo. É aqui que entra o brilhante conceito de <strong>Pitch</strong>.
+                    </p>
+
+                    <div style="display: flex; gap: 20px; align-items: stretch; margin-top: 1.5rem;">
+                        <div style="flex: 1; border: 1px solid var(--border-active); background: rgba(204, 255, 0, 0.05); padding: 20px; border-radius: 4px;">
+                            <strong style="color: var(--lime-beat); display: block; margin-bottom: 10px; font-family: var(--font-display);">O QUE É O PITCH?</strong>
+                            <p style="font-size: 0.95rem; color: var(--text-main); margin: 0;">O Pitch agrupa o Takt Time de segundos em uma unidade de tempo humanamente gerenciável (geralmente de <strong>15, 30 ou 60 minutos</strong>) ou em uma unidade física (um <em>tote</em> cheio, uma gaiola, um palete).</p>
+                        </div>
+                        <div style="flex: 1; border: 1px solid var(--border-active); background: rgba(204, 255, 0, 0.05); padding: 20px; border-radius: 4px;">
+                            <strong style="color: var(--lime-beat); display: block; margin-bottom: 10px; font-family: var(--font-display);">APLICAÇÃO PRÁTICA</strong>
+                            <p style="font-size: 0.95rem; color: var(--text-main); margin: 0;">Se o Takt é de 10 pacotes/minuto, um Pitch de 15 minutos = 150 pacotes. O Problem Solver <strong>não olha para os segundos</strong>, ele verifica a cada 15 min se a estação liberou 150 itens. Se saíram apenas 100, o alarme soa e o desvio é tratado quase em tempo real.</p>
+                        </div>
+                    </div>
+                </section>
+                <section class="tech-panel" id="section-andon-abc" style="border-color: var(--border-rhythm);">
+                    <div class="panel-header">
+                        <div class="panel-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                        </div>
+                        <h2 class="panel-title">SEÇÃO 7 // GESTÃO VISUAL E CURVA ABC</h2>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 40px; margin-top: 1.5rem;">
+                        
+                        <div>
+                            <h3 style="color: var(--violet-rhythm); font-family: var(--font-display); font-size: 1.3rem; margin-bottom: 15px;">GESTÃO VISUAL E ANDON</h3>
+                            <p style="font-size: 1rem; color: var(--text-main); margin-bottom: 15px;">Para que o ritmo da operação funcione sem gritaria, a comunicação visual no CD deve ser impecável. Telões e Dashboards devem exibir o Takt Time ideal lado a lado com a produção real.</p>
+                            
+                            
+
+                            <div style="background: rgba(0,0,0,0.5); padding: 15px; border-left: 3px solid var(--red-critical); margin-top: 15px;">
+                                <span style="color: var(--red-critical); font-family: var(--font-mono); font-weight: bold;">[ ALERTA ANDON ]</span>
+                                <p style="font-size: 0.9rem; margin-top: 5px; color: var(--text-muted);">Luzes ou alertas sistêmicos disparam automaticamente quando o <em>Cycle Time</em> de uma estação fica consistentemente mais lento que o Takt. Isso sinaliza instantaneamente que a área precisa de manutenção, insumos ou liderança.</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 style="color: var(--lime-beat); font-family: var(--font-display); font-size: 1.3rem; margin-bottom: 15px;">O IMPACTO DA CURVA ABC</h3>
+                            <p style="font-size: 1rem; color: var(--text-main); margin-bottom: 15px;">Na logística, nem todo produto flui no mesmo ritmo. Misturar fluxos diferentes destrói a matemática do Takt Time e mascara ineficiências severas.</p>
+                            <ul class="cyber-list" style="margin-top: 0;">
+                                <li style="margin-bottom: 10px;"><strong class="list-title" style="color: var(--lime-beat); font-size: 1rem;">CURVA A (Fast-movers / Sortables)</strong> Itens de alto giro e fáceis de manusear. Possuem um Cycle Time incrivelmente rápido e voam nas esteiras.</li>
+                                <li><strong class="list-title" style="color: var(--lime-beat); font-size: 1rem;">CURVA C (Non-Sort / Pesados)</strong> Itens volumosos. Exigem empilhadeiras, caixas sob medida ou duas pessoas para erguer. Elevam o Cycle Time drasticamente.</li>
+                            </ul>
+                            <div style="background: rgba(204, 255, 0, 0.05); border: 1px solid rgba(204, 255, 0, 0.3); padding: 10px; text-align: center; font-family: var(--font-mono); color: var(--text-pure); font-size: 0.9rem; margin-top: 15px;">
+                                O Takt global deve ser desdobrado em "Takt Times Específicos" para cada tipo de fluxo.
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+
+                <div style="margin-top: 4rem; text-align: center; border-top: 1px solid rgba(185, 0, 255, 0.3); border-bottom: 1px solid rgba(185, 0, 255, 0.3); padding: 3rem 0; background: radial-gradient(circle at center, rgba(185, 0, 255, 0.05), transparent 70%);">
+                    <h2 style="font-family: var(--font-display); font-size: 2.2rem; color: var(--text-title); line-height: 1.4; text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);">
+                        O Takt Time não é sobre trabalhar mais rápido.<br>
+                        É sobre a equipe trabalhar <span style="color: var(--lime-beat); text-shadow: 0 0 20px var(--lime-glow);">em perfeita sincronia</span>.<br>
+                        Em uma orquestra logística, <span style="color: var(--violet-rhythm); border-bottom: 2px solid var(--violet-rhythm);">o tempo é a partitura.</span>
+                    </h2>
+                </div>
+
+            </div> <footer style="margin-top: auto; padding: 2rem 4rem; background: var(--bg-panel-deep); border-top: 1px solid var(--border-rhythm); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; box-shadow: 0 -10px 30px rgba(0,0,0,0.5);">
+                
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                    <span style="font-family: var(--font-display); font-size: 1.2rem; color: var(--text-pure); letter-spacing: 2px;">
+                        MELI <span style="color: var(--lime-beat); text-shadow: 0 0 10px rgba(204,255,0,0.5);">PDI</span>
+                    </span>
+                    <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); letter-spacing: 2px;">
+                        LOGISTICS DOCUMENTATION // TAKT_TIME_MODULE_V5.0
+                    </span>
+                </div>
+
+                <div style="display: flex; gap: 30px; font-family: var(--font-code); font-size: 0.8rem;">
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <span style="color: var(--violet-rhythm); text-shadow: 0 0 8px var(--violet-dim);">CYCLE TIME</span>
+                        <span style="color: var(--text-main);">OPTIMIZED</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <span style="color: var(--lime-beat); text-shadow: 0 0 8px rgba(204,255,0,0.4);">PITCH BLOCK</span>
+                        <span style="color: var(--text-main);">SYNC 15M</span>
+                    </div>
+                </div>
+
+                <div style="text-align: right; font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); letter-spacing: 1px;">
+                    <span style="color: var(--lime-beat);">[ RHYTHM ENGINE SECURE ]</span><br>
+                    TERMINAL_ID: OSASCO_CD // 2026
+                </div>
+
+            </footer>
+
+        </main> </div> ```
+
+---
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // 1. SYSTEM BOOT LOG
+            console.log("%c[SYS_BOOT]%c Inicializando Engine de Takt Time...", "color: #B900FF; font-weight: bold;", "color: #E2E8F0;");
+            console.log("%c[MODULE]%c Sincronizando metrônomo da operação e calculando Pitch...", "color: #CCFF00; font-weight: bold;", "color: #E2E8F0;");
+            
+            // 2. INTERSECTION OBSERVER (ANIMAÇÃO DOS PAINÉIS DE VIDRO)
+            const animatedElements = document.querySelectorAll('.tech-panel');
+            
+            animatedElements.forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(30px)';
+                el.style.transition = 'opacity 0.7s ease-out, transform 0.7s cubic-bezier(0.25, 1, 0.5, 1)';
+            });
+
+            const elementObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                        
+                        // Efeito de Flash na borda para simular batida de ritmo
+                        const originalBorder = getComputedStyle(entry.target).borderColor;
+                        entry.target.style.borderColor = 'var(--lime-beat)';
+                        entry.target.style.boxShadow = '0 0 20px rgba(204, 255, 0, 0.2)';
+                        
+                        setTimeout(() => {
+                            entry.target.style.borderColor = originalBorder;
+                            entry.target.style.boxShadow = 'var(--shadow-glass)';
+                        }, 300);
+
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+
+            animatedElements.forEach(el => {
+                elementObserver.observe(el);
+            });
+
+            // 3. Efeito Sonoro Visual (Hover em cards de ritmo)
+            const rhythmBoxes = document.querySelectorAll('.rhythm-box');
+            rhythmBoxes.forEach(box => {
+                box.addEventListener('mouseenter', () => {
+                    box.style.transform = 'translateY(-5px)';
+                    box.style.transition = 'transform 0.3s';
+                });
+                box.addEventListener('mouseleave', () => {
+                    box.style.transform = 'translateY(0)';
+                });
+            });
+        });
+    </script>
+</body>
+</html>
